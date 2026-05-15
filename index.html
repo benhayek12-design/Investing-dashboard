@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070b14" />
+  <title>Quantum Computing Investment Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b14;
+      --bg-soft: #0d1324;
+      --card: rgba(18, 27, 48, 0.84);
+      --card-strong: #121b30;
+      --text: #eaf0ff;
+      --muted: #9aa8c7;
+      --line: rgba(148, 163, 184, 0.18);
+      --accent: #7dd3fc;
+      --accent-2: #a78bfa;
+      --accent-3: #34d399;
+      --danger: #fb7185;
+      --warning: #fbbf24;
+      --orange: #fb923c;
+      --ok: #4ade80;
+      --shadow: 0 22px 55px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+
+    [data-theme="light"] {
+      color-scheme: light;
+      --bg: #f6f8ff;
+      --bg-soft: #e8eefc;
+      --card: rgba(255, 255, 255, 0.9);
+      --card-strong: #ffffff;
+      --text: #111827;
+      --muted: #5b677d;
+      --line: rgba(15, 23, 42, 0.14);
+      --accent: #0284c7;
+      --accent-2: #7c3aed;
+      --accent-3: #059669;
+      --danger: #e11d48;
+      --warning: #d97706;
+      --orange: #ea580c;
+      --ok: #16a34a;
+      --shadow: 0 22px 55px rgba(15, 23, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 8% -10%, rgba(125, 211, 252, 0.22), transparent 28%),
+        radial-gradient(circle at 88% 4%, rgba(167, 139, 250, 0.22), transparent 24%),
+        radial-gradient(circle at 50% 108%, rgba(52, 211, 153, 0.12), transparent 30%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+
+    .shell { width: min(1500px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 60px; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.55fr 0.85fr;
+      gap: 22px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .panel {
+      background: linear-gradient(145deg, var(--card), rgba(11, 18, 32, 0.72));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .hero-main { padding: clamp(22px, 3vw, 36px); position: relative; overflow: hidden; }
+    .hero-main::after {
+      content: "";
+      position: absolute;
+      inset: auto -90px -140px auto;
+      width: 320px;
+      height: 320px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(125, 211, 252, 0.20), transparent 65%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(125, 211, 252, 0.25);
+      color: var(--accent);
+      background: rgba(125, 211, 252, 0.08);
+      font-size: 0.83rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 16px 0 12px; font-size: clamp(2rem, 5vw, 4.6rem); line-height: 0.95; letter-spacing: -0.06em; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.65; max-width: 900px; }
+
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(125, 211, 252, 0.42); background: rgba(125, 211, 252, 0.08); }
+    .btn.primary { background: linear-gradient(135deg, rgba(125, 211, 252, 0.20), rgba(167, 139, 250, 0.18)); border-color: rgba(125, 211, 252, 0.35); }
+
+    .hero-side { padding: 22px; display: grid; gap: 12px; }
+    .metric { padding: 16px; border-radius: 15px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.035); }
+    .metric span { display: block; color: var(--muted); font-size: 0.82rem; margin-bottom: 8px; }
+    .metric strong { display: block; font-size: 1.7rem; letter-spacing: -0.04em; }
+
+    .toolbar { padding: 16px; margin-bottom: 20px; display: grid; gap: 14px; }
+    .toolbar-row { display: grid; grid-template-columns: 1.4fr 0.7fr 0.55fr auto auto; gap: 12px; align-items: center; }
+    .field { position: relative; }
+    .field label { display: block; color: var(--muted); font-size: 0.78rem; margin: 0 0 6px 4px; }
+    input, select {
+      width: 100%;
+      min-height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 10px 12px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: rgba(125, 211, 252, 0.55); box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.09); }
+
+    .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
+    .card { padding: 16px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow); }
+    .card-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 10px; }
+    .card h3 { margin: 0; font-size: 0.98rem; }
+    .card .count { font-size: 1.65rem; font-weight: 800; color: var(--accent); }
+    .mini { color: var(--muted); font-size: 0.84rem; line-height: 1.45; }
+    .ticker-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+
+    .watchlist { padding: 18px; margin-bottom: 22px; }
+    .section-title { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .section-title h2 { margin: 0; font-size: 1.25rem; letter-spacing: -0.03em; }
+    .section-title p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .watch-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .watch-card { padding: 14px; border-radius: 15px; background: rgba(255,255,255,0.035); border: 1px solid var(--line); }
+    .watch-card h3 { margin: 0 0 4px; font-size: 0.98rem; }
+    .watch-card p { margin: 0 0 12px; color: var(--muted); font-size: 0.82rem; line-height: 1.45; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .tag.ticker { color: var(--accent); border-color: rgba(125, 211, 252, 0.24); background: rgba(125, 211, 252, 0.08); }
+    .tag.alias { color: var(--muted); border-color: var(--line); background: rgba(148, 163, 184, 0.08); }
+    .tag.risk-lower { color: var(--ok); background: rgba(74, 222, 128, 0.10); border-color: rgba(74, 222, 128, 0.24); }
+    .tag.risk-medium { color: var(--accent); background: rgba(125, 211, 252, 0.10); border-color: rgba(125, 211, 252, 0.24); }
+    .tag.risk-high { color: var(--orange); background: rgba(251, 146, 60, 0.11); border-color: rgba(251, 146, 60, 0.25); }
+    .tag.risk-speculative { color: var(--danger); background: rgba(251, 113, 133, 0.12); border-color: rgba(251, 113, 133, 0.26); }
+    .tag.val-overvalued { color: var(--warning); background: rgba(251, 191, 36, 0.11); border-color: rgba(251, 191, 36, 0.24); }
+    .tag.val-reasonable { color: var(--ok); background: rgba(74, 222, 128, 0.10); border-color: rgba(74, 222, 128, 0.22); }
+    .tag.val-undervalued { color: var(--accent-3); background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.24); }
+    .tag.val-speculative { color: var(--danger); background: rgba(251, 113, 133, 0.12); border-color: rgba(251, 113, 133, 0.26); }
+
+    .table-panel { overflow: hidden; }
+    .table-head { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+    .table-head h2 { margin: 0; font-size: 1.1rem; }
+    .table-count { color: var(--muted); font-size: 0.9rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1450px; }
+    th, td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--card-strong);
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    th.sortable { cursor: pointer; }
+    th.sortable:hover { color: var(--accent); }
+    td { color: var(--text); font-size: 0.9rem; line-height: 1.45; }
+    tbody tr:hover { background: rgba(125, 211, 252, 0.045); }
+    .company-cell strong { display: block; margin-bottom: 6px; }
+    .placeholder { color: var(--muted); }
+    .links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .link-pill { padding: 5px 8px; border-radius: 999px; background: rgba(255,255,255,0.055); border: 1px solid var(--line); color: var(--accent); font-weight: 700; font-size: 0.76rem; }
+    .link-pill:hover { border-color: rgba(125, 211, 252, 0.45); }
+
+    .api-section { margin-top: 22px; padding: 18px; }
+    .api-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .api-card { padding: 14px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,0.035); }
+    .api-card h3 { margin: 0 0 8px; font-size: 0.98rem; }
+    .api-card p { margin: 0; color: var(--muted); line-height: 1.5; font-size: 0.84rem; }
+
+    .footer { color: var(--muted); font-size: 0.85rem; line-height: 1.6; padding: 18px 4px 0; }
+    .empty { padding: 30px; color: var(--muted); text-align: center; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      margin-bottom: 20px;
+      position: sticky;
+      top: 8px;
+      z-index: 10;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-btn {
+      min-height: 42px;
+      padding: 10px 16px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      font-weight: 800;
+      transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+    .tab-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.045); }
+    .tab-btn.active { color: var(--text); border-color: rgba(125, 211, 252, 0.36); background: linear-gradient(135deg, rgba(125, 211, 252, 0.16), rgba(167, 139, 250, 0.12)); }
+    .tab-panel[hidden] { display: none !important; }
+    .tab-panel { animation: fadeIn 180ms ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .utility-row { grid-template-columns: auto 1fr auto auto; margin-top: 12px; }
+    .file-field input { padding: 8px 10px; }
+    .status-line { margin: 12px 4px 0; color: var(--muted); line-height: 1.55; font-size: 0.88rem; }
+
+    .data-section { padding: 18px; margin-bottom: 22px; }
+    .data-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .data-card { padding: 14px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,0.035); }
+    .data-card h3 { margin: 0 0 8px; font-size: 0.98rem; }
+    .data-card p { margin: 0 0 12px; color: var(--muted); line-height: 1.5; font-size: 0.88rem; }
+    .code-sample { margin: 0; white-space: pre-wrap; border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,0.18); padding: 12px; color: var(--text); font-size: 0.78rem; line-height: 1.55; overflow-x: auto; }
+
+    @media (max-width: 1120px) {
+      .hero, .toolbar-row { grid-template-columns: 1fr; }
+      .cards, .watch-grid, .api-grid, .data-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero-side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 18px, 1500px); padding-top: 12px; }
+      .hero-side, .cards, .watch-grid, .api-grid, .data-grid { grid-template-columns: 1fr; }
+      .hero-main, .hero-side, .watchlist, .api-section, .data-section { padding: 16px; }
+      .toolbar { padding: 12px; }
+      .tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+      .tab-btn { min-height: 40px; padding: 9px 6px; font-size: 0.86rem; }
+      .toolbar-row, .utility-row { gap: 10px; grid-template-columns: 1fr; }
+      .table-head { align-items: start; flex-direction: column; }
+      .hero-actions .btn, .toolbar-row .btn, .utility-row .btn { width: 100%; }
+      h1 { font-size: 2.25rem; }
+
+      /* iPhone/mobile table mode: rows become readable cards instead of a tiny, wide table. */
+      .table-wrap { overflow-x: visible; padding: 0 10px 12px; }
+      table { min-width: 0; width: 100%; border-collapse: separate; border-spacing: 0 12px; }
+      thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      tbody, tr, td { display: block; width: 100%; }
+      tbody tr {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.035);
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+        overflow: hidden;
+      }
+      tbody tr:hover { background: rgba(125, 211, 252, 0.055); }
+      td {
+        display: grid;
+        grid-template-columns: minmax(104px, 35%) minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 10px 12px;
+        font-size: 0.86rem;
+        border-bottom: 1px solid var(--line);
+      }
+      td:last-child { border-bottom: 0; }
+      td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .company-cell { display: block; padding-top: 14px; }
+      .company-cell::before { display: block; margin-bottom: 6px; }
+      .links { justify-content: flex-start; }
+    }
+
+    @media print {
+      body { background: #fff; color: #111; }
+      .toolbar, .hero-actions, .tabs, .api-section, .data-section { display: none; }
+      .panel, .card { box-shadow: none; }
+      table { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-main panel">
+        <span class="eyebrow">Static v1 · Quantum + infrastructure market map</span>
+        <h1>Quantum Computing Investment Dashboard</h1>
+        <p>
+          A self-contained, no-API dashboard for screening quantum-computing-related equities, semiconductor infrastructure,
+          photonics, power/cooling, cybersecurity, Big Tech AI/HPC enablers, and thematic ETFs. Use it to map themes,
+          compare risk, and update placeholder fundamentals.
+        </p>
+        <div class="hero-actions">
+          <button class="btn primary" type="button" data-open-tab="stocks">View stocks</button>
+          <button class="btn" type="button" data-open-tab="settings">Settings</button>
+          <button class="btn" type="button" data-open-tab="data">Update data</button>
+        </div>
+      </div>
+      <aside class="hero-side panel">
+        <div class="metric"><span>Total tracked securities</span><strong id="totalCount">—</strong></div>
+        <div class="metric"><span>Categories</span><strong id="categoryCount">—</strong></div>
+        <div class="metric"><span>Speculative/high risk</span><strong id="riskCount">—</strong></div>
+        <div class="metric"><span>Exchange-verified</span><strong>May 15, 2026</strong></div>
+      </aside>
+    </section>
+
+    <nav class="tabs panel" aria-label="Dashboard tabs">
+      <button class="tab-btn active" type="button" data-tab="overview" aria-selected="true">Overview</button>
+      <button class="tab-btn" type="button" data-tab="stocks" aria-selected="false">Stocks</button>
+      <button class="tab-btn" type="button" data-tab="data" aria-selected="false">Data</button>
+      <button class="tab-btn" type="button" data-tab="settings" aria-selected="false">Settings</button>
+    </nav>
+
+    <section class="tab-panel active" id="tab-overview">
+    <section class="cards" id="summaryCards" aria-label="Summary cards by category"></section>
+
+    <section class="watchlist panel">
+      <div class="section-title">
+        <div>
+          <h2>Top watchlist</h2>
+          <p>Pre-built groups for faster review; edit the watchlist arrays in the JavaScript.</p>
+        </div>
+      </div>
+      <div class="watch-grid" id="watchlistGrid"></div>
+    </section>
+
+    </section>
+
+    <section class="tab-panel" id="tab-stocks" hidden>
+    <section class="table-panel panel" id="dashboardTable">
+      <div class="table-head">
+        <div>
+          <h2>Investment universe</h2>
+          <div class="table-count" id="visibleCount">—</div>
+        </div>
+        <div class="table-count">Desktop: click any sortable header to sort. iPhone: rows render as cards. Placeholder financial columns are ready for live/manual data.</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" data-sort="company">Company</th>
+              <th class="sortable" data-sort="ticker">Ticker</th>
+              <th class="sortable" data-sort="exchange">Exchange</th>
+              <th class="sortable" data-sort="category">Category</th>
+              <th class="sortable" data-sort="risk">Risk</th>
+              <th class="sortable" data-sort="valuation">Valuation view</th>
+              <th class="sortable" data-sort="quantumThesis">Quantum thesis</th>
+              <th class="sortable" data-sort="aiHpcPivot">AI/HPC pivot potential</th>
+              <th class="sortable" data-sort="livePrice">Live price</th>
+              <th class="sortable" data-sort="marketCap">Market cap</th>
+              <th class="sortable" data-sort="psRatio">P/S ratio</th>
+              <th class="sortable" data-sort="revenueGrowth">Revenue growth</th>
+              <th class="sortable" data-sort="cashRunway">Cash runway</th>
+              <th class="sortable" data-sort="analystNotes">Analyst notes</th>
+              <th>Links</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="emptyState" hidden>No matching securities. Clear filters or broaden your search.</div>
+    </section>
+
+    </section>
+
+    <section class="tab-panel" id="tab-data" hidden>
+    <section class="data-section panel">
+      <div class="section-title">
+        <div>
+          <h2>Update actual info</h2>
+          <p>Populate the placeholder columns manually today, or wire in a data source later.</p>
+        </div>
+      </div>
+      <div class="data-grid">
+        <article class="data-card">
+          <h3>Fastest path on iPhone</h3>
+          <p>Open Settings, export the CSV, edit the placeholder columns in Numbers, then import the edited CSV back into the dashboard.</p>
+          <button class="btn primary" type="button" data-open-tab="settings">Open settings</button>
+        </article>
+        <article class="data-card">
+          <h3>Permanent GitHub update</h3>
+          <p>Edit the <code>stocks</code> array in <code>index.html</code>. Change fields like <code>livePrice</code>, <code>marketCap</code>, <code>psRatio</code>, <code>revenueGrowth</code>, <code>cashRunway</code>, and <code>analystNotes</code>.</p>
+        </article>
+        <article class="data-card">
+          <h3>Example stock edit</h3>
+          <pre class="code-sample"><code>"livePrice": "$123.45",
+"marketCap": "$50.2B",
+"psRatio": "12.8x",
+"revenueGrowth": "+18% YoY",
+"cashRunway": "N/A",
+"analystNotes": "Updated after Q1 report."</code></pre>
+        </article>
+      </div>
+    </section>
+    <section class="api-section panel">
+      <div class="section-title">
+        <div>
+          <h2>Future live-data options</h2>
+          <p>No API keys are used in this file. These are practical free/low-cost options to evaluate separately.</p>
+        </div>
+      </div>
+      <div class="api-grid" id="apiGrid"></div>
+    </section>
+
+    </section>
+
+    <section class="tab-panel" id="tab-settings" hidden>
+    <section class="toolbar panel" aria-label="Dashboard settings">
+      <div class="section-title">
+        <div>
+          <h2>Settings</h2>
+          <p>Filters, theme, CSV export, and CSV import live here so the dashboard view stays clean.</p>
+        </div>
+      </div>
+      <div class="toolbar-row">
+        <div class="field">
+          <label for="searchInput">Search</label>
+          <input id="searchInput" type="search" placeholder="Search company, ticker, thesis, AI/HPC notes…" />
+        </div>
+        <div class="field">
+          <label for="categoryFilter">Category filter</label>
+          <select id="categoryFilter"><option value="all">All categories</option></select>
+        </div>
+        <div class="field">
+          <label for="riskFilter">Risk filter</label>
+          <select id="riskFilter"><option value="all">All risk levels</option></select>
+        </div>
+        <button class="btn" id="clearBtn" type="button">Clear filters</button>
+        <button class="btn primary" data-action="export-csv" type="button">Export CSV</button>
+      </div>
+      <div class="toolbar-row utility-row">
+        <div class="field">
+          <label for="sortKeySelect">Sort by</label>
+          <select id="sortKeySelect">
+            <option value="category">Category</option>
+            <option value="company">Company</option>
+            <option value="ticker">Ticker</option>
+            <option value="exchange">Exchange</option>
+            <option value="risk">Risk</option>
+            <option value="valuation">Valuation view</option>
+            <option value="livePrice">Live price</option>
+            <option value="marketCap">Market cap</option>
+            <option value="psRatio">P/S ratio</option>
+            <option value="revenueGrowth">Revenue growth</option>
+            <option value="cashRunway">Cash runway</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sortDirectionSelect">Sort direction</label>
+          <select id="sortDirectionSelect">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </div>
+        <button class="btn" id="themeBtn" type="button">Toggle light/dark</button>
+        <button class="btn" type="button" data-open-tab="stocks">Back to stocks</button>
+      </div>
+      <div class="toolbar-row utility-row">
+        <div class="field file-field">
+          <label for="csvImport">Import edited CSV</label>
+          <input id="csvImport" type="file" accept=".csv,text/csv" />
+        </div>
+        <button class="btn" id="resetStorageBtn" type="button">Reset imported data</button>
+        <span class="mini">CSV import matches rows by ticker and updates any columns you edited.</span>
+        <span class="mini">Imported values are saved locally in your browser, not pushed to GitHub.</span>
+      </div>
+      <p class="status-line" id="dataStatus">Using built-in static data. Importing a CSV updates this browser and saves the edited values on this device.</p>
+    </section>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Ticker/exchange baseline was checked against Nasdaq Trader symbol directory files and exchange-code definitions.
+        Nasdaq market codes used here: Q = Nasdaq Global Select Market, G = Nasdaq Global Market, S = Nasdaq Capital Market.
+        Other-listed exchange codes used here: N = NYSE, P = NYSE Arca, Z = BATS/Cboe BZX.
+      </p>
+      <p>
+        Static data can be edited directly in the <code>stocks</code> array, or updated locally through CSV import in the Settings tab.
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    // =============================================================
+    // EDIT STOCKS HERE
+    // Add, remove, or update rows in this array. Keep ticker symbols
+    // uppercase. Links are generated automatically from ticker + tvExchange.
+    // =============================================================
+    let stocks = [
+    {
+        "company": "IonQ, Inc.",
+        "ticker": "IONQ",
+        "formerTicker": "",
+        "exchange": "NYSE",
+        "tvExchange": "NYSE",
+        "category": "Pure-play quantum",
+        "risk": "High",
+        "valuation": "Speculative",
+        "quantumThesis": "Pure-play trapped-ion quantum-computing hardware and cloud access; direct exposure to enterprise and government quantum adoption.",
+        "aiHpcPivot": "Potential long-term hybrid quantum-AI workflows; not an AI/HPC infrastructure pivot today.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Add latest backlog, bookings, cash, and milestone notes."
+    },
+    {
+        "company": "Rigetti Computing, Inc.",
+        "ticker": "RGTI",
+        "formerTicker": "",
+        "exchange": "Nasdaq Capital Market",
+        "tvExchange": "NASDAQ",
+        "category": "Pure-play quantum",
+        "risk": "Speculative",
+        "valuation": "Speculative",
+        "quantumThesis": "Superconducting full-stack quantum-computing platform; high upside if error correction and chip scaling improve.",
+        "aiHpcPivot": "Hybrid quantum/HPC cloud workflows possible, but commercialization risk remains high.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track qubit roadmap, cash burn, dilution, partnerships."
+    },
+    {
+        "company": "D-Wave Quantum Inc.",
+        "ticker": "QBTS",
+        "formerTicker": "",
+        "exchange": "NYSE",
+        "tvExchange": "NYSE",
+        "category": "Pure-play quantum",
+        "risk": "Speculative",
+        "valuation": "Speculative",
+        "quantumThesis": "Quantum annealing and optimization platform with near-term use-case focus in logistics, scheduling, materials, and optimization.",
+        "aiHpcPivot": "Potential optimization layer for AI/HPC workloads; not a conventional data-center pivot.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track customer production usage vs. pilots."
+    },
+    {
+        "company": "Quantum Computing Inc.",
+        "ticker": "QUBT",
+        "formerTicker": "",
+        "exchange": "Nasdaq Capital Market",
+        "tvExchange": "NASDAQ",
+        "category": "Pure-play quantum",
+        "risk": "Speculative",
+        "valuation": "Speculative",
+        "quantumThesis": "Integrated photonics and quantum-optics exposure; highly speculative route to quantum/photonic computing components.",
+        "aiHpcPivot": "Potential photonic compute adjacency, but early-stage and execution-sensitive.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Validate revenue quality, manufacturing progress, and financing needs."
+    },
+    {
+        "company": "SEALSQ Corp.",
+        "ticker": "LAES",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Pure-play quantum",
+        "risk": "High",
+        "valuation": "Speculative",
+        "quantumThesis": "Semiconductor and secure-element angle on post-quantum cryptography and quantum-safe identity.",
+        "aiHpcPivot": "Limited AI/HPC pivot; relevance is security chips and quantum-safe authentication.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track PQC product adoption, margins, and liquidity."
+    },
+    {
+        "company": "Honeywell International Inc.",
+        "ticker": "HON",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Pure-play quantum",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Diversified industrial with quantum exposure through Quantinuum; lower pure-play torque but materially lower business-model risk.",
+        "aiHpcPivot": "Industrial automation and controls can benefit from AI-driven productivity; not a direct HPC pivot.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track Quantinuum ownership, spin/IPO optionality, industrial cycle."
+    },
+    {
+        "company": "International Business Machines Corporation",
+        "ticker": "IBM",
+        "formerTicker": "",
+        "exchange": "NYSE",
+        "tvExchange": "NYSE",
+        "category": "Big Tech quantum",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "IBM Quantum is one of the most visible enterprise quantum ecosystems, spanning hardware roadmaps, software, and cloud access.",
+        "aiHpcPivot": "AI software, consulting, and hybrid cloud can pair with future quantum services.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track quantum roadmap, software growth, free cash flow."
+    },
+    {
+        "company": "Alphabet Inc.",
+        "ticker": "GOOGL",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Big Tech quantum",
+        "risk": "Lower",
+        "valuation": "Reasonable",
+        "quantumThesis": "Google Quantum AI provides deep research exposure, including superconducting quantum systems and error-correction work.",
+        "aiHpcPivot": "Major AI model, cloud, and TPU infrastructure exposure; quantum is optionality within a much larger AI platform.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track cloud profitability, capex, AI monetization."
+    },
+    {
+        "company": "Microsoft Corporation",
+        "ticker": "MSFT",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Big Tech quantum",
+        "risk": "Lower",
+        "valuation": "Reasonable",
+        "quantumThesis": "Azure Quantum and Microsoft quantum software/tooling offer enterprise access to multiple hardware approaches.",
+        "aiHpcPivot": "One of the strongest AI/HPC cloud platforms through Azure, OpenAI ecosystem exposure, and enterprise software distribution.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track Azure growth, AI gross margin, capex discipline."
+    },
+    {
+        "company": "Amazon.com, Inc.",
+        "ticker": "AMZN",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Big Tech quantum",
+        "risk": "Lower",
+        "valuation": "Reasonable",
+        "quantumThesis": "AWS Braket gives cloud customers access to quantum hardware partners and managed experiment workflows.",
+        "aiHpcPivot": "AWS is a core AI/HPC infrastructure platform, with custom silicon and massive data-center scale.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track AWS growth, retail margins, capex efficiency."
+    },
+    {
+        "company": "NVIDIA Corporation",
+        "ticker": "NVDA",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Big Tech quantum",
+        "risk": "Medium",
+        "valuation": "Overvalued",
+        "quantumThesis": "CUDA-Q and accelerated simulation/control workflows make NVIDIA a key quantum-adjacent AI/HPC enabler.",
+        "aiHpcPivot": "Primary AI accelerator and networking supplier; strongest direct AI/HPC leverage in the list.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track Blackwell/next-gen demand, margins, export controls."
+    },
+    {
+        "company": "Intel Corporation",
+        "ticker": "INTC",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Big Tech quantum",
+        "risk": "High",
+        "valuation": "Speculative",
+        "quantumThesis": "Silicon spin-qubit and cryogenic-control research offers a semiconductor-native quantum path.",
+        "aiHpcPivot": "Foundry and accelerator turnaround could create AI/HPC upside, but execution risk is elevated.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track foundry losses, product competitiveness, government incentives."
+    },
+    {
+        "company": "Taiwan Semiconductor Manufacturing Company Limited",
+        "ticker": "TSM",
+        "formerTicker": "",
+        "exchange": "NYSE",
+        "tvExchange": "NYSE",
+        "category": "Semiconductor infrastructure",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Advanced foundry capacity can support quantum-control chips, cryo-CMOS, silicon photonics, and AI accelerators.",
+        "aiHpcPivot": "Core manufacturing backbone for AI accelerators and high-performance silicon.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track AI wafer demand, geopolitical risk, capex cycle."
+    },
+    {
+        "company": "ASML Holding N.V.",
+        "ticker": "ASML",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Semiconductor infrastructure",
+        "risk": "Medium",
+        "valuation": "Overvalued",
+        "quantumThesis": "EUV lithography is a bottleneck technology for advanced semiconductors that may underpin quantum-control and photonic devices.",
+        "aiHpcPivot": "Critical supplier for leading-edge AI/HPC chip manufacturing.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track China restrictions, order backlog, EUV/high-NA adoption."
+    },
+    {
+        "company": "Applied Materials, Inc.",
+        "ticker": "AMAT",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Semiconductor infrastructure",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Process-equipment exposure to specialty and leading-edge nodes relevant to superconducting, photonic, and cryogenic components.",
+        "aiHpcPivot": "Broad beneficiary of AI-driven wafer-fab equipment demand.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track WFE cycle, services revenue, China exposure."
+    },
+    {
+        "company": "Lam Research Corporation",
+        "ticker": "LRCX",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Semiconductor infrastructure",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Etch/deposition tooling can support advanced device fabrication required for quantum and AI chips.",
+        "aiHpcPivot": "Memory and advanced packaging equipment exposure tied to AI servers and HBM.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track memory capex recovery, China mix, services."
+    },
+    {
+        "company": "KLA Corporation",
+        "ticker": "KLAC",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Semiconductor infrastructure",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Process control and inspection are essential for high-yield quantum/photonic device manufacturing.",
+        "aiHpcPivot": "Inspection/metrology benefits from increasing complexity of AI chips and advanced packaging.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track process-control spend intensity and export controls."
+    },
+    {
+        "company": "SkyWater Technology, Inc.",
+        "ticker": "SKYT",
+        "formerTicker": "",
+        "exchange": "Nasdaq Capital Market",
+        "tvExchange": "NASDAQ",
+        "category": "Semiconductor infrastructure",
+        "risk": "High",
+        "valuation": "Speculative",
+        "quantumThesis": "Domestic specialty foundry angle for custom, secure, superconducting, radiation-hardened, or quantum-adjacent chips.",
+        "aiHpcPivot": "Potential specialty-fab and advanced-packaging support; smaller scale and customer concentration risk.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track ATS revenue, fab utilization, capital needs."
+    },
+    {
+        "company": "Micron Technology, Inc.",
+        "ticker": "MU",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Semiconductor infrastructure",
+        "risk": "High",
+        "valuation": "Reasonable",
+        "quantumThesis": "Indirect quantum infrastructure exposure through memory technology and AI/HPC server demand.",
+        "aiHpcPivot": "HBM and high-performance memory are central to AI training and inference servers.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track HBM share, pricing cycle, inventory normalization."
+    },
+    {
+        "company": "Tower Semiconductor Ltd.",
+        "ticker": "TSEM",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Semiconductor infrastructure",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Analog, RF, mixed-signal, and specialty foundry exposure can support sensors, silicon photonics, and control electronics.",
+        "aiHpcPivot": "Less direct AI/HPC torque; specialty analog demand can benefit from broader infrastructure build-out.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track specialty utilization, automotive/industrial mix."
+    },
+    {
+        "company": "Coherent Corp.",
+        "ticker": "COHR",
+        "formerTicker": "",
+        "exchange": "NYSE",
+        "tvExchange": "NYSE",
+        "category": "Photonics/lasers",
+        "risk": "High",
+        "valuation": "Reasonable",
+        "quantumThesis": "Lasers, optical components, and photonics supply chain exposure for quantum systems and high-speed optical networking.",
+        "aiHpcPivot": "Strong optical-interconnect and datacenter photonics adjacency for AI/HPC clusters.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track AI transceiver demand, debt, margins."
+    },
+    {
+        "company": "Lumentum Holdings Inc.",
+        "ticker": "LITE",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Photonics/lasers",
+        "risk": "High",
+        "valuation": "Speculative",
+        "quantumThesis": "Optical components, lasers, and photonic modules can be enabling technologies for quantum and datacenter optics.",
+        "aiHpcPivot": "AI datacenter optical networking could support recovery if demand and margins improve.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track telecom/datacenter mix, customer concentration, inventory recovery."
+    },
+    {
+        "company": "IPG Photonics Corporation",
+        "ticker": "IPGP",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Photonics/lasers",
+        "risk": "Medium",
+        "valuation": "Undervalued",
+        "quantumThesis": "High-performance laser technology is relevant to quantum labs, precision manufacturing, and photonic systems.",
+        "aiHpcPivot": "Indirect AI/HPC exposure through manufacturing and industrial laser demand; less direct than COHR/LITE.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track industrial recovery, China exposure, margin stabilization."
+    },
+    {
+        "company": "MKS Inc.",
+        "ticker": "MKSI",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Photonics/lasers",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Photonics, lasers, vacuum, and precision instruments align with quantum labs and semiconductor manufacturing.",
+        "aiHpcPivot": "Semicap and advanced electronics exposure can benefit from AI/HPC manufacturing demand.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track Atotech integration, deleveraging, semicap recovery."
+    },
+    {
+        "company": "Vertiv Holdings Co.",
+        "ticker": "VRT",
+        "formerTicker": "",
+        "exchange": "NYSE",
+        "tvExchange": "NYSE",
+        "category": "Power/cooling/infrastructure",
+        "risk": "Medium",
+        "valuation": "Overvalued",
+        "quantumThesis": "Quantum and AI data centers require resilient power, thermal management, and rack infrastructure.",
+        "aiHpcPivot": "Direct beneficiary of AI/HPC power and cooling demand.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track backlog, liquid cooling adoption, valuation multiple."
+    },
+    {
+        "company": "Eaton Corporation plc",
+        "ticker": "ETN",
+        "formerTicker": "",
+        "exchange": "NYSE",
+        "tvExchange": "NYSE",
+        "category": "Power/cooling/infrastructure",
+        "risk": "Lower",
+        "valuation": "Reasonable",
+        "quantumThesis": "Electrical infrastructure and power management are foundational for data centers and quantum/HPC facilities.",
+        "aiHpcPivot": "Major electrification and datacenter power-equipment beneficiary.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track electrical backlog, margin expansion, cycle risk."
+    },
+    {
+        "company": "Super Micro Computer, Inc.",
+        "ticker": "SMCI",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Power/cooling/infrastructure",
+        "risk": "High",
+        "valuation": "Speculative",
+        "quantumThesis": "Server and liquid-cooling infrastructure can support AI/HPC environments that may eventually integrate quantum accelerators.",
+        "aiHpcPivot": "Direct AI server and rack-scale liquid-cooling exposure, with high execution and governance scrutiny.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track filings, margins, customer mix, working capital."
+    },
+    {
+        "company": "Constellation Energy Corporation",
+        "ticker": "CEG",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Power/cooling/infrastructure",
+        "risk": "Medium",
+        "valuation": "Overvalued",
+        "quantumThesis": "Reliable low-carbon power is a strategic input for power-hungry AI/HPC and future quantum-computing facilities.",
+        "aiHpcPivot": "Nuclear and power-contract exposure to datacenter demand.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track datacenter PPAs, nuclear policy, power prices."
+    },
+    {
+        "company": "Talen Energy Corporation",
+        "ticker": "TLN",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Power/cooling/infrastructure",
+        "risk": "High",
+        "valuation": "Speculative",
+        "quantumThesis": "Power-generation and datacenter-adjacent energy assets can support compute infrastructure demand.",
+        "aiHpcPivot": "Potential power supplier to AI/HPC data centers; project, regulatory, and customer-concentration risk.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track power contracts, interconnection, leverage, regulatory reviews."
+    },
+    {
+        "company": "Danaher Corporation",
+        "ticker": "DHR",
+        "formerTicker": "",
+        "exchange": "NYSE",
+        "tvExchange": "NYSE",
+        "category": "Power/cooling/infrastructure",
+        "risk": "Lower",
+        "valuation": "Reasonable",
+        "quantumThesis": "Indirect instrumentation and life-science tools angle; not a direct quantum-computing infrastructure company.",
+        "aiHpcPivot": "AI in life-science workflows is relevant, but HPC infrastructure exposure is limited.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Consider moving to a separate 'instrumentation' bucket if desired."
+    },
+    {
+        "company": "Stryker Corporation",
+        "ticker": "SYK",
+        "formerTicker": "",
+        "exchange": "NYSE",
+        "tvExchange": "NYSE",
+        "category": "Power/cooling/infrastructure",
+        "risk": "Lower",
+        "valuation": "Reasonable",
+        "quantumThesis": "Very indirect healthcare/robotics adjacency; not a primary quantum-computing play.",
+        "aiHpcPivot": "AI-assisted surgery/robotics and healthcare data potential, but not an HPC infrastructure stock.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Flag as non-core; include only if healthcare/robotics adjacency matters."
+    },
+    {
+        "company": "Palo Alto Networks, Inc.",
+        "ticker": "PANW",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Cybersecurity/post-quantum encryption",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Post-quantum migration should lift demand for crypto-agility, network security, and cloud-security controls.",
+        "aiHpcPivot": "AI security operations and cloud workload protection are core growth vectors.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track platformization, billings, margins."
+    },
+    {
+        "company": "CrowdStrike Holdings, Inc.",
+        "ticker": "CRWD",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Cybersecurity/post-quantum encryption",
+        "risk": "Medium",
+        "valuation": "Overvalued",
+        "quantumThesis": "Endpoint, identity, and cloud security could benefit from enterprise PQC readiness and crypto-agility projects.",
+        "aiHpcPivot": "AI-enabled threat detection and security data platform remain key drivers.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track net retention, incident overhang, module adoption."
+    },
+    {
+        "company": "Fortinet, Inc.",
+        "ticker": "FTNT",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Cybersecurity/post-quantum encryption",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Network-security appliances and SASE tooling can be channels for post-quantum encryption migration.",
+        "aiHpcPivot": "AI-assisted network security and secure SD-WAN; not a compute-infrastructure pivot.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track firewall cycle, SASE growth, margins."
+    },
+    {
+        "company": "Zscaler, Inc.",
+        "ticker": "ZS",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Cybersecurity/post-quantum encryption",
+        "risk": "High",
+        "valuation": "Speculative",
+        "quantumThesis": "Zero-trust and cloud-security architecture can become part of PQC migration and crypto-agility programs.",
+        "aiHpcPivot": "AI data-loss and cloud workload security; high multiple and execution sensitivity.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track ARR, enterprise adoption, sales productivity."
+    },
+    {
+        "company": "Cisco Systems, Inc.",
+        "ticker": "CSCO",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Select Market",
+        "tvExchange": "NASDAQ",
+        "category": "Cybersecurity/post-quantum encryption",
+        "risk": "Lower",
+        "valuation": "Reasonable",
+        "quantumThesis": "Networking installed base and security portfolio can help enterprises roll out quantum-safe network upgrades.",
+        "aiHpcPivot": "Networking, observability, and security exposure to AI datacenter traffic; lower-growth but cash-generative.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track Splunk integration, networking orders, security growth."
+    },
+    {
+        "company": "Defiance Quantum ETF",
+        "ticker": "QTUM",
+        "formerTicker": "",
+        "exchange": "Nasdaq Global Market",
+        "tvExchange": "NASDAQ",
+        "category": "ETFs",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Diversified basket for quantum computing, machine learning, and enabling technologies.",
+        "aiHpcPivot": "ETF-level exposure varies by holdings; review current constituents before buying.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track expense ratio, holdings overlap, liquidity."
+    },
+    {
+        "company": "ARK Autonomous Technology & Robotics ETF",
+        "ticker": "ARKQ",
+        "formerTicker": "",
+        "exchange": "Cboe BZX / BATS",
+        "tvExchange": "BATS",
+        "category": "ETFs",
+        "risk": "Medium",
+        "valuation": "Reasonable",
+        "quantumThesis": "Thematic ETF with autonomy, robotics, AI, and industrial-technology exposure; quantum exposure is indirect.",
+        "aiHpcPivot": "Broader autonomy/robotics/AI platform exposure; holdings can shift materially.",
+        "livePrice": "\u2014",
+        "marketCap": "\u2014",
+        "psRatio": "\u2014",
+        "revenueGrowth": "\u2014",
+        "cashRunway": "\u2014",
+        "analystNotes": "Track holdings, active-management drift, expense ratio."
+    }
+];
+
+    const defaultStocks = JSON.parse(JSON.stringify(stocks));
+
+    // Optional curated groups shown in the Top Watchlist section.
+    const watchlists = [
+    {
+        "title": "Safest infrastructure plays",
+        "subtitle": "Lower pure-play torque, stronger businesses",
+        "tickers": [
+            "ETN",
+            "TSM",
+            "ASML",
+            "KLAC",
+            "AMAT",
+            "IBM",
+            "CSCO",
+            "CEG"
+        ]
+    },
+    {
+        "title": "Highest-risk quantum pure plays",
+        "subtitle": "Direct quantum upside with financing/execution risk",
+        "tickers": [
+            "RGTI",
+            "QUBT",
+            "QBTS",
+            "IONQ",
+            "LAES"
+        ]
+    },
+    {
+        "title": "AI/HPC infrastructure beneficiaries",
+        "subtitle": "Compute, power, cooling, and cloud exposure",
+        "tickers": [
+            "NVDA",
+            "MSFT",
+            "AMZN",
+            "VRT",
+            "SMCI",
+            "ETN",
+            "CEG"
+        ]
+    },
+    {
+        "title": "Underappreciated photonics plays",
+        "subtitle": "Lasers, optical networking, and precision photonics",
+        "tickers": [
+            "COHR",
+            "LITE",
+            "IPGP",
+            "MKSI"
+        ]
+    }
+];
+
+    // Free/low-cost live-data ideas. This dashboard does not call them.
+    const apiOptions = [
+    {
+        "name": "Alpha Vantage",
+        "bestFor": "Free starter quotes, historical prices, fundamentals, and technical indicators.",
+        "caveat": "Free-tier rate limits are tight; use caching and batch updates."
+    },
+    {
+        "name": "Financial Modeling Prep",
+        "bestFor": "Fundamentals, ratios, statements, and quote endpoints for dashboards.",
+        "caveat": "Check display/licensing terms before publishing or redistributing."
+    },
+    {
+        "name": "Twelve Data",
+        "bestFor": "Batch quotes, EOD, intraday, WebSocket, and global coverage options.",
+        "caveat": "Free/trial capacity is useful for prototypes; production may need a paid plan."
+    },
+    {
+        "name": "Stooq",
+        "bestFor": "No-key historical CSV/EOD workflows and simple research backfills.",
+        "caveat": "Not a fundamentals source; symbol coverage and formats need testing."
+    }
+];
+
+    const state = {
+      search: "",
+      category: "all",
+      risk: "all",
+      sortKey: "category",
+      sortDirection: "asc"
+    };
+
+    const STORAGE_KEY = "quantumDashboardStocks.v3";
+
+    const els = {
+      searchInput: document.getElementById("searchInput"),
+      categoryFilter: document.getElementById("categoryFilter"),
+      riskFilter: document.getElementById("riskFilter"),
+      tableBody: document.getElementById("stockTableBody"),
+      summaryCards: document.getElementById("summaryCards"),
+      watchlistGrid: document.getElementById("watchlistGrid"),
+      apiGrid: document.getElementById("apiGrid"),
+      visibleCount: document.getElementById("visibleCount"),
+      emptyState: document.getElementById("emptyState"),
+      totalCount: document.getElementById("totalCount"),
+      categoryCount: document.getElementById("categoryCount"),
+      riskCount: document.getElementById("riskCount"),
+      clearBtn: document.getElementById("clearBtn"),
+      exportBtns: document.querySelectorAll("[data-action='export-csv']"),
+      themeBtn: document.getElementById("themeBtn"),
+      csvImport: document.getElementById("csvImport"),
+      resetStorageBtn: document.getElementById("resetStorageBtn"),
+      sortKeySelect: document.getElementById("sortKeySelect"),
+      sortDirectionSelect: document.getElementById("sortDirectionSelect"),
+      dataStatus: document.getElementById("dataStatus"),
+      tabButtons: document.querySelectorAll(".tab-btn"),
+      tabPanels: document.querySelectorAll(".tab-panel"),
+      openTabButtons: document.querySelectorAll("[data-open-tab]")
+    };
+
+    const riskOrder = { "Lower": 1, "Medium": 2, "High": 3, "Speculative": 4 };
+    const valuationOrder = { "Undervalued": 1, "Reasonable": 2, "Overvalued": 3, "Speculative": 4 };
+    const importHeaderMap = {
+      "Company": "company",
+      "Former ticker": "formerTicker",
+      "Exchange": "exchange",
+      "Category": "category",
+      "Risk": "risk",
+      "Valuation view": "valuation",
+      "Quantum thesis": "quantumThesis",
+      "AI/HPC pivot potential": "aiHpcPivot",
+      "Live price": "livePrice",
+      "Market cap": "marketCap",
+      "P/S ratio": "psRatio",
+      "Revenue growth": "revenueGrowth",
+      "Cash runway": "cashRunway",
+      "Analyst notes": "analystNotes"
+    };
+
+    function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCompare(b)); }
+    function slug(value) { return String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
+    function displayTicker(stock) { return stock.formerTicker ? `${stock.ticker} / formerly ${stock.formerTicker}` : stock.ticker; }
+    function yahooUrl(stock) { return `https://finance.yahoo.com/quote/${encodeURIComponent(stock.ticker)}`; }
+    function tradingViewUrl(stock) { return `https://www.tradingview.com/symbols/${stock.tvExchange}-${stock.ticker}/`; }
+
+    function populateFilters() {
+      els.categoryFilter.innerHTML = '<option value="all">All categories</option>';
+      els.riskFilter.innerHTML = '<option value="all">All risk levels</option>';
+      unique(stocks.map(s => s.category)).forEach(category => {
+        const opt = document.createElement("option");
+        opt.value = category;
+        opt.textContent = category;
+        els.categoryFilter.appendChild(opt);
+      });
+      unique(stocks.map(s => s.risk)).sort((a, b) => riskOrder[a] - riskOrder[b]).forEach(risk => {
+        const opt = document.createElement("option");
+        opt.value = risk;
+        opt.textContent = risk;
+        els.riskFilter.appendChild(opt);
+      });
+      if (![...els.categoryFilter.options].some(opt => opt.value === state.category)) state.category = "all";
+      if (![...els.riskFilter.options].some(opt => opt.value === state.risk)) state.risk = "all";
+      els.categoryFilter.value = state.category;
+      els.riskFilter.value = state.risk;
+    }
+
+    function getFilteredStocks() {
+      const query = state.search.trim().toLowerCase();
+      return stocks.filter(stock => {
+        const haystack = [
+          stock.company, stock.ticker, stock.formerTicker, stock.exchange, stock.category,
+          stock.risk, stock.valuation, stock.quantumThesis, stock.aiHpcPivot, stock.analystNotes
+        ].join(" ").toLowerCase();
+        const matchesSearch = !query || haystack.includes(query);
+        const matchesCategory = state.category === "all" || stock.category === state.category;
+        const matchesRisk = state.risk === "all" || stock.risk === state.risk;
+        return matchesSearch && matchesCategory && matchesRisk;
+      });
+    }
+
+    function sortedStocks(rows) {
+      const { sortKey, sortDirection } = state;
+      const dir = sortDirection === "asc" ? 1 : -1;
+      return [...rows].sort((a, b) => {
+        let av = a[sortKey] ?? "";
+        let bv = b[sortKey] ?? "";
+        if (sortKey === "risk") return ((riskOrder[av] || 99) - (riskOrder[bv] || 99)) * dir;
+        if (sortKey === "valuation") return ((valuationOrder[av] || 99) - (valuationOrder[bv] || 99)) * dir;
+        return String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" }) * dir;
+      });
+    }
+
+    function renderSummaryCards() {
+      const byCategory = unique(stocks.map(s => s.category));
+      els.summaryCards.innerHTML = byCategory.map(category => {
+        const rows = stocks.filter(s => s.category === category);
+        const highRisk = rows.filter(s => ["High", "Speculative"].includes(s.risk)).length;
+        const tickers = rows.map(s => `<span class="tag ticker">${s.ticker}</span>`).join("");
+        return `
+          <article class="card">
+            <div class="card-top">
+              <h3>${category}</h3>
+              <span class="count">${rows.length}</span>
+            </div>
+            <div class="mini">${highRisk} high/speculative risk · ${rows.filter(s => s.valuation === "Speculative").length} speculative valuation views</div>
+            <div class="ticker-list">${tickers}</div>
+          </article>`;
+      }).join("");
+    }
+
+    function renderWatchlists() {
+      els.watchlistGrid.innerHTML = watchlists.map(list => {
+        const tags = list.tickers.map(ticker => {
+          const stock = stocks.find(s => s.ticker === ticker || s.formerTicker === ticker);
+          const title = stock ? stock.company : ticker;
+          return `<span class="tag ticker" title="${title}">${ticker}</span>`;
+        }).join("");
+        return `<article class="watch-card"><h3>${list.title}</h3><p>${list.subtitle}</p><div class="ticker-list">${tags}</div></article>`;
+      }).join("");
+    }
+
+    function renderApiOptions() {
+      els.apiGrid.innerHTML = apiOptions.map(api => `
+        <article class="api-card">
+          <h3>${api.name}</h3>
+          <p><strong>Best for:</strong> ${api.bestFor}</p>
+          <p><strong>Caveat:</strong> ${api.caveat}</p>
+        </article>`).join("");
+    }
+
+    function renderTable() {
+      const rows = sortedStocks(getFilteredStocks());
+      els.visibleCount.textContent = `${rows.length} of ${stocks.length} securities shown`;
+      els.emptyState.hidden = rows.length > 0;
+      els.tableBody.innerHTML = rows.map(stock => `
+        <tr>
+          <td data-label="Company" class="company-cell"><strong>${stock.company}</strong><span class="mini">${stock.category}</span></td>
+          <td data-label="Ticker"><span class="tag ticker">${stock.ticker}</span>${stock.formerTicker ? `<div style="margin-top:6px"><span class="tag alias">formerly ${stock.formerTicker}</span></div>` : ""}</td>
+          <td data-label="Exchange">${stock.exchange}</td>
+          <td data-label="Category">${stock.category}</td>
+          <td data-label="Risk"><span class="tag risk-${slug(stock.risk)}">${stock.risk}</span></td>
+          <td data-label="Valuation"><span class="tag val-${slug(stock.valuation)}">${stock.valuation}</span></td>
+          <td data-label="Quantum thesis">${stock.quantumThesis}</td>
+          <td data-label="AI/HPC potential">${stock.aiHpcPivot}</td>
+          <td data-label="Live price" class="placeholder">${stock.livePrice}</td>
+          <td data-label="Market cap" class="placeholder">${stock.marketCap}</td>
+          <td data-label="P/S ratio" class="placeholder">${stock.psRatio}</td>
+          <td data-label="Revenue growth" class="placeholder">${stock.revenueGrowth}</td>
+          <td data-label="Cash runway" class="placeholder">${stock.cashRunway}</td>
+          <td data-label="Analyst notes">${stock.analystNotes}</td>
+          <td data-label="Links"><div class="links"><a class="link-pill" target="_blank" rel="noopener" href="${yahooUrl(stock)}">Yahoo</a><a class="link-pill" target="_blank" rel="noopener" href="${tradingViewUrl(stock)}">TradingView</a></div></td>
+        </tr>`).join("");
+    }
+
+    function updateHeroMetrics() {
+      els.totalCount.textContent = stocks.length;
+      els.categoryCount.textContent = unique(stocks.map(s => s.category)).length;
+      els.riskCount.textContent = stocks.filter(s => ["High", "Speculative"].includes(s.risk)).length;
+    }
+
+    function exportCsv() {
+      const rows = sortedStocks(getFilteredStocks());
+      const headers = ["Company", "Ticker", "Former ticker", "Exchange", "Category", "Risk", "Valuation view", "Quantum thesis", "AI/HPC pivot potential", "Live price", "Market cap", "P/S ratio", "Revenue growth", "Cash runway", "Analyst notes", "Yahoo Finance", "TradingView"];
+      const escapeCsv = value => `"${String(value ?? "").replaceAll('"', '""')}"`;
+      const lines = [headers.map(escapeCsv).join(",")];
+      rows.forEach(stock => {
+        lines.push([
+          stock.company, stock.ticker, stock.formerTicker, stock.exchange, stock.category, stock.risk, stock.valuation,
+          stock.quantumThesis, stock.aiHpcPivot, stock.livePrice, stock.marketCap, stock.psRatio, stock.revenueGrowth,
+          stock.cashRunway, stock.analystNotes, yahooUrl(stock), tradingViewUrl(stock)
+        ].map(escapeCsv).join(","));
+      });
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `quantum-investment-dashboard-${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function setDataStatus(message) {
+      if (els.dataStatus) els.dataStatus.textContent = message;
+    }
+
+    function refreshDashboard() {
+      populateFilters();
+      updateHeroMetrics();
+      renderSummaryCards();
+      renderWatchlists();
+      renderApiOptions();
+      renderTable();
+    }
+
+    function setActiveTab(tabName) {
+      els.tabButtons.forEach(button => {
+        const isActive = button.dataset.tab === tabName;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-selected", isActive ? "true" : "false");
+      });
+      els.tabPanels.forEach(panel => {
+        panel.hidden = panel.id !== `tab-${tabName}`;
+      });
+      const tabs = document.querySelector(".tabs");
+      if (tabs) {
+        const y = tabs.getBoundingClientRect().top + window.scrollY - 8;
+        window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+      }
+    }
+
+    function loadSavedStocks() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const saved = JSON.parse(raw);
+        if (!Array.isArray(saved) || saved.length === 0) return false;
+        stocks = saved;
+        setDataStatus("Using imported data saved on this device. Use Reset imported data to return to the built-in version.");
+        return true;
+      } catch (error) {
+        setDataStatus("Could not load saved imported data. Using built-in static data.");
+        return false;
+      }
+    }
+
+    function saveStocksToLocalStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stocks));
+      } catch (error) {
+        setDataStatus("Imported rows were applied, but this browser could not save them locally.");
+      }
+    }
+
+    function resetImportedData() {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (error) {}
+      stocks = JSON.parse(JSON.stringify(defaultStocks));
+      state.search = "";
+      state.category = "all";
+      state.risk = "all";
+      state.sortKey = "category";
+      state.sortDirection = "asc";
+      els.searchInput.value = "";
+      els.sortKeySelect.value = state.sortKey;
+      els.sortDirectionSelect.value = state.sortDirection;
+      refreshDashboard();
+      setDataStatus("Reset to built-in static data.");
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && inQuotes && next === '"') {
+          field += '"';
+          i++;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          row.push(field);
+          field = "";
+        } else if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && next === "\n") i++;
+          row.push(field);
+          if (row.some(cell => cell.trim() !== "")) rows.push(row);
+          row = [];
+          field = "";
+        } else {
+          field += char;
+        }
+      }
+      row.push(field);
+      if (row.some(cell => cell.trim() !== "")) rows.push(row);
+      return rows;
+    }
+
+    function importCsvText(text) {
+      const rows = parseCsv(text);
+      if (rows.length < 2) throw new Error("CSV needs a header row and at least one stock row.");
+      const headers = rows[0].map(header => header.trim());
+      const tickerIndex = headers.findIndex(header => header.toLowerCase() === "ticker");
+      if (tickerIndex === -1) throw new Error("CSV must include a Ticker column.");
+
+      let updated = 0;
+      const missing = [];
+
+      rows.slice(1).forEach(cells => {
+        const ticker = String(cells[tickerIndex] || "").trim().toUpperCase();
+        if (!ticker) return;
+        const stockIndex = stocks.findIndex(stock =>
+          stock.ticker.toUpperCase() === ticker || String(stock.formerTicker || "").toUpperCase() === ticker
+        );
+        if (stockIndex === -1) {
+          missing.push(ticker);
+          return;
+        }
+
+        headers.forEach((header, columnIndex) => {
+          const key = importHeaderMap[header];
+          if (!key) return;
+          stocks[stockIndex][key] = String(cells[columnIndex] ?? "").trim();
+        });
+        updated++;
+      });
+
+      if (updated === 0) throw new Error("No matching tickers were found in the CSV.");
+      saveStocksToLocalStorage();
+      refreshDashboard();
+      const missingText = missing.length ? ` ${missing.length} ticker(s) not found: ${missing.slice(0, 8).join(", ")}${missing.length > 8 ? "…" : ""}` : "";
+      setDataStatus(`Imported ${updated} row(s) and saved them on this device.${missingText}`);
+    }
+
+    function bindEvents() {
+      els.searchInput.addEventListener("input", event => { state.search = event.target.value; renderTable(); });
+      els.categoryFilter.addEventListener("change", event => { state.category = event.target.value; renderTable(); });
+      els.riskFilter.addEventListener("change", event => { state.risk = event.target.value; renderTable(); });
+      els.sortKeySelect.addEventListener("change", event => { state.sortKey = event.target.value; renderTable(); });
+      els.sortDirectionSelect.addEventListener("change", event => { state.sortDirection = event.target.value; renderTable(); });
+      els.clearBtn.addEventListener("click", () => {
+        state.search = ""; state.category = "all"; state.risk = "all";
+        els.searchInput.value = ""; els.categoryFilter.value = "all"; els.riskFilter.value = "all";
+        renderTable();
+      });
+      els.exportBtns.forEach(btn => btn.addEventListener("click", exportCsv));
+      els.themeBtn.addEventListener("click", () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+      });
+      els.resetStorageBtn.addEventListener("click", resetImportedData);
+      els.csvImport.addEventListener("change", event => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try { importCsvText(String(reader.result || "")); }
+          catch (error) { setDataStatus(`Import failed: ${error.message}`); }
+          event.target.value = "";
+        };
+        reader.onerror = () => setDataStatus("Import failed: the file could not be read.");
+        reader.readAsText(file);
+      });
+      els.tabButtons.forEach(button => button.addEventListener("click", () => setActiveTab(button.dataset.tab)));
+      els.openTabButtons.forEach(button => button.addEventListener("click", () => setActiveTab(button.dataset.openTab)));
+      document.querySelectorAll("th.sortable").forEach(th => {
+        th.addEventListener("click", () => {
+          const key = th.dataset.sort;
+          if (state.sortKey === key) { state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc"; }
+          else { state.sortKey = key; state.sortDirection = "asc"; }
+          els.sortKeySelect.value = state.sortKey;
+          els.sortDirectionSelect.value = state.sortDirection;
+          renderTable();
+        });
+      });
+    }
+
+    function init() {
+      loadSavedStocks();
+      els.sortKeySelect.value = state.sortKey;
+      els.sortDirectionSelect.value = state.sortDirection;
+      refreshDashboard();
+      bindEvents();
+    }
+
+    init();
+  </script>
+</body>
+</html>
