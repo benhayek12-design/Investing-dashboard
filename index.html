@@ -801,6 +801,14 @@
         justify-content: flex-start;
       }
     }
+    /* Fix: do not keep tabs or search controls stuck on screen while scrolling */
+   .top-tabs,
+   .controls {
+     position: static !important;
+     top: auto !important;
+     bottom: auto !important;
+     z-index: auto !important;
+    }
   </style>
 </head>
 
