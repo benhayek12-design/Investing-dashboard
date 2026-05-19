@@ -1,0 +1,2117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07111f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Quantum Stocks" />
+  <meta name="application-name" content="Quantum Stocks" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>Quantum Stock Dashboard</title>
+
+  <style>
+    /* =========================================================
+       Quantum Stock Dashboard
+       CSS organization:
+       1. Theme variables
+       2. Base reset
+       3. App layout and navigation
+       4. Cards, summaries, and categories
+       5. Stock cards, filters, and label guide
+       6. Settings and modal
+       7. Responsive rules
+       ========================================================= */
+
+    /* 1. Theme variables */
+    :root {
+      color-scheme: dark;
+      --bg: #050914;
+      --bg-soft: #07111f;
+      --panel: #101a2e;
+      --panel-2: #142039;
+      --panel-top: #16233d;
+      --glass: rgba(7, 17, 31, 0.92);
+      --border: #283754;
+      --text: #eef5ff;
+      --muted: #aab8d8;
+      --muted-2: #7f8dac;
+      --accent: #7ed8ff;
+      --accent-2: #a78bfa;
+      --good: #63e6be;
+      --warn: #ffd166;
+      --bad: #ff8a8a;
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+      --radius: 22px;
+      --tap: 48px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    }
+
+    body.light {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --bg-soft: #eef3fb;
+      --panel: #ffffff;
+      --panel-2: #f6f8fc;
+      --panel-top: #ffffff;
+      --glass: rgba(255, 255, 255, 0.92);
+      --border: #dce4ef;
+      --text: #111827;
+      --muted: #5f6b7f;
+      --muted-2: #7b8798;
+      --accent: #0369a1;
+      --accent-2: #6d28d9;
+      --shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+    }
+
+    /* 2. Base reset */
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% -10%, rgba(126, 216, 255, 0.18), transparent 34%),
+        radial-gradient(circle at 90% 8%, rgba(167, 139, 250, 0.16), transparent 38%),
+        var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select,
+    textarea { font: inherit; }
+
+    button,
+    a,
+    input,
+    select,
+    textarea { -webkit-tap-highlight-color: transparent; }
+
+    a { color: inherit; }
+
+    h1,
+    h2,
+    h3,
+    p { margin-top: 0; }
+
+    /* 3. App layout and navigation */
+    .app {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 28px);
+    }
+
+    .top-tabs {
+      position: static;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 10px;
+      margin: 0 0 18px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    }
+
+    .tab-button {
+      min-height: var(--tap);
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      background: rgba(126, 216, 255, 0.14);
+      color: var(--accent);
+      outline: 1px solid rgba(126, 216, 255, 0.38);
+    }
+
+    .hero {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin: 0;
+    }
+
+    h1 {
+      margin-bottom: 4px;
+      font-size: clamp(2.25rem, 12vw, 4.6rem);
+      line-height: 0.95;
+      letter-spacing: -0.065em;
+    }
+
+    .hero p {
+      max-width: 720px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 5vw, 1.45rem);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 12px;
+      margin: 10px 0 14px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: -0.035em;
+    }
+
+    .section-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+    }
+
+    /* 4. Cards, summaries, and categories */
+    .grid { display: grid; gap: 14px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .category-grid { grid-template-columns: 1fr; }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--panel-top), var(--panel));
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .metric-card .label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .metric-card .number {
+      display: block;
+      margin-top: 6px;
+      color: var(--text);
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+    }
+
+    .category-card { display: grid; gap: 12px; }
+
+    .category-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .category-name {
+      font-size: 1.05rem;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      line-height: 1.25;
+    }
+
+    .category-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 38px;
+      min-height: 38px;
+      border-radius: 999px;
+      background: rgba(126, 216, 255, 0.11);
+      color: var(--accent);
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+
+    /* 5. Stock cards and filters */
+    .controls {
+      position: static;
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+    }
+
+    .label-guide {
+      margin: 0 0 14px;
+      border: 1px solid rgba(170, 184, 216, 0.18);
+      border-radius: 16px;
+      background: rgba(170, 184, 216, 0.055);
+      color: var(--muted);
+      overflow: hidden;
+    }
+
+    .label-guide summary {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 13px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    .label-guide summary::-webkit-details-marker { display: none; }
+
+    .label-guide summary::after {
+      content: "+";
+      color: var(--accent);
+      font-size: 1.15rem;
+      font-weight: 900;
+    }
+
+    .label-guide[open] summary::after { content: "−"; }
+
+    .label-guide summary span {
+      color: var(--accent);
+      font-weight: 950;
+    }
+
+    .label-guide-content {
+      display: grid;
+      gap: 10px;
+      padding: 0 13px 13px;
+      border-top: 1px solid rgba(170, 184, 216, 0.12);
+    }
+
+    .label-guide-item {
+      padding-top: 10px;
+    }
+
+    .label-guide-item strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text);
+      font-size: 0.82rem;
+    }
+
+    .label-guide-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .field { display: grid; gap: 7px; }
+
+    label {
+      color: var(--muted);
+      font-size: 0.83rem;
+      font-weight: 850;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: var(--tap);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 11px 13px;
+      outline: none;
+    }
+
+    option { background: var(--panel); color: var(--text); }
+    textarea { min-height: 96px; resize: vertical; }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(126, 216, 255, 0.75);
+      box-shadow: 0 0 0 3px rgba(126, 216, 255, 0.12);
+    }
+
+    .stock-list { display: grid; gap: 14px; }
+
+    .stock-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .stock-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .ticker {
+      color: var(--accent);
+      font-size: 1.9rem;
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: -0.055em;
+    }
+
+    .company {
+      margin: 7px 0 0;
+      font-size: 1.08rem;
+      font-weight: 850;
+      letter-spacing: -0.03em;
+    }
+
+    .meta {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      justify-content: flex-end;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(170, 184, 216, 0.25);
+      background: rgba(170, 184, 216, 0.10);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .risk-low {
+      color: var(--good);
+      border-color: rgba(99, 230, 190, 0.35);
+      background: rgba(99, 230, 190, 0.10);
+    }
+
+    .risk-moderate {
+      color: #93c5fd;
+      border-color: rgba(147, 197, 253, 0.35);
+      background: rgba(147, 197, 253, 0.10);
+    }
+
+    .risk-high {
+      color: var(--warn);
+      border-color: rgba(255, 209, 102, 0.38);
+      background: rgba(255, 209, 102, 0.12);
+    }
+
+    .risk-very-high {
+      color: var(--bad);
+      border-color: rgba(255, 138, 138, 0.42);
+      background: rgba(255, 138, 138, 0.12);
+    }
+
+    .val-undervalued {
+      color: var(--good);
+      border-color: rgba(99, 230, 190, 0.35);
+      background: rgba(99, 230, 190, 0.10);
+    }
+
+    .val-reasonable {
+      color: #93c5fd;
+      border-color: rgba(147, 197, 253, 0.35);
+      background: rgba(147, 197, 253, 0.10);
+    }
+
+    .val-overvalued {
+      color: var(--warn);
+      border-color: rgba(255, 209, 102, 0.38);
+      background: rgba(255, 209, 102, 0.12);
+    }
+
+    .val-speculative {
+      color: var(--bad);
+      border-color: rgba(255, 138, 138, 0.42);
+      background: rgba(255, 138, 138, 0.12);
+    }
+
+    .text-block {
+      display: grid;
+      gap: 5px;
+      margin: 13px 0;
+    }
+
+    .text-block .small-label {
+      color: var(--accent);
+      font-size: 0.77rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .text-block p { margin: 0; color: var(--muted); }
+
+    .manual-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .manual-item {
+      min-height: 64px;
+      padding: 10px;
+      border: 1px solid rgba(170, 184, 216, 0.16);
+      border-radius: 14px;
+      background: rgba(170, 184, 216, 0.055);
+    }
+
+    .manual-item .mini-label {
+      display: block;
+      color: var(--muted-2);
+      font-size: 0.72rem;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .manual-item .mini-value {
+      display: block;
+      margin-top: 4px;
+      color: var(--text);
+      font-weight: 850;
+      word-break: break-word;
+    }
+
+    .notes-item { grid-column: 1 / -1; }
+
+    .pro-metrics {
+      margin: 12px 0 0;
+      border: 1px solid rgba(126, 216, 255, 0.18);
+      border-radius: 16px;
+      background: rgba(126, 216, 255, 0.055);
+      overflow: hidden;
+    }
+
+    .pro-metrics summary {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 12px;
+      color: var(--muted);
+      cursor: pointer;
+      list-style: none;
+      font-size: 0.84rem;
+      font-weight: 850;
+    }
+
+    .pro-metrics summary::-webkit-details-marker { display: none; }
+
+    .pro-metrics summary::after {
+      content: "+";
+      color: var(--accent);
+      font-size: 1.15rem;
+      font-weight: 950;
+    }
+
+    .pro-metrics[open] summary::after { content: "−"; }
+
+    .pro-metrics summary span {
+      color: var(--accent);
+      font-weight: 950;
+    }
+
+    .pro-metrics summary small {
+      color: var(--muted-2);
+      font-size: 0.74rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .pro-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 0 12px 12px;
+      border-top: 1px solid rgba(170, 184, 216, 0.12);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .button,
+    .link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: var(--tap);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(126, 216, 255, 0.12);
+      color: var(--accent);
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 0 12px;
+    }
+
+    .button.secondary,
+    .link-button.secondary {
+      background: rgba(170, 184, 216, 0.08);
+      color: var(--text);
+    }
+
+    .button.danger {
+      background: rgba(255, 138, 138, 0.12);
+      color: var(--bad);
+      border-color: rgba(255, 138, 138, 0.34);
+    }
+
+    .empty {
+      display: none;
+      padding: 22px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* 6. Settings and modal */
+    .watchlist-grid { display: grid; gap: 14px; }
+    .watch-card h3 { margin-bottom: 10px; font-size: 1.14rem; letter-spacing: -0.025em; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid rgba(126, 216, 255, 0.28);
+      border-radius: 999px;
+      background: rgba(126, 216, 255, 0.09);
+      color: var(--accent);
+      min-height: 38px;
+      padding: 0 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .settings-grid { display: grid; gap: 14px; }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 52px;
+      border-top: 1px solid rgba(170, 184, 216, 0.14);
+      padding-top: 12px;
+      margin-top: 12px;
+    }
+
+    .setting-row:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .switch {
+      width: 54px;
+      height: 32px;
+      appearance: none;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(170, 184, 216, 0.20);
+      padding: 0;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.2s ease;
+    }
+
+    .switch:checked { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+    .switch:checked::after { transform: translateX(22px); }
+
+    .settings-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .disabled-box {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      color: var(--muted);
+      background: rgba(170, 184, 216, 0.06);
+    }
+
+    .status-text {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.56);
+    }
+
+    .modal.active { display: flex; }
+
+    .modal-card {
+      width: min(640px, 100%);
+      max-height: min(88vh, 760px);
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .modal-header h2 { margin: 0; letter-spacing: -0.04em; }
+
+    .close-button {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(170, 184, 216, 0.10);
+      color: var(--text);
+      font-size: 1.4rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .form-grid { display: grid; gap: 12px; }
+
+    .form-section {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(170, 184, 216, 0.14);
+    }
+
+    .form-section:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .form-section h3 {
+      margin: 0;
+      color: var(--text);
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .form-hint {
+      margin: -4px 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    .form-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .file-input { display: none; }
+
+    body.compact .stock-card,
+    body.compact .card {
+      padding: 14px;
+      border-radius: 18px;
+    }
+
+    body.compact .manual-grid { gap: 6px; }
+
+    body.compact .manual-item {
+      min-height: 54px;
+      padding: 8px;
+    }
+
+    /* 7. Responsive rules */
+    @media (min-width: 720px) {
+      .app { padding-inline: 26px; }
+      .summary-grid { grid-template-columns: repeat(4, 1fr); }
+      .category-grid { grid-template-columns: repeat(2, 1fr); }
+      .controls { grid-template-columns: 1.4fr 1fr 1fr; }
+      .label-guide-content { grid-template-columns: repeat(2, 1fr); }
+      .form-grid { grid-template-columns: repeat(2, 1fr); }
+      .pro-metrics-grid { grid-template-columns: repeat(4, 1fr); }
+      .stock-list { grid-template-columns: repeat(2, 1fr); }
+      .watchlist-grid { grid-template-columns: repeat(2, 1fr); }
+      .settings-grid { grid-template-columns: repeat(3, 1fr); }
+      .modal { align-items: center; }
+    }
+
+    @media (max-width: 430px) {
+      .app { padding-inline: 14px; }
+      .top-tabs { gap: 5px; padding: 7px; }
+      .tab-button { min-height: 43px; font-size: 0.88rem; }
+      .summary-grid { gap: 10px; }
+      .card,
+      .stock-card { padding: 16px; }
+      .actions { grid-template-columns: 1fr; }
+      .stock-header { display: grid; }
+      .tags { justify-content: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <nav class="top-tabs" aria-label="Dashboard tabs">
+      <button class="tab-button active" type="button" data-tab="home">Home</button>
+      <button class="tab-button" type="button" data-tab="stocks">Stocks</button>
+      <button class="tab-button" type="button" data-tab="watchlists">Watchlists</button>
+      <button class="tab-button" type="button" data-tab="settings">Settings</button>
+    </nav>
+
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Quantum Stocks</p>
+        <h1>Dashboard</h1>
+        <p>A simple mobile watchlist for quantum, infrastructure, photonics, cybersecurity, and ETFs.</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="tab-panel active" id="homePanel" data-panel="home">
+        <div class="grid summary-grid" id="summaryCards"></div>
+
+        <div class="section-title" style="margin-top: 24px;">
+          <div>
+            <h2>Categories</h2>
+            <p>Static v1 coverage.</p>
+          </div>
+        </div>
+
+        <div class="grid category-grid" id="categoryCards"></div>
+      </section>
+
+      <section class="tab-panel" id="stocksPanel" data-panel="stocks">
+        <div class="section-title">
+          <div>
+            <h2>Stocks</h2>
+            <p>Search, filter, and edit your notes.</p>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="field">
+            <label for="searchInput">Search</label>
+            <input id="searchInput" type="search" placeholder="Ticker, company, thesis..." autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="categoryFilter">Category</label>
+            <select id="categoryFilter"></select>
+          </div>
+
+          <div class="field">
+            <label for="riskFilter">Risk</label>
+            <select id="riskFilter"></select>
+          </div>
+        </div>
+
+        <details class="label-guide">
+          <summary><span>Label guide</span> Risk · valuation · metrics</summary>
+          <div class="label-guide-content">
+            <div class="label-guide-item">
+              <strong>Risk</strong>
+              <p>Low = diversified and established. Moderate = real business with cycle or valuation risk. High / Very High = more execution, cash-burn, volatility, or early-stage risk.</p>
+            </div>
+            <div class="label-guide-item">
+              <strong>Valuation</strong>
+              <p>Reasonable = easier to justify from current business quality. Overvalued = priced for a lot of optimism. Speculative = future-potential driven. Undervalued = appears cheap versus potential.</p>
+            </div>
+            <div class="label-guide-item">
+              <strong>AI / Data Center Relevance</strong>
+              <p>Shows whether the company can benefit from AI, cloud, chips, power, cooling, or data-center demand while quantum matures.</p>
+            </div>
+            <div class="label-guide-item">
+              <strong>Pro Metrics</strong>
+              <p>Manual v1 fields for trend and risk: 6M average, 6M return, price vs averages, volatility, drawdown, relative strength vs QQQ, and share dilution.</p>
+            </div>
+          </div>
+        </details>
+
+        <div class="stock-list" id="stockList"></div>
+        <div class="empty" id="emptyState">No stocks match your filters.</div>
+      </section>
+
+      <section class="tab-panel" id="watchlistsPanel" data-panel="watchlists">
+        <div class="section-title">
+          <div>
+            <h2>Watchlists</h2>
+            <p>Curated groups.</p>
+          </div>
+        </div>
+
+        <div class="watchlist-grid" id="watchlistGrid"></div>
+      </section>
+
+      <section class="tab-panel" id="settingsPanel" data-panel="settings">
+        <div class="section-title">
+          <div>
+            <h2>Settings</h2>
+            <p>Display and saved data.</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <div class="card">
+            <h3>Display</h3>
+
+            <div class="setting-row">
+              <div>
+                <strong>Dark mode</strong>
+                <p class="meta">Default view.</p>
+              </div>
+              <input class="switch" id="darkToggle" type="checkbox" checked />
+            </div>
+
+            <div class="setting-row">
+              <div>
+                <strong>Compact cards</strong>
+                <p class="meta">Tighter layout.</p>
+              </div>
+              <input class="switch" id="compactToggle" type="checkbox" />
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Data</h3>
+            <p class="meta">Export, import, or clear your saved manual fields.</p>
+
+            <div class="settings-actions">
+              <button class="button" id="exportCsv" type="button">Export CSV</button>
+              <button class="button secondary" id="importCsvButton" type="button">Import CSV</button>
+              <button class="button danger" id="resetData" type="button">Reset local changes</button>
+              <input class="file-input" id="importCsv" type="file" accept=".csv,text/csv" />
+            </div>
+
+            <p class="status-text" id="dataStatus">Manual edits and pro metrics save on this device.</p>
+          </div>
+
+          <div class="card">
+            <h3>Live Data</h3>
+            <div class="disabled-box">
+              <strong>Coming in v2</strong>
+              <p class="meta">Live prices, valuation data, and pro metrics are manual for now.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="editModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Edit stock</p>
+          <h2 id="editTitle">Edit</h2>
+          <p class="meta" id="editSubtitle"></p>
+        </div>
+        <button class="close-button" type="button" id="closeModal" aria-label="Close">×</button>
+      </div>
+
+      <form id="editForm">
+        <div class="form-section">
+          <h3>Core Data</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="livePriceInput">Live Price</label>
+              <input id="livePriceInput" name="livePrice" type="text" placeholder="$0.00" />
+            </div>
+
+            <div class="field">
+              <label for="marketCapInput">Market Cap</label>
+              <input id="marketCapInput" name="marketCap" type="text" placeholder="$0.0B" />
+            </div>
+
+            <div class="field">
+              <label for="psRatioInput">P/S Ratio</label>
+              <input id="psRatioInput" name="psRatio" type="text" placeholder="0.0x" />
+            </div>
+
+            <div class="field">
+              <label for="revenueGrowthInput">Revenue Growth</label>
+              <input id="revenueGrowthInput" name="revenueGrowth" type="text" placeholder="+0% YoY" />
+            </div>
+
+            <div class="field">
+              <label for="cashRunwayInput">Cash Runway</label>
+              <input id="cashRunwayInput" name="cashRunway" type="text" placeholder="Example: 18 months" />
+            </div>
+
+            <div class="field full">
+              <label for="analystNotesInput">Analyst Notes</label>
+              <textarea id="analystNotesInput" name="analystNotes" placeholder="Your notes..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Pro Metrics</h3>
+          <p class="form-hint">Manual v1 metrics. Use percentages like +12%, prices like $100.50, or labels like High / Moderate.</p>
+          <div class="form-grid">
+            <div class="field">
+              <label for="sixMonthAvgPriceInput">6M Avg Price</label>
+              <input id="sixMonthAvgPriceInput" name="sixMonthAvgPrice" type="text" placeholder="$0.00" />
+            </div>
+
+            <div class="field">
+              <label for="sixMonthReturnInput">6M Return</label>
+              <input id="sixMonthReturnInput" name="sixMonthReturn" type="text" placeholder="+0%" />
+            </div>
+
+            <div class="field">
+              <label for="priceVsSixMonthAvgInput">Price vs 6M Avg</label>
+              <input id="priceVsSixMonthAvgInput" name="priceVsSixMonthAvg" type="text" placeholder="+0%" />
+            </div>
+
+            <div class="field">
+              <label for="priceVs200DaySmaInput">Price vs 200D SMA</label>
+              <input id="priceVs200DaySmaInput" name="priceVs200DaySma" type="text" placeholder="+0%" />
+            </div>
+
+            <div class="field">
+              <label for="sixMonthVolatilityInput">6M Volatility</label>
+              <input id="sixMonthVolatilityInput" name="sixMonthVolatility" type="text" placeholder="Low / Moderate / High" />
+            </div>
+
+            <div class="field">
+              <label for="sixMonthMaxDrawdownInput">6M Max Drawdown</label>
+              <input id="sixMonthMaxDrawdownInput" name="sixMonthMaxDrawdown" type="text" placeholder="-0%" />
+            </div>
+
+            <div class="field">
+              <label for="relativeStrengthVsQqqInput">Relative vs QQQ</label>
+              <input id="relativeStrengthVsQqqInput" name="relativeStrengthVsQqq" type="text" placeholder="+0%" />
+            </div>
+
+            <div class="field">
+              <label for="shareDilutionInput">Share Dilution</label>
+              <input id="shareDilutionInput" name="shareDilution" type="text" placeholder="+0% YoY" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="button secondary" id="cancelEdit" type="button">Cancel</button>
+          <button class="button" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================
+       1. Static Stock Data
+       Edit this section to add, remove, or update stocks.
+       ========================================================= */
+    const stocks = [
+      {
+        ticker: "IONQ",
+        company: "IonQ, Inc.",
+        exchange: "NYSE",
+        category: "Pure-play quantum",
+        risk: "High",
+        valuation: "Speculative",
+        thesis: "Direct pure-play exposure to trapped-ion quantum computing, cloud access, and enterprise quantum experiments.",
+        aiHpc: "Could benefit from quantum workloads being paired with cloud and data-center compute systems, but it is not a classic AI infrastructure stock."
+      },
+      {
+        ticker: "RGTI",
+        company: "Rigetti Computing, Inc.",
+        exchange: "NASDAQ",
+        category: "Pure-play quantum",
+        risk: "Very High",
+        valuation: "Speculative",
+        thesis: "Pure-play superconducting quantum hardware and full-stack quantum systems exposure.",
+        aiHpc: "Potential quantum and data-center compute integration story, but commercialization risk remains high."
+      },
+      {
+        ticker: "QBTS",
+        company: "D-Wave Quantum Inc.",
+        exchange: "NYSE",
+        category: "Pure-play quantum",
+        risk: "Very High",
+        valuation: "Speculative",
+        thesis: "Quantum annealing and gate-model quantum roadmap with customer-facing optimization use cases.",
+        aiHpc: "Potential use in optimization workloads that may sit beside AI and data-center workflows."
+      },
+      {
+        ticker: "QUBT",
+        company: "Quantum Computing Inc.",
+        exchange: "NASDAQ",
+        category: "Pure-play quantum",
+        risk: "Very High",
+        valuation: "Speculative",
+        thesis: "Small-cap quantum and photonic computing exposure with early-stage commercialization risk.",
+        aiHpc: "Possible optimization and photonics angle, but still highly speculative."
+      },
+      {
+        ticker: "LAES",
+        company: "SEALSQ Corp.",
+        exchange: "NASDAQ",
+        category: "Pure-play quantum",
+        risk: "Very High",
+        valuation: "Speculative",
+        thesis: "Security-chip and post-quantum cryptography angle tied to quantum-resistant identity and hardware security.",
+        aiHpc: "More relevant to secure hardware and post-quantum security than AI and data-center infrastructure."
+      },
+      {
+        ticker: "HON",
+        company: "Honeywell International Inc.",
+        exchange: "NASDAQ",
+        category: "Pure-play quantum",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Diversified industrial company with indirect quantum exposure through Quantinuum.",
+        aiHpc: "Industrial automation and data-center-adjacent exposure, but quantum is only one part of the story."
+      },
+      {
+        ticker: "IBM",
+        company: "International Business Machines Corp.",
+        exchange: "NYSE",
+        category: "Big Tech quantum",
+        risk: "Low",
+        valuation: "Reasonable",
+        thesis: "Large enterprise technology company with one of the deepest public quantum hardware, software, and developer ecosystems.",
+        aiHpc: "Hybrid cloud, mainframe, AI software, and quantum research can support enterprise compute demand."
+      },
+      {
+        ticker: "GOOGL",
+        company: "Alphabet Inc.",
+        exchange: "NASDAQ",
+        category: "Big Tech quantum",
+        risk: "Low",
+        valuation: "Reasonable",
+        thesis: "Quantum research through Google Quantum AI with a long-term focus on useful quantum computing.",
+        aiHpc: "Major AI and cloud platform with data-center infrastructure and custom AI chips."
+      },
+      {
+        ticker: "MSFT",
+        company: "Microsoft Corp.",
+        exchange: "NASDAQ",
+        category: "Big Tech quantum",
+        risk: "Low",
+        valuation: "Reasonable",
+        thesis: "Azure Quantum gives Microsoft exposure to quantum software, cloud access, and long-term hardware research.",
+        aiHpc: "Major AI cloud and enterprise software platform with strong data-center demand."
+      },
+      {
+        ticker: "AMZN",
+        company: "Amazon.com, Inc.",
+        exchange: "NASDAQ",
+        category: "Big Tech quantum",
+        risk: "Low",
+        valuation: "Reasonable",
+        thesis: "AWS Braket provides cloud access to quantum systems and keeps Amazon involved in quantum workflows.",
+        aiHpc: "AWS is a core AI and data-center cloud infrastructure platform."
+      },
+      {
+        ticker: "NVDA",
+        company: "NVIDIA Corp.",
+        exchange: "NASDAQ",
+        category: "Big Tech quantum",
+        risk: "Moderate",
+        valuation: "Overvalued",
+        thesis: "Quantum-adjacent through simulation, accelerated computing, CUDA-Q, and the classical compute needed around quantum systems.",
+        aiHpc: "Core AI and data-center infrastructure leader."
+      },
+      {
+        ticker: "INTC",
+        company: "Intel Corp.",
+        exchange: "NASDAQ",
+        category: "Big Tech quantum",
+        risk: "High",
+        valuation: "Reasonable",
+        thesis: "Quantum-adjacent through silicon spin-qubit research, cryogenic control, chips, and foundry ambitions.",
+        aiHpc: "AI accelerator and foundry turnaround potential, but execution risk is elevated."
+      },
+      {
+        ticker: "TSM",
+        company: "Taiwan Semiconductor Manufacturing Co. Ltd.",
+        exchange: "NYSE",
+        category: "Semiconductor infrastructure",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Advanced foundry infrastructure that supports high-end chips used in AI, data-center, and quantum-adjacent systems.",
+        aiHpc: "One of the most important manufacturing layers for AI and advanced-compute chips."
+      },
+      {
+        ticker: "ASML",
+        company: "ASML Holding N.V.",
+        exchange: "NASDAQ",
+        category: "Semiconductor infrastructure",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Critical lithography equipment supplier for advanced semiconductor manufacturing.",
+        aiHpc: "Advanced AI and data-center chips depend on leading-edge lithography capacity."
+      },
+      {
+        ticker: "AMAT",
+        company: "Applied Materials, Inc.",
+        exchange: "NASDAQ",
+        category: "Semiconductor infrastructure",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Semiconductor manufacturing equipment exposure across deposition, materials engineering, and advanced chip production.",
+        aiHpc: "Benefits from semiconductor capex tied to AI and advanced computing."
+      },
+      {
+        ticker: "LRCX",
+        company: "Lam Research Corp.",
+        exchange: "NASDAQ",
+        category: "Semiconductor infrastructure",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Etch and deposition equipment supplier tied to advanced chip production.",
+        aiHpc: "AI and data-center chip production supports long-term wafer-fab equipment demand."
+      },
+      {
+        ticker: "KLAC",
+        company: "KLA Corp.",
+        exchange: "NASDAQ",
+        category: "Semiconductor infrastructure",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Process control and inspection equipment for advanced semiconductors.",
+        aiHpc: "Complex AI and data-center chips require strong process control and yield management."
+      },
+      {
+        ticker: "SKYT",
+        company: "SkyWater Technology, Inc.",
+        exchange: "NASDAQ",
+        category: "Semiconductor infrastructure",
+        risk: "High",
+        valuation: "Speculative",
+        thesis: "Specialty foundry exposure that may benefit from domestic semiconductor and emerging hardware demand.",
+        aiHpc: "More niche foundry exposure; higher execution risk than large semiconductor infrastructure names."
+      },
+      {
+        ticker: "MU",
+        company: "Micron Technology, Inc.",
+        exchange: "NASDAQ",
+        category: "Semiconductor infrastructure",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Memory and storage supplier important to AI servers and advanced compute systems.",
+        aiHpc: "High-bandwidth memory and data-center memory demand are key AI and data-center drivers."
+      },
+      {
+        ticker: "TSEM",
+        company: "Tower Semiconductor Ltd.",
+        exchange: "NASDAQ",
+        category: "Semiconductor infrastructure",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Specialty analog foundry exposure that can support sensors, power, photonics, and mixed-signal infrastructure.",
+        aiHpc: "Indirect AI and data-center exposure through specialty chip manufacturing."
+      },
+      {
+        ticker: "COHR",
+        company: "Coherent Corp.",
+        exchange: "NASDAQ",
+        category: "Photonics/lasers",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Photonics, lasers, optical components, and compound materials exposure relevant to advanced compute and quantum systems.",
+        aiHpc: "Optical interconnect and photonics demand can benefit from AI data-center growth."
+      },
+      {
+        ticker: "LITE",
+        company: "Lumentum Holdings Inc.",
+        exchange: "NASDAQ",
+        category: "Photonics/lasers",
+        risk: "High",
+        valuation: "Reasonable",
+        thesis: "Optical and photonic components that can benefit from data-center networking and advanced optical systems.",
+        aiHpc: "AI data centers need faster optical connectivity, making photonics an important infrastructure layer."
+      },
+      {
+        ticker: "IPGP",
+        company: "IPG Photonics Corp.",
+        exchange: "NASDAQ",
+        category: "Photonics/lasers",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Fiber laser leader with industrial laser expertise relevant to precision manufacturing and photonics infrastructure.",
+        aiHpc: "Less direct AI exposure, but photonics and advanced manufacturing remain relevant."
+      },
+      {
+        ticker: "MKSI",
+        company: "MKS Instruments, Inc.",
+        exchange: "NASDAQ",
+        category: "Photonics/lasers",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Photonics, lasers, vacuum, and process-control tools for semiconductor and advanced manufacturing markets.",
+        aiHpc: "AI chip capex can support demand for semiconductor manufacturing tools and photonics components."
+      },
+      {
+        ticker: "VRT",
+        company: "Vertiv Holdings Co.",
+        exchange: "NYSE",
+        category: "Power/cooling/infrastructure",
+        risk: "Moderate",
+        valuation: "Overvalued",
+        thesis: "Data-center power and thermal infrastructure supplier that can benefit from AI/data-center buildouts.",
+        aiHpc: "Strong AI and data-center infrastructure beneficiary through cooling, power, and data-center systems."
+      },
+      {
+        ticker: "ETN",
+        company: "Eaton Corp. plc",
+        exchange: "NYSE",
+        category: "Power/cooling/infrastructure",
+        risk: "Low",
+        valuation: "Reasonable",
+        thesis: "Power management and electrification exposure for data centers and industrial infrastructure.",
+        aiHpc: "AI data centers require reliable power distribution and electrical infrastructure."
+      },
+      {
+        ticker: "SMCI",
+        company: "Super Micro Computer, Inc.",
+        exchange: "NASDAQ",
+        category: "Power/cooling/infrastructure",
+        risk: "High",
+        valuation: "Speculative",
+        thesis: "AI server and rack systems company with liquid-cooling and data-center infrastructure exposure.",
+        aiHpc: "Direct AI and data-center server infrastructure candidate, but volatility and execution risk are high."
+      },
+      {
+        ticker: "CEG",
+        company: "Constellation Energy Corp.",
+        exchange: "NASDAQ",
+        category: "Power/cooling/infrastructure",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Large clean-power provider that can benefit from rising data-center electricity demand.",
+        aiHpc: "AI data centers need large, reliable power sources."
+      },
+      {
+        ticker: "TLN",
+        company: "Talen Energy Corp.",
+        exchange: "NYSE",
+        category: "Power/cooling/infrastructure",
+        risk: "High",
+        valuation: "Speculative",
+        thesis: "Power generation exposure with data-center power optionality.",
+        aiHpc: "Potential AI data-center power beneficiary, but higher risk than diversified utilities."
+      },
+      {
+        ticker: "DHR",
+        company: "Danaher Corp.",
+        exchange: "NYSE",
+        category: "Power/cooling/infrastructure",
+        risk: "Low",
+        valuation: "Reasonable",
+        thesis: "Scientific instrumentation and life-science tools exposure with indirect relevance to advanced research ecosystems.",
+        aiHpc: "Indirect; more research tools and instrumentation than AI and data-center infrastructure."
+      },
+      {
+        ticker: "SYK",
+        company: "Stryker Corp.",
+        exchange: "NYSE",
+        category: "Power/cooling/infrastructure",
+        risk: "Low",
+        valuation: "Reasonable",
+        thesis: "Large medical technology company; included as an indirect infrastructure-style large-cap watchlist item rather than a direct quantum play.",
+        aiHpc: "Indirect; not a core AI and data-center infrastructure name."
+      },
+      {
+        ticker: "PANW",
+        company: "Palo Alto Networks, Inc.",
+        exchange: "NASDAQ",
+        category: "Cybersecurity/post-quantum encryption",
+        risk: "Moderate",
+        valuation: "Overvalued",
+        thesis: "Cybersecurity leader that may benefit as enterprises upgrade encryption and network defenses for a post-quantum world.",
+        aiHpc: "AI security and cloud security are more direct drivers than quantum."
+      },
+      {
+        ticker: "CRWD",
+        company: "CrowdStrike Holdings, Inc.",
+        exchange: "NASDAQ",
+        category: "Cybersecurity/post-quantum encryption",
+        risk: "Moderate",
+        valuation: "Overvalued",
+        thesis: "Endpoint and cloud security platform that could benefit from long-term security modernization.",
+        aiHpc: "AI-powered security platform exposure."
+      },
+      {
+        ticker: "FTNT",
+        company: "Fortinet, Inc.",
+        exchange: "NASDAQ",
+        category: "Cybersecurity/post-quantum encryption",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "Network security and firewall exposure that can participate in encryption and infrastructure refresh cycles.",
+        aiHpc: "Less direct AI and data-center exposure; benefits from security demand around networks and data centers."
+      },
+      {
+        ticker: "ZS",
+        company: "Zscaler, Inc.",
+        exchange: "NASDAQ",
+        category: "Cybersecurity/post-quantum encryption",
+        risk: "High",
+        valuation: "Overvalued",
+        thesis: "Zero-trust cloud security platform that could benefit from broad security architecture upgrades.",
+        aiHpc: "AI security demand may support growth, but valuation risk is high."
+      },
+      {
+        ticker: "CSCO",
+        company: "Cisco Systems, Inc.",
+        exchange: "NASDAQ",
+        category: "Cybersecurity/post-quantum encryption",
+        risk: "Low",
+        valuation: "Reasonable",
+        thesis: "Networking and security incumbent that can participate in post-quantum encryption migration across enterprise networks.",
+        aiHpc: "Data-center networking and security exposure."
+      },
+      {
+        ticker: "QTUM",
+        company: "Defiance Quantum ETF",
+        exchange: "NASDAQ",
+        category: "ETFs",
+        risk: "Moderate",
+        valuation: "Reasonable",
+        thesis: "ETF basket exposure to quantum computing, machine learning, and related technology themes.",
+        aiHpc: "Diversified exposure can include AI, semiconductor, and quantum-related names."
+      },
+      {
+        ticker: "ARKQ",
+        company: "ARK Autonomous Technology & Robotics ETF",
+        exchange: "Cboe BZX",
+        category: "ETFs",
+        risk: "High",
+        valuation: "Speculative",
+        thesis: "Actively managed ETF focused on autonomous technology, robotics, and related innovation themes with indirect quantum overlap.",
+        aiHpc: "Broader AI, autonomy, robotics, and compute exposure."
+      }
+    ];
+
+    /* =========================================================
+       2. App Configuration
+       Manual fields, watchlists, and localStorage keys.
+       ========================================================= */
+    const coreFields = ["livePrice", "marketCap", "psRatio", "revenueGrowth", "cashRunway", "analystNotes"];
+    const proMetricFields = [
+      "sixMonthAvgPrice",
+      "sixMonthReturn",
+      "priceVsSixMonthAvg",
+      "priceVs200DaySma",
+      "sixMonthVolatility",
+      "sixMonthMaxDrawdown",
+      "relativeStrengthVsQqq",
+      "shareDilution"
+    ];
+    const editableFields = [...coreFields, ...proMetricFields];
+
+    const fieldLabels = {
+      livePrice: "Live Price",
+      marketCap: "Market Cap",
+      psRatio: "P/S Ratio",
+      revenueGrowth: "Revenue Growth",
+      cashRunway: "Cash Runway",
+      analystNotes: "Analyst Notes",
+      sixMonthAvgPrice: "6M Avg Price",
+      sixMonthReturn: "6M Return",
+      priceVsSixMonthAvg: "Price vs 6M Avg",
+      priceVs200DaySma: "Price vs 200D SMA",
+      sixMonthVolatility: "6M Volatility",
+      sixMonthMaxDrawdown: "6M Max Drawdown",
+      relativeStrengthVsQqq: "Relative vs QQQ",
+      shareDilution: "Share Dilution"
+    };
+
+    const watchlists = [
+      {
+        title: "Safest Infrastructure Plays",
+        tickers: ["NVDA", "TSM", "ASML", "AMAT", "VRT", "ETN", "CEG"]
+      },
+      {
+        title: "Highest-Risk Quantum Pure Plays",
+        tickers: ["IONQ", "RGTI", "QBTS", "QUBT"]
+      },
+      {
+        title: "Big Tech Quantum Leaders",
+        tickers: ["IBM", "GOOGL", "MSFT", "AMZN"]
+      },
+      {
+        title: "Underappreciated Photonics Plays",
+        tickers: ["COHR", "LITE", "MKSI", "IPGP"]
+      }
+    ];
+
+    const STORAGE_KEY = "quantumStockDashboard.manualFields.v1";
+    const PREFS_KEY = "quantumStockDashboard.preferences.v1";
+    const LEGACY_FULL_STOCKS_KEY = "quantumDashboardStocks.v3";
+
+    let manualEdits = loadManualEdits();
+    let prefs = loadJson(PREFS_KEY, { darkMode: true, compactCards: false });
+    let activeEditTicker = null;
+
+    const els = {};
+
+    /* =========================================================
+       3. App Startup
+       ========================================================= */
+    document.addEventListener("DOMContentLoaded", init);
+
+    function init() {
+      cacheElements();
+      bindEvents();
+      applyPrefs();
+      populateFilters();
+      renderAll();
+    }
+
+    function cacheElements() {
+      els.tabButtons = document.querySelectorAll(".tab-button");
+      els.panels = document.querySelectorAll(".tab-panel");
+      els.summaryCards = document.getElementById("summaryCards");
+      els.categoryCards = document.getElementById("categoryCards");
+      els.searchInput = document.getElementById("searchInput");
+      els.categoryFilter = document.getElementById("categoryFilter");
+      els.riskFilter = document.getElementById("riskFilter");
+      els.stockList = document.getElementById("stockList");
+      els.emptyState = document.getElementById("emptyState");
+      els.watchlistGrid = document.getElementById("watchlistGrid");
+      els.darkToggle = document.getElementById("darkToggle");
+      els.compactToggle = document.getElementById("compactToggle");
+      els.exportCsv = document.getElementById("exportCsv");
+      els.importCsvButton = document.getElementById("importCsvButton");
+      els.importCsv = document.getElementById("importCsv");
+      els.resetData = document.getElementById("resetData");
+      els.dataStatus = document.getElementById("dataStatus");
+      els.editModal = document.getElementById("editModal");
+      els.editTitle = document.getElementById("editTitle");
+      els.editSubtitle = document.getElementById("editSubtitle");
+      els.editForm = document.getElementById("editForm");
+      els.closeModal = document.getElementById("closeModal");
+      els.cancelEdit = document.getElementById("cancelEdit");
+    }
+
+    function bindEvents() {
+      els.tabButtons.forEach(button => {
+        button.addEventListener("click", () => setActiveTab(button.dataset.tab));
+      });
+
+      els.searchInput.addEventListener("input", renderStocks);
+      els.categoryFilter.addEventListener("change", renderStocks);
+      els.riskFilter.addEventListener("change", renderStocks);
+
+      els.stockList.addEventListener("click", event => {
+        const editButton = event.target.closest("[data-edit]");
+        if (editButton) openEditor(editButton.dataset.edit);
+      });
+
+      els.watchlistGrid.addEventListener("click", event => {
+        const chip = event.target.closest("[data-ticker]");
+        if (!chip) return;
+
+        setActiveTab("stocks");
+        els.searchInput.value = chip.dataset.ticker;
+        els.categoryFilter.value = "all";
+        els.riskFilter.value = "all";
+        renderStocks();
+      });
+
+      els.darkToggle.addEventListener("change", () => {
+        prefs.darkMode = els.darkToggle.checked;
+        savePrefs();
+        applyPrefs();
+      });
+
+      els.compactToggle.addEventListener("change", () => {
+        prefs.compactCards = els.compactToggle.checked;
+        savePrefs();
+        applyPrefs();
+      });
+
+      els.exportCsv.addEventListener("click", exportCsv);
+      els.importCsvButton.addEventListener("click", () => els.importCsv.click());
+      els.importCsv.addEventListener("change", importCsv);
+      els.resetData.addEventListener("click", resetLocalData);
+
+      els.closeModal.addEventListener("click", closeEditor);
+      els.cancelEdit.addEventListener("click", closeEditor);
+
+      els.editModal.addEventListener("click", event => {
+        if (event.target === els.editModal) closeEditor();
+      });
+
+      els.editForm.addEventListener("submit", saveEditor);
+    }
+
+    /* =========================================================
+       4. Render Functions
+       These functions draw the app on the screen.
+       ========================================================= */
+    function renderAll() {
+      renderHome();
+      renderStocks();
+      renderWatchlists();
+    }
+
+    function renderHome() {
+      const totalStocks = stocks.length;
+      const totalCategories = unique(stocks.map(stock => stock.category)).length;
+      const highRiskStocks = stocks.filter(stock => stock.risk === "High" || stock.risk === "Very High").length;
+      const infrastructureStocks = stocks.filter(stock =>
+        stock.category === "Semiconductor infrastructure" ||
+        stock.category === "Power/cooling/infrastructure"
+      ).length;
+
+      const summary = [
+        ["Total stocks", totalStocks],
+        ["Categories", totalCategories],
+        ["High-risk stocks", highRiskStocks],
+        ["Infrastructure", infrastructureStocks]
+      ];
+
+      els.summaryCards.innerHTML = summary.map(([label, value]) => `
+        <article class="card metric-card">
+          <span class="label">${escapeHtml(label)}</span>
+          <span class="number">${escapeHtml(String(value))}</span>
+        </article>
+      `).join("");
+
+      const categoryCounts = unique(stocks.map(stock => stock.category)).map(category => ({
+        category,
+        count: stocks.filter(stock => stock.category === category).length
+      }));
+
+      els.categoryCards.innerHTML = categoryCounts.map(item => `
+        <article class="card category-card">
+          <div class="category-row">
+            <span class="category-name">${escapeHtml(item.category)}</span>
+            <span class="category-count">${item.count}</span>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderStocks() {
+      const query = els.searchInput.value.trim().toLowerCase();
+      const category = els.categoryFilter.value;
+      const risk = els.riskFilter.value;
+
+      const filtered = stocks.filter(stock => {
+        const merged = getMergedStock(stock.ticker);
+        const text = [
+          merged.ticker,
+          merged.company,
+          merged.exchange,
+          merged.category,
+          merged.risk,
+          merged.valuation,
+          merged.thesis,
+          merged.aiHpc,
+          ...editableFields.map(field => merged[field] || "")
+        ].join(" ").toLowerCase();
+
+        const matchesSearch = !query || text.includes(query);
+        const matchesCategory = category === "all" || stock.category === category;
+        const matchesRisk = risk === "all" || stock.risk === risk;
+
+        return matchesSearch && matchesCategory && matchesRisk;
+      });
+
+      els.emptyState.style.display = filtered.length ? "none" : "block";
+      els.stockList.innerHTML = filtered.map(stock => stockCardHtml(getMergedStock(stock.ticker))).join("");
+    }
+
+    function stockCardHtml(stock) {
+      const coreValues = coreFields.map(field => metricItemHtml(field, stock[field], field === "analystNotes")).join("");
+      const proMetricValues = proMetricFields.map(field => metricItemHtml(field, stock[field], false)).join("");
+      const filledProMetrics = proMetricFields.filter(field => stock[field] && String(stock[field]).trim()).length;
+
+      return `
+        <article class="stock-card">
+          <div class="stock-header">
+            <div>
+              <div class="ticker">${escapeHtml(stock.ticker)}</div>
+              <h3 class="company">${escapeHtml(stock.company)}</h3>
+              <p class="meta">${escapeHtml(stock.exchange)} · ${escapeHtml(stock.category)}</p>
+            </div>
+
+            <div class="tags">
+              <span class="tag risk-${className(stock.risk)}">${escapeHtml(stock.risk)}</span>
+              <span class="tag val-${className(stock.valuation)}">${escapeHtml(stock.valuation)}</span>
+            </div>
+          </div>
+
+          <div class="text-block">
+            <span class="small-label">Quantum thesis</span>
+            <p>${escapeHtml(stock.thesis)}</p>
+          </div>
+
+          ${stock.aiHpc ? `
+            <div class="text-block">
+              <span class="small-label">AI / Data Center Relevance</span>
+              <p>${escapeHtml(stock.aiHpc)}</p>
+            </div>
+          ` : ""}
+
+          <div class="manual-grid">
+            ${coreValues}
+          </div>
+
+          <details class="pro-metrics">
+            <summary>
+              <span>Pro Metrics</span>
+              <small>${filledProMetrics}/${proMetricFields.length} filled</small>
+            </summary>
+            <div class="pro-metrics-grid">
+              ${proMetricValues}
+            </div>
+          </details>
+
+          <div class="actions">
+            <a class="link-button secondary" href="${yahooUrl(stock.ticker)}" target="_blank" rel="noopener">Yahoo</a>
+            <a class="link-button secondary" href="${tradingViewUrl(stock.ticker)}" target="_blank" rel="noopener">TradingView</a>
+            <button class="button" type="button" data-edit="${escapeAttr(stock.ticker)}">Edit</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function metricItemHtml(field, value, isNotes) {
+      const displayValue = value && String(value).trim() ? value : "—";
+      return `
+        <div class="manual-item ${isNotes ? "notes-item" : ""}">
+          <span class="mini-label">${escapeHtml(fieldLabels[field])}</span>
+          <span class="mini-value">${escapeHtml(displayValue)}</span>
+        </div>
+      `;
+    }
+
+    function renderWatchlists() {
+      els.watchlistGrid.innerHTML = watchlists.map(list => `
+        <article class="card watch-card">
+          <h3>${escapeHtml(list.title)}</h3>
+          <div class="chips">
+            ${list.tickers.map(ticker => `
+              <button class="chip" type="button" data-ticker="${escapeAttr(ticker)}">${escapeHtml(ticker)}</button>
+            `).join("")}
+          </div>
+        </article>
+      `).join("");
+    }
+
+    /* =========================================================
+       5. User Actions
+       Editing, saving, exporting, importing, and resetting.
+       ========================================================= */
+    function setActiveTab(tabName) {
+      els.tabButtons.forEach(button => {
+        button.classList.toggle("active", button.dataset.tab === tabName);
+      });
+
+      els.panels.forEach(panel => {
+        panel.classList.toggle("active", panel.dataset.panel === tabName);
+      });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function applyPrefs() {
+      document.body.classList.toggle("light", !prefs.darkMode);
+      document.body.classList.toggle("compact", Boolean(prefs.compactCards));
+      els.darkToggle.checked = Boolean(prefs.darkMode);
+      els.compactToggle.checked = Boolean(prefs.compactCards);
+    }
+
+    function populateFilters() {
+      const categories = ["all", ...unique(stocks.map(stock => stock.category))];
+      const risks = ["all", ...unique(stocks.map(stock => stock.risk))];
+
+      els.categoryFilter.innerHTML = categories.map(value => {
+        const label = value === "all" ? "All categories" : value;
+        return `<option value="${escapeAttr(value)}">${escapeHtml(label)}</option>`;
+      }).join("");
+
+      els.riskFilter.innerHTML = risks.map(value => {
+        const label = value === "all" ? "All risks" : value;
+        return `<option value="${escapeAttr(value)}">${escapeHtml(label)}</option>`;
+      }).join("");
+    }
+
+    function openEditor(ticker) {
+      const stock = getMergedStock(ticker);
+      activeEditTicker = ticker;
+
+      els.editTitle.textContent = stock.ticker;
+      els.editSubtitle.textContent = `${stock.company} · ${stock.exchange}`;
+
+      editableFields.forEach(field => {
+        const input = els.editForm.elements[field];
+        if (input) input.value = stock[field] || "";
+      });
+
+      els.editModal.classList.add("active");
+      els.editModal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeEditor() {
+      activeEditTicker = null;
+      els.editModal.classList.remove("active");
+      els.editModal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      els.editForm.reset();
+    }
+
+    function saveEditor(event) {
+      event.preventDefault();
+      if (!activeEditTicker) return;
+
+      const next = {};
+      editableFields.forEach(field => {
+        const input = els.editForm.elements[field];
+        next[field] = input ? input.value.trim() : "";
+      });
+
+      manualEdits[activeEditTicker] = next;
+      saveJson(STORAGE_KEY, manualEdits);
+
+      closeEditor();
+      renderAll();
+      setStatus("Saved manual edits on this device.");
+    }
+
+    function getMergedStock(ticker) {
+      const base = stocks.find(stock => stock.ticker === ticker);
+      const emptyFields = Object.fromEntries(editableFields.map(field => [field, ""]));
+      return {
+        ...emptyFields,
+        ...base,
+        ...(manualEdits[ticker] || {})
+      };
+    }
+
+    function exportCsv() {
+      const headers = [
+        "ticker",
+        "company",
+        "exchange",
+        "category",
+        "risk",
+        "valuation",
+        "quantumThesis",
+        "aiDataCenterRelevance",
+        ...editableFields
+      ];
+
+      const rows = stocks.map(stock => {
+        const merged = getMergedStock(stock.ticker);
+        return [
+          merged.ticker,
+          merged.company,
+          merged.exchange,
+          merged.category,
+          merged.risk,
+          merged.valuation,
+          merged.thesis,
+          merged.aiHpc,
+          ...editableFields.map(field => merged[field] || "")
+        ];
+      });
+
+      const csv = [headers, ...rows].map(row => row.map(csvEscape).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "quantum-stock-dashboard.csv";
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setStatus("CSV exported.");
+    }
+
+    function importCsv(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        try {
+          const rows = parseCsv(String(reader.result || ""));
+          if (rows.length < 2) throw new Error("CSV is empty.");
+
+          const headers = rows[0].map(normalizeHeader);
+          const tickerIndex = headers.indexOf("ticker");
+
+          if (tickerIndex === -1) {
+            throw new Error("CSV must include a ticker column.");
+          }
+
+          const fieldIndex = {};
+          editableFields.forEach(field => {
+            const index = headers.indexOf(normalizeHeader(field));
+            if (index !== -1) fieldIndex[field] = index;
+          });
+
+          rows.slice(1).forEach(row => {
+            const ticker = String(row[tickerIndex] || "").trim().toUpperCase();
+            if (!ticker || !stocks.some(stock => stock.ticker === ticker)) return;
+
+            const next = manualEdits[ticker] || {};
+            editableFields.forEach(field => {
+              if (fieldIndex[field] !== undefined) {
+                next[field] = String(row[fieldIndex[field]] || "").trim();
+              }
+            });
+            manualEdits[ticker] = next;
+          });
+
+          saveJson(STORAGE_KEY, manualEdits);
+          renderAll();
+          setStatus("CSV imported.");
+        } catch (error) {
+          alert(error.message || "Could not import CSV.");
+        } finally {
+          els.importCsv.value = "";
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function resetLocalData() {
+      const ok = confirm("Clear saved manual fields and notes from this device?");
+      if (!ok) return;
+
+      manualEdits = {};
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(LEGACY_FULL_STOCKS_KEY);
+
+      renderAll();
+      setStatus("Local edits cleared.");
+    }
+
+    function savePrefs() {
+      saveJson(PREFS_KEY, prefs);
+      setStatus("Display settings saved.");
+    }
+
+    function setStatus(text) {
+      if (els.dataStatus) {
+        els.dataStatus.textContent = text || "Manual edits and pro metrics save on this device.";
+      }
+      console.log(`Dashboard status: ${text}`);
+    }
+
+    /* =========================================================
+       6. Helpers
+       Storage, CSV, links, escaping, and formatting.
+       ========================================================= */
+    function loadManualEdits() {
+      const direct = loadJson(STORAGE_KEY, null);
+      if (direct && typeof direct === "object" && !Array.isArray(direct)) {
+        return direct;
+      }
+
+      const legacyStocks = loadJson(LEGACY_FULL_STOCKS_KEY, null);
+      if (Array.isArray(legacyStocks)) {
+        const migrated = {};
+        legacyStocks.forEach(stock => {
+          if (!stock || !stock.ticker) return;
+          migrated[String(stock.ticker).toUpperCase()] = Object.fromEntries(
+            editableFields.map(field => [field, stock[field] || ""])
+          );
+        });
+        return migrated;
+      }
+
+      return {};
+    }
+
+    function loadJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function saveJson(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (error) {
+        alert("Could not save locally. Your browser storage may be full or blocked.");
+      }
+    }
+
+    function unique(values) {
+      return [...new Set(values)];
+    }
+
+    function className(value) {
+      return String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    function yahooUrl(ticker) {
+      return `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}`;
+    }
+
+    function tradingViewUrl(ticker) {
+      return `https://www.tradingview.com/search/?query=${encodeURIComponent(ticker)}`;
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      if (/[",\n\r]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            field += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === "," && !inQuotes) {
+          row.push(field);
+          field = "";
+        } else if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && next === "\n") i++;
+          row.push(field);
+          rows.push(row);
+          row = [];
+          field = "";
+        } else {
+          field += char;
+        }
+      }
+
+      if (field !== "" || row.length) {
+        row.push(field);
+        rows.push(row);
+      }
+
+      return rows.filter(r => r.some(cell => String(cell).trim() !== ""));
+    }
+
+    function normalizeHeader(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value);
+    }
+  </script>
+</body>
+</html>
