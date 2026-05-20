@@ -217,6 +217,8 @@
     .val-overvalued { color: var(--warn); border-color: rgba(255,209,102,0.38); background: rgba(255,209,102,0.12); }
     .val-speculative { color: var(--bad); border-color: rgba(255,138,138,0.42); background: rgba(255,138,138,0.12); }
 
+    .quote-timestamp { margin-top: 10px; color: var(--muted-2); font-size: 0.78rem; font-weight: 800; }
+    .quote-timestamp strong { color: var(--accent); }
     .text-block { display: grid; gap: 5px; margin: 13px 0; }
     .small-label { color: var(--accent); font-size: 0.77rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
     .text-block p { margin: 0; color: var(--muted); }
@@ -247,18 +249,6 @@
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip { border: 1px solid rgba(126,216,255,0.28); border-radius: 999px; background: rgba(126,216,255,0.09); color: var(--accent); min-height: 38px; padding: 0 12px; font-weight: 900; cursor: pointer; }
 
-    .history-grid { display: grid; gap: 14px; }
-    .history-symbol-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-    .history-symbol { min-height: 36px; border-radius: 999px; border: 1px solid var(--border); background: rgba(170,184,216,0.08); color: var(--muted); padding: 0 10px; font-weight: 850; cursor: pointer; }
-    .history-symbol.saved { color: var(--good); border-color: rgba(99,230,190,0.35); background: rgba(99,230,190,0.10); }
-    .history-symbol.missing { color: var(--bad); border-color: rgba(255,138,138,0.35); background: rgba(255,138,138,0.10); }
-    .history-symbol.active { outline: 2px solid var(--accent); }
-    .history-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
-    .history-table th, .history-table td { border-bottom: 1px solid rgba(170,184,216,0.14); padding: 9px 6px; text-align: left; vertical-align: top; }
-    .history-table th { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
-    .log-list { display: grid; gap: 8px; }
-    .log-item { border: 1px solid rgba(170,184,216,0.12); border-radius: 14px; padding: 10px; background: rgba(170,184,216,0.055); }
-
     .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 1px solid rgba(170,184,216,0.14); padding-top: 12px; margin-top: 12px; }
     .setting-row:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
     .switch { width: 54px; height: 32px; appearance: none; border-radius: 999px; border: 1px solid var(--border); background: rgba(170,184,216,0.20); padding: 0; position: relative; cursor: pointer; }
@@ -270,6 +260,60 @@
     .status-line span:first-child { color: var(--muted); font-size: 0.82rem; font-weight: 850; }
     .status-line span:last-child { color: var(--text); font-weight: 850; text-align: right; }
     .file-input { display: none; }
+
+
+
+    .history-grid { display: grid; gap: 14px; }
+    .history-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 0; }
+    .insight-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .insight-card { min-height: 96px; padding: 14px; border: 1px solid rgba(170,184,216,0.16); border-radius: 16px; background: rgba(170,184,216,0.055); }
+    .insight-card .mini-label { display: block; color: var(--muted-2); font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; }
+    .insight-card .big-value { display: block; margin-top: 6px; color: var(--text); font-size: 1.25rem; font-weight: 950; letter-spacing: -0.04em; }
+    .insight-card .sub-value { display: block; margin-top: 3px; color: var(--muted); font-size: 0.86rem; font-weight: 750; }
+    .history-table { width: 100%; border-collapse: collapse; overflow: hidden; font-size: 0.9rem; }
+    .history-table th, .history-table td { padding: 10px 8px; border-bottom: 1px solid rgba(170,184,216,0.12); text-align: left; vertical-align: top; }
+    .history-table th { color: var(--muted-2); font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; }
+    .history-table td { color: var(--text); font-weight: 800; }
+    .history-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid rgba(170,184,216,0.14); border-radius: 16px; background: rgba(170,184,216,0.04); }
+
+    .history-coverage-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .history-symbol-button {
+      min-height: 34px;
+      border: 1px solid rgba(126,216,255,0.26);
+      border-radius: 999px;
+      background: rgba(126,216,255,0.08);
+      color: var(--accent);
+      padding: 0 10px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .history-symbol-button.missing {
+      border-color: rgba(255,138,138,0.30);
+      background: rgba(255,138,138,0.08);
+      color: var(--bad);
+    }
+    .history-symbol-button.active {
+      outline: 2px solid rgba(126,216,255,0.55);
+      background: rgba(126,216,255,0.18);
+    }
+    .coverage-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .refresh-log-list { display: grid; gap: 9px; margin-top: 10px; }
+    .refresh-log-item { padding: 12px; border-radius: 14px; border: 1px solid rgba(170,184,216,0.14); background: rgba(170,184,216,0.05); }
+    .refresh-log-item strong { display: block; color: var(--text); }
+    .refresh-log-item span { display: block; margin-top: 3px; color: var(--muted); font-size: 0.88rem; }
+    .history-details { border: 1px solid var(--border); border-radius: var(--radius); background: rgba(170,184,216,0.05); overflow: hidden; }
+    .history-details summary { min-height: 48px; display: flex; align-items: center; padding: 0 14px; color: var(--accent); font-weight: 900; cursor: pointer; }
+    .history-details .details-body { padding: 0 14px 14px; }
 
     .modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; justify-content: center; padding: 14px; background: rgba(0,0,0,0.56); }
     .modal.active { display: flex; }
@@ -298,6 +342,7 @@
       .controls { grid-template-columns: 1.3fr 1fr 1fr auto; align-items: end; }
       .settings-grid { grid-template-columns: repeat(3, 1fr); }
       .history-grid { grid-template-columns: repeat(2, 1fr); }
+      .history-wide { grid-column: 1 / -1; }
       .modal { align-items: center; }
       .guide-grid { grid-template-columns: repeat(2, 1fr); }
       .settings-actions { grid-template-columns: 1fr; }
@@ -305,13 +350,12 @@
 
     @media (max-width: 430px) {
       .app { padding-inline: 14px; }
-      .top-tabs { grid-template-columns: repeat(5, 1fr); gap: 5px; padding: 7px; border-radius: 22px; }
-      .tab-button { min-height: 43px; font-size: 0.75rem; }
+      .top-tabs { gap: 5px; padding: 7px; }
+      .tab-button { min-height: 43px; font-size: 0.76rem; padding: 0 4px; }
       .card, .stock-card, .watch-card { padding: 16px; }
       .actions { grid-template-columns: 1fr; }
       .stock-header { display: grid; }
       .tags { justify-content: flex-start; }
-      .history-table { font-size: 0.78rem; }
     }
   </style>
 </head>
@@ -381,51 +425,65 @@
         <div class="watchlist-grid" id="watchlistGrid"></div>
       </section>
 
+
       <section class="tab-panel" data-panel="history">
         <div class="section-title">
-          <div><h2>History</h2><p>Saved snapshots and stock-level drilldowns.</p></div>
+          <div><h2>History</h2><p>Snapshot insights, stock drilldowns, and recent refresh activity.</p></div>
         </div>
+
         <div class="history-grid">
           <div class="card">
-            <h3>Snapshot Coverage</h3>
+            <h3>Latest Snapshot</h3>
+            <p class="meta">Saved data from Cloudflare KV. Use Refresh Now in Settings to update.</p>
             <div class="status-grid">
-              <div class="status-line"><span>Latest snapshot</span><span id="historySnapshotDate">—</span></div>
-              <div class="status-line"><span>Saved symbols</span><span id="historySymbolCount">—</span></div>
-              <div class="status-line"><span>Saved at</span><span id="historySavedAt">—</span></div>
-              <div class="status-line"><span>Coverage</span><span id="historyCoverageCount">—</span></div>
-              <div class="status-line"><span>Missing</span><span id="historyMissingCount">—</span></div>
+              <div class="status-line"><span>Date</span><span id="historySnapshotDate">No snapshot</span></div>
+              <div class="status-line"><span>Symbols saved</span><span id="historySymbolCount">—</span></div>
+              <div class="status-line"><span>Last saved</span><span id="historySavedAt">Never</span></div>
             </div>
-            <p class="meta" id="historyCoverageNote" style="margin-top:12px;">Tap Load History to check which of the 38 tickers are saved.</p>
-            <div class="history-symbol-grid" id="historySymbolCoverage"></div>
+            <div class="history-actions">
+              <button class="button" id="loadHistory" type="button">Load History</button>
+              <button class="button secondary" id="loadRefreshLog" type="button">Refresh Log</button>
+            </div>
           </div>
 
           <div class="card">
             <h3>Snapshot Insights</h3>
-            <div class="grid summary-grid" id="historyInsights"></div>
+            <p class="meta">Top and weakest readings from the latest saved snapshot.</p>
+            <div class="insight-grid" id="historyInsights"></div>
           </div>
 
-          <div class="card">
-            <h3>Stock Drilldown</h3>
-            <div class="field"><label for="historyTickerSelect">Pick a stock</label><select id="historyTickerSelect"></select></div>
-            <div class="manual-grid" id="selectedHistorySummary" style="margin-top:14px;"></div>
-          </div>
-
-          <div class="card">
-            <h3>Saved History Table</h3>
-            <div style="overflow:auto;"><table class="history-table"><thead><tr><th>Date</th><th>Price</th><th>6M</th><th>P/S</th><th>Vs QQQ</th></tr></thead><tbody id="selectedHistoryRows"></tbody></table></div>
-          </div>
-
-          <div class="card" style="grid-column:1/-1;">
-            <h3>Refresh Activity</h3>
-            <div class="settings-actions" style="grid-template-columns:1fr 1fr; margin-bottom:12px;">
-              <button class="button" id="loadHistory" type="button">Load History</button>
-              <button class="button secondary" id="loadRefreshLog" type="button">Refresh Log</button>
+          <div class="card history-wide">
+            <h3>Snapshot Coverage</h3>
+            <p class="meta">Shows all dashboard stocks. Blue = saved in the latest snapshot. Red = missing from the latest snapshot.</p>
+            <div class="status-grid">
+              <div class="status-line"><span>Saved today</span><span id="historyCoverageCount">—</span></div>
+              <div class="status-line"><span>Missing</span><span id="historyMissingCount">—</span></div>
             </div>
-            <details class="label-guide" open>
-              <summary>Recent Refreshes</summary>
-              <div class="log-list" id="refreshLogList" style="padding:0 14px 14px;"><p class="meta">Tap Refresh Log to load recent API activity.</p></div>
-            </details>
+            <div class="history-coverage-list" id="historySymbolCoverage"></div>
+            <p class="coverage-note" id="historyCoverageNote">Load history to see snapshot coverage.</p>
           </div>
+
+          <div class="card history-wide">
+            <div class="section-title" style="margin-top: 0;">
+              <div><h3>Stock Drilldown</h3><p>Select one stock to inspect its saved history.</p></div>
+            </div>
+            <div class="field" style="margin-bottom: 12px;"><label for="historyTickerSelect">Stock</label><select id="historyTickerSelect"></select></div>
+            <div class="insight-grid" id="selectedHistorySummary"></div>
+            <div class="history-scroll" style="margin-top: 12px;">
+              <table class="history-table">
+                <thead><tr><th>Date</th><th>Price</th><th>6M</th><th>Rel QQQ</th><th>P/S</th><th>Revenue</th></tr></thead>
+                <tbody id="selectedHistoryRows"><tr><td colspan="6">Load history to view stock snapshots.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <details class="history-details history-wide">
+            <summary>Recent Refresh Activity</summary>
+            <div class="details-body">
+              <p class="meta">Technical log from the Worker. Useful for confirming whether data came from cache or APIs.</p>
+              <div class="refresh-log-list" id="refreshLogList"><div class="meta">Tap Refresh Log to load activity.</div></div>
+            </div>
+          </details>
         </div>
       </section>
 
@@ -457,12 +515,15 @@
             <div class="setting-row"><div><strong>Auto-refresh</strong><p class="meta">Every 15 minutes when open.</p></div><input class="switch" id="autoRefreshToggle" type="checkbox" /></div>
             <div class="settings-actions">
               <button class="button" id="refreshNow" type="button">Refresh Now</button>
+              <button class="button secondary" id="forcePriceRefresh" type="button">Force Price Refresh</button>
               <button class="button secondary" id="saveWorkerUrl" type="button">Save Worker URL</button>
               <button class="button secondary" id="clearLiveCache" type="button">Clear Live Cache</button>
             </div>
             <div class="status-grid">
               <div class="status-line"><span>Status</span><span id="liveStatus">Not connected</span></div>
               <div class="status-line"><span>Last quote refresh</span><span id="lastQuoteRefresh">Never</span></div>
+              <div class="status-line"><span>Quote cache age</span><span id="quoteCacheAge">—</span></div>
+              <div class="status-line"><span>Next quote refresh</span><span id="nextQuoteRefresh">—</span></div>
               <div class="status-line"><span>Last performance refresh</span><span id="lastPerformanceRefresh">Never</span></div>
               <div class="status-line"><span>Last fundamentals refresh</span><span id="lastFundamentalsRefresh">Never</span></div>
               <div class="status-line"><span>Cache used</span><span id="cacheStatus">—</span></div>
@@ -574,10 +635,10 @@
     let manualEdits = loadJson(STORAGE.edits, {});
     let prefs = loadJson(STORAGE.prefs, { darkMode: true, compactCards: false });
     let watchlists = loadJson(STORAGE.watchlists, DEFAULT_WATCHLISTS);
-    let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false });
+    let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null });
     let liveSettings = loadJson(STORAGE.liveSettings, { workerUrl: DEFAULT_WORKER_URL, autoRefresh: false });
-    let filters = { search: "", category: "all", risk: "all" };
     let historyState = { snapshots: [], refreshLog: [], selectedTicker: "IONQ" };
+    let filters = { search: "", category: "all", risk: "all" };
     let activeEditTicker = null;
     let activeWatchlistIndex = null;
     let autoRefreshTimer = null;
@@ -595,10 +656,8 @@
         bindEvents();
         applyPrefs();
         populateFilters();
-        populateHistoryTickerSelect();
         renderAll();
         updateLiveStatus();
-        renderHistory();
         configureAutoRefresh();
       } catch (error) {
         showStartupError(error);
@@ -630,10 +689,13 @@
       els.workerUrlInput = document.getElementById("workerUrlInput");
       els.autoRefreshToggle = document.getElementById("autoRefreshToggle");
       els.refreshNow = document.getElementById("refreshNow");
+      els.forcePriceRefresh = document.getElementById("forcePriceRefresh");
       els.saveWorkerUrl = document.getElementById("saveWorkerUrl");
       els.clearLiveCache = document.getElementById("clearLiveCache");
       els.liveStatus = document.getElementById("liveStatus");
       els.lastQuoteRefresh = document.getElementById("lastQuoteRefresh");
+      els.quoteCacheAge = document.getElementById("quoteCacheAge");
+      els.nextQuoteRefresh = document.getElementById("nextQuoteRefresh");
       els.lastPerformanceRefresh = document.getElementById("lastPerformanceRefresh");
       els.lastFundamentalsRefresh = document.getElementById("lastFundamentalsRefresh");
       els.cacheStatus = document.getElementById("cacheStatus");
@@ -688,6 +750,7 @@
       els.resetData.addEventListener("click", resetLocalData);
       els.saveWorkerUrl.addEventListener("click", saveWorkerUrl);
       els.refreshNow.addEventListener("click", () => refreshLiveData(false));
+      if (els.forcePriceRefresh) els.forcePriceRefresh.addEventListener("click", forcePriceRefresh);
       els.clearLiveCache.addEventListener("click", clearLiveCache);
       els.autoRefreshToggle.addEventListener("change", () => { liveSettings.autoRefresh = els.autoRefreshToggle.checked; saveLiveSettings(); configureAutoRefresh(); });
       els.loadHistory.addEventListener("click", () => loadHistoryData());
@@ -743,7 +806,9 @@
     function stockCardHtml(stock) {
       const coreValues = CORE_FIELDS.map(field => metricItemHtml(field, stock[field], field === "analystNotes")).join("");
       const proValues = PRO_FIELDS.map(field => metricItemHtml(field, stock[field], false)).join("");
-      return `<article class="stock-card" id="stock-${escapeAttr(stock.ticker)}"><div class="stock-header"><div><div class="ticker">${escapeHtml(stock.ticker)}</div><h3 class="company">${escapeHtml(stock.company)}</h3><p class="meta">${escapeHtml(stock.exchange)} · ${escapeHtml(stock.category)}</p></div><div class="tags"><span class="tag risk-${className(stock.risk)}">${escapeHtml(stock.risk)}</span><span class="tag val-${className(stock.valuation)}">${escapeHtml(stock.valuation)}</span></div></div><div class="text-block"><span class="small-label">Quantum thesis</span><p>${escapeHtml(stock.thesis)}</p></div><div class="text-block"><span class="small-label">AI / Data Center Relevance</span><p>${escapeHtml(stock.aiData)}</p></div><div class="manual-grid">${coreValues}</div><details class="pro-metrics"><summary>Pro Metrics</summary><div class="manual-grid">${proValues}</div></details><div class="actions"><a class="link-button secondary" href="${yahooUrl(stock.ticker)}" target="_blank" rel="noopener">Yahoo</a><a class="link-button secondary" href="${tradingViewUrl(stock.ticker)}" target="_blank" rel="noopener">TradingView</a><button class="button" type="button" data-edit="${escapeAttr(stock.ticker)}">Edit</button></div></article>`;
+      const quoteTime = getQuoteUpdatedAt(stock.ticker);
+      const quoteMeta = quoteTime ? `<p class="quote-timestamp"><strong>Price updated:</strong> ${escapeHtml(formatDateTime(quoteTime))} · Finnhub</p>` : `<p class="quote-timestamp"><strong>Price updated:</strong> Not refreshed yet</p>`;
+      return `<article class="stock-card" id="stock-${escapeAttr(stock.ticker)}"><div class="stock-header"><div><div class="ticker">${escapeHtml(stock.ticker)}</div><h3 class="company">${escapeHtml(stock.company)}</h3><p class="meta">${escapeHtml(stock.exchange)} · ${escapeHtml(stock.category)}</p></div><div class="tags"><span class="tag risk-${className(stock.risk)}">${escapeHtml(stock.risk)}</span><span class="tag val-${className(stock.valuation)}">${escapeHtml(stock.valuation)}</span></div></div><div class="text-block"><span class="small-label">Quantum thesis</span><p>${escapeHtml(stock.thesis)}</p></div><div class="text-block"><span class="small-label">AI / Data Center Relevance</span><p>${escapeHtml(stock.aiData)}</p></div><div class="manual-grid">${coreValues}</div>${quoteMeta}<details class="pro-metrics"><summary>Pro Metrics</summary><div class="manual-grid">${proValues}</div></details><div class="actions"><a class="link-button secondary" href="${yahooUrl(stock.ticker)}" target="_blank" rel="noopener">Yahoo</a><a class="link-button secondary" href="${tradingViewUrl(stock.ticker)}" target="_blank" rel="noopener">TradingView</a><button class="button" type="button" data-edit="${escapeAttr(stock.ticker)}">Edit</button></div></article>`;
     }
 
     function metricItemHtml(field, value, isNotes) {
@@ -758,11 +823,6 @@
       els.riskFilter.innerHTML = risks.map(value => `<option value="${escapeAttr(value)}">${escapeHtml(value === "all" ? "All risks" : value)}</option>`).join("");
       els.categoryFilter.value = filters.category;
       els.riskFilter.value = filters.risk;
-    }
-
-    function populateHistoryTickerSelect() {
-      els.historyTickerSelect.innerHTML = stocks.map(stock => `<option value="${escapeAttr(stock.ticker)}">${escapeHtml(stock.ticker)} · ${escapeHtml(stock.company)}</option>`).join("");
-      els.historyTickerSelect.value = historyState.selectedTicker;
     }
 
     function getFilteredStocks() {
@@ -780,90 +840,13 @@
       return { ...empty, ...base, ...(manualEdits[ticker] || {}), ...(liveData.quotes[ticker] || {}), ...(liveData.performance[ticker] || {}), ...((liveData.fundamentals && liveData.fundamentals[ticker]) || {}) };
     }
 
-    function renderHistory() {
-      const latest = getLatestSnapshot();
-      if (!latest) {
-        els.historySnapshotDate.textContent = "No snapshot";
-        els.historySymbolCount.textContent = "0/38";
-        els.historySavedAt.textContent = "—";
-        els.historyCoverageCount.textContent = "0/38";
-        els.historyMissingCount.textContent = "38";
-        els.historyCoverageNote.textContent = "Tap Load History after Refresh Now or wait for Cron to save a snapshot.";
-        els.historyInsights.innerHTML = emptyInsightCards();
-        renderHistoryCoverage(null);
-        renderSelectedHistory();
-        return;
-      }
-
-      const data = latest.data || {};
-      const saved = stocks.filter(stock => data[stock.ticker]);
-      const missing = stocks.filter(stock => !data[stock.ticker]);
-      els.historySnapshotDate.textContent = latest.date || "Latest";
-      els.historySymbolCount.textContent = `${saved.length}/38`;
-      els.historySavedAt.textContent = formatDateTime(latest.generatedAt || latest.at);
-      els.historyCoverageCount.textContent = `${saved.length}/38`;
-      els.historyMissingCount.textContent = String(missing.length);
-      els.historyCoverageNote.textContent = missing.length ? `${missing.length} tickers are not saved in the latest snapshot yet.` : "All 38 tickers are saved in the latest snapshot.";
-      renderHistoryCoverage(latest);
-      renderHistoryInsights(latest);
-      renderSelectedHistory();
-    }
-
-    function renderHistoryCoverage(snapshot) {
-      const data = snapshot && snapshot.data ? snapshot.data : {};
-      els.historySymbolCoverage.innerHTML = stocks.map(stock => {
-        const saved = Boolean(data[stock.ticker]);
-        const active = historyState.selectedTicker === stock.ticker;
-        return `<button class="history-symbol ${saved ? "saved" : "missing"} ${active ? "active" : ""}" data-history-ticker="${escapeAttr(stock.ticker)}" type="button">${escapeHtml(stock.ticker)}</button>`;
-      }).join("");
-    }
-
-    function renderHistoryInsights(snapshot) {
-      const rows = Object.entries(snapshot.data || {}).map(([ticker, data]) => ({ ticker, ...data }));
-      const best6m = bestByMetric(rows, "sixMonthReturn", true);
-      const worst6m = bestByMetric(rows, "sixMonthReturn", false);
-      const bestRel = bestByMetric(rows, "relativeStrengthVsQqq", true);
-      const worstRel = bestByMetric(rows, "relativeStrengthVsQqq", false);
-      els.historyInsights.innerHTML = [
-        insightCard("Best 6M Return", best6m), insightCard("Weakest 6M Return", worst6m), insightCard("Best vs QQQ", bestRel), insightCard("Weakest vs QQQ", worstRel)
-      ].join("");
-    }
-
-    function renderSelectedHistory() {
-      const ticker = historyState.selectedTicker || "IONQ";
-      if (els.historyTickerSelect.value !== ticker) els.historyTickerSelect.value = ticker;
-      const rows = historyState.snapshots.map(snapshot => ({ date: snapshot.date || "—", data: (snapshot.data || {})[ticker] || null })).filter(row => row.data).reverse();
-      const latest = rows[0] && rows[0].data;
-      if (!latest) {
-        els.selectedHistorySummary.innerHTML = metricItemHtml("livePrice", "No saved data", false) + metricItemHtml("sixMonthReturn", "—", false) + metricItemHtml("psRatio", "—", false) + metricItemHtml("marketCap", "—", false);
-        els.selectedHistoryRows.innerHTML = `<tr><td colspan="5">No saved history for ${escapeHtml(ticker)} yet.</td></tr>`;
-        return;
-      }
-      els.selectedHistorySummary.innerHTML = [
-        ["livePrice", latest.livePrice], ["sixMonthReturn", latest.sixMonthReturn], ["psRatio", latest.psRatio], ["marketCap", latest.marketCap]
-      ].map(([field, value]) => metricItemHtml(field, value, false)).join("");
-      els.selectedHistoryRows.innerHTML = rows.map(row => `<tr><td>${escapeHtml(row.date)}</td><td>${escapeHtml(row.data.livePrice || "—")}</td><td>${escapeHtml(row.data.sixMonthReturn || "—")}</td><td>${escapeHtml(row.data.psRatio || "—")}</td><td>${escapeHtml(row.data.relativeStrengthVsQqq || "—")}</td></tr>`).join("");
-    }
-
-    function emptyInsightCards() { return ["Best 6M Return", "Weakest 6M Return", "Best vs QQQ", "Weakest vs QQQ"].map(title => `<article class="card metric-card"><span class="label">${title}</span><span class="number">—</span></article>`).join(""); }
-    function insightCard(title, item) { return `<article class="card metric-card"><span class="label">${escapeHtml(title)}</span><span class="number">${item ? escapeHtml(item.ticker) : "—"}</span><p class="meta">${item ? escapeHtml(item.value) : "No data"}</p></article>`; }
-    function bestByMetric(rows, field, high) {
-      const parsed = rows.map(row => ({ ticker: row.ticker, value: row[field], number: parseNumberFromText(row[field]) })).filter(row => Number.isFinite(row.number));
-      if (!parsed.length) return null;
-      parsed.sort((a, b) => high ? b.number - a.number : a.number - b.number);
-      return parsed[0];
-    }
-
-    function getLatestSnapshot() {
-      return historyState.snapshots.slice().sort((a, b) => new Date(b.generatedAt || b.at || b.date) - new Date(a.generatedAt || a.at || a.date))[0] || null;
-    }
-
     /* =========================================================
        5. User Actions
        ========================================================= */
     function setActiveTab(tabName) {
       els.tabButtons.forEach(button => button.classList.toggle("active", button.dataset.tab === tabName));
       els.panels.forEach(panel => panel.classList.toggle("active", panel.dataset.panel === tabName));
+      if (tabName === "history") { loadHistoryData(false); loadRefreshLogData(false); }
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -1033,6 +1016,31 @@
       }
     }
 
+    async function forcePriceRefresh() {
+      const workerUrl = sanitizeWorkerUrl(liveSettings.workerUrl || DEFAULT_WORKER_URL);
+      if (!workerUrl) { setLiveStatus("Missing Worker URL"); return; }
+      if (els.forcePriceRefresh) { els.forcePriceRefresh.disabled = true; els.forcePriceRefresh.textContent = "Forcing..."; }
+      setLiveStatus("Forcing latest prices...");
+      try {
+        const symbols = stocks.map(stock => stock.ticker).join(",");
+        const url = `${workerUrl}/api/quotes?symbols=${encodeURIComponent(symbols)}&force=1`;
+        const payload = await fetchJsonFromUrl(url);
+        if (!payload.ok) throw new Error(payload.error || "Price refresh failed.");
+        liveData.quotes = payload.data || {};
+        liveData.lastQuoteRefresh = payload.generatedAt || new Date().toISOString();
+        if (!liveData.cache || typeof liveData.cache !== "object") liveData.cache = {};
+        liveData.cache.quotes = payload.coverage || { filled: Object.keys(liveData.quotes).length, total: stocks.length };
+        saveJson(STORAGE.live, liveData);
+        setLiveStatus("Prices refreshed");
+        renderStocks();
+        updateLiveStatus();
+      } catch (error) {
+        setLiveStatus("Price error: " + (error.message || "Refresh failed"));
+      } finally {
+        if (els.forcePriceRefresh) { els.forcePriceRefresh.disabled = false; els.forcePriceRefresh.textContent = "Force Price Refresh"; }
+      }
+    }
+
     function saveWorkerUrl() {
       liveSettings.workerUrl = sanitizeWorkerUrl(els.workerUrlInput.value) || DEFAULT_WORKER_URL;
       els.workerUrlInput.value = liveSettings.workerUrl;
@@ -1058,6 +1066,8 @@
       els.workerUrlInput.value = liveSettings.workerUrl || DEFAULT_WORKER_URL;
       els.autoRefreshToggle.checked = Boolean(liveSettings.autoRefresh);
       els.lastQuoteRefresh.textContent = formatDateTime(liveData.lastQuoteRefresh);
+      if (els.quoteCacheAge) els.quoteCacheAge.textContent = quoteCacheAgeText();
+      if (els.nextQuoteRefresh) els.nextQuoteRefresh.textContent = nextQuoteRefreshText();
       els.lastPerformanceRefresh.textContent = formatDateTime(liveData.lastPerformanceRefresh);
       if (els.lastFundamentalsRefresh) els.lastFundamentalsRefresh.textContent = formatDateTime(liveData.lastFundamentalsRefresh);
       if (els.cacheStatus) els.cacheStatus.textContent = cacheStatusText(liveData.cache);
@@ -1084,39 +1094,125 @@
       if (!workerUrl) return;
       try {
         if (showStatus) setLiveStatus("Loading refresh log...");
-        const payload = await fetchJsonFromUrl(`${workerUrl}/api/refresh-log`);
+        const payload = await fetchJsonFromUrl(`${workerUrl}/api/refresh-log?limit=60`);
         historyState.refreshLog = Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.data) ? payload.data : []);
         renderRefreshLog();
         if (showStatus) setLiveStatus("Refresh log loaded");
       } catch (error) {
-        if (showStatus) setLiveStatus("Refresh log error: " + (error.message || "Could not load refresh log"));
+        if (showStatus) setLiveStatus("Log error: " + (error.message || "Could not load refresh log"));
       }
+    }
+
+    function renderHistory() {
+      const latest = historyState.snapshots[0];
+      populateHistoryTickerSelect();
+      if (!latest) {
+        els.historySnapshotDate.textContent = "No snapshot";
+        els.historySymbolCount.textContent = "—";
+        els.historySavedAt.textContent = "Never";
+        els.historyInsights.innerHTML = insightCardHtml("No history yet", "Refresh Now", "Then tap Load History");
+        renderHistoryCoverage(null);
+        els.selectedHistorySummary.innerHTML = insightCardHtml("Select a stock", "—", "No snapshots yet");
+        els.selectedHistoryRows.innerHTML = `<tr><td colspan="6">No history loaded yet.</td></tr>`;
+        return;
+      }
+      const data = latest.data || {};
+      const entries = Object.entries(data).map(([ticker, row]) => ({ ticker, ...row }));
+      els.historySnapshotDate.textContent = latest.date || "—";
+      els.historySymbolCount.textContent = `${entries.length} symbols`;
+      els.historySavedAt.textContent = formatDateTime(latest.generatedAt);
+      renderHistoryCoverage(latest);
+
+      const topReturn = bestBy(entries, row => parsePercentValue(row.sixMonthReturn));
+      const worstReturn = worstBy(entries, row => parsePercentValue(row.sixMonthReturn));
+      const topRel = bestBy(entries, row => parsePercentValue(row.relativeStrengthVsQqq));
+      const worstRel = worstBy(entries, row => parsePercentValue(row.relativeStrengthVsQqq));
+      const topRevenue = bestBy(entries, row => parsePercentValue(row.revenueGrowth));
+      const highestPs = bestBy(entries, row => Number(row.psRatioRaw));
+      els.historyInsights.innerHTML = [
+        insightCardHtml("Best 6M return", topReturn ? topReturn.sixMonthReturn : "—", topReturn ? topReturn.ticker : "—"),
+        insightCardHtml("Weakest 6M return", worstReturn ? worstReturn.sixMonthReturn : "—", worstReturn ? worstReturn.ticker : "—"),
+        insightCardHtml("Best vs QQQ", topRel ? topRel.relativeStrengthVsQqq : "—", topRel ? topRel.ticker : "—"),
+        insightCardHtml("Weakest vs QQQ", worstRel ? worstRel.relativeStrengthVsQqq : "—", worstRel ? worstRel.ticker : "—"),
+        insightCardHtml("Top revenue growth", topRevenue ? topRevenue.revenueGrowth : "—", topRevenue ? topRevenue.ticker : "—"),
+        insightCardHtml("Highest P/S", highestPs ? highestPs.psRatio : "—", highestPs ? highestPs.ticker : "—")
+      ].join("");
+
+      renderSelectedStockHistory();
+    }
+
+    function populateHistoryTickerSelect() {
+      if (!els.historyTickerSelect) return;
+      const current = historyState.selectedTicker || "IONQ";
+      els.historyTickerSelect.innerHTML = stocks.map(stock => `<option value="${escapeAttr(stock.ticker)}">${escapeHtml(stock.ticker)} · ${escapeHtml(stock.company)}</option>`).join("");
+      els.historyTickerSelect.value = stocks.some(stock => stock.ticker === current) ? current : stocks[0].ticker;
+      historyState.selectedTicker = els.historyTickerSelect.value;
+    }
+
+    function renderHistoryCoverage(latest) {
+      if (!els.historySymbolCoverage) return;
+
+      const latestData = latest && latest.data ? latest.data : {};
+      const savedTickers = new Set(Object.keys(latestData));
+      const savedCount = stocks.filter(stock => savedTickers.has(stock.ticker)).length;
+      const missingCount = stocks.length - savedCount;
+
+      if (els.historyCoverageCount) els.historyCoverageCount.textContent = `${savedCount}/${stocks.length}`;
+      if (els.historyMissingCount) els.historyMissingCount.textContent = String(missingCount);
+
+      els.historySymbolCoverage.innerHTML = stocks.map(stock => {
+        const saved = savedTickers.has(stock.ticker);
+        const active = stock.ticker === historyState.selectedTicker;
+        return `<button class="history-symbol-button ${saved ? "" : "missing"} ${active ? "active" : ""}" type="button" data-history-ticker="${escapeAttr(stock.ticker)}">${escapeHtml(stock.ticker)}</button>`;
+      }).join("");
+
+      if (!latest) {
+        els.historyCoverageNote.textContent = "No snapshot loaded yet.";
+      } else if (missingCount === 0) {
+        els.historyCoverageNote.textContent = "All 38 stocks are saved in the latest snapshot.";
+      } else {
+        els.historyCoverageNote.textContent = `${missingCount} stocks are missing from the latest snapshot. Go to Settings → Live Data → Refresh Now to save a full 38-stock snapshot, then tap Load History.`;
+      }
+    }
+
+    function renderSelectedStockHistory() {
+      const ticker = historyState.selectedTicker || "IONQ";
+      const rows = historyState.snapshots.map(snapshot => ({ date: snapshot.date, generatedAt: snapshot.generatedAt, ...(snapshot.data && snapshot.data[ticker] ? snapshot.data[ticker] : {}) })).filter(row => row.priceRaw || row.sixMonthReturn || row.psRatio);
+      const latestSnapshot = historyState.snapshots[0];
+      const isInLatestSnapshot = Boolean(latestSnapshot && latestSnapshot.data && latestSnapshot.data[ticker]);
+      const latest = rows[0] || {};
+      els.selectedHistorySummary.innerHTML = [
+        insightCardHtml(`${ticker} latest price`, latest.livePrice || "—", latest.dayChange || (isInLatestSnapshot ? "Saved" : "Missing from latest snapshot")),
+        insightCardHtml("6M return", latest.sixMonthReturn || "—", latest.relativeStrengthVsQqq ? `Rel QQQ ${latest.relativeStrengthVsQqq}` : "Relative strength"),
+        insightCardHtml("P/S ratio", latest.psRatio || "—", latest.revenueGrowth ? `Revenue ${latest.revenueGrowth}` : "Fundamentals"),
+        insightCardHtml("Market cap", latest.marketCap || "—", latest.volume || "Volume")
+      ].join("");
+      els.selectedHistoryRows.innerHTML = rows.length ? rows.map(row => `<tr><td>${escapeHtml(row.date || "—")}</td><td>${escapeHtml(row.livePrice || "—")}</td><td>${escapeHtml(row.sixMonthReturn || "—")}</td><td>${escapeHtml(row.relativeStrengthVsQqq || "—")}</td><td>${escapeHtml(row.psRatio || "—")}</td><td>${escapeHtml(row.revenueGrowth || "—")}</td></tr>`).join("") : `<tr><td colspan="6">No saved snapshots for ${escapeHtml(ticker)} yet. Refresh all 38 stocks in Settings, then load History again.</td></tr>`;
     }
 
     function renderRefreshLog() {
       if (!historyState.refreshLog.length) {
-        els.refreshLogList.innerHTML = `<p class="meta">No refresh activity loaded yet.</p>`;
+        els.refreshLogList.innerHTML = `<div class="meta">No refresh activity loaded yet.</div>`;
         return;
       }
-      els.refreshLogList.innerHTML = historyState.refreshLog.slice(0, 8).map(item => {
-        const at = item.refreshedAt || item.at || item.generatedAt;
-        const type = item.type || (item.refresh ? "dashboard" : "refresh");
-        const symbolCount = item.symbolCount || (item.symbols && item.symbols.length) || 0;
-        return `<div class="log-item"><strong>${escapeHtml(type)}</strong><p class="meta">${escapeHtml(formatDateTime(at))} · ${escapeHtml(symbolCount)} symbols</p></div>`;
-      }).join("");
+      els.refreshLogList.innerHTML = historyState.refreshLog.map(item => `<div class="refresh-log-item"><strong>${escapeHtml(item.type || "refresh")} · ${escapeHtml(item.provider || "provider")}</strong><span>${escapeHtml(formatDateTime(item.refreshedAt))} · ${escapeHtml(String(item.symbolCount || 0))} symbols · ${item.force ? "forced refresh" : "scheduled/cache refresh"}</span><span>${escapeHtml((item.symbols || []).slice(0, 12).join(", "))}${(item.symbols || []).length > 12 ? "…" : ""}</span></div>`).join("");
+    }
+
+    function insightCardHtml(label, value, sub) {
+      return `<div class="insight-card"><span class="mini-label">${escapeHtml(label)}</span><span class="big-value">${escapeHtml(value || "—")}</span><span class="sub-value">${escapeHtml(sub || "")}</span></div>`;
     }
 
     function cacheStatusText(cache) {
-      if (!cache || !Object.keys(cache).length) return "—";
-      const parts = [];
-      ["quotes", "performance", "fundamentals"].forEach(key => {
-        if (cache[key]) {
-          if (typeof cache[key].filled === "number") parts.push(`${key}: ${cache[key].filled}/${cache[key].total}`);
-          else parts.push(`${key}: ${cache[key].fromKv ? "cache" : "fresh"}`);
-        }
+      if (!cache) return "—";
+      const parts = ["quotes", "performance", "fundamentals"].map(key => {
+        const item = cache[key] || {};
+        if (item.refreshed) return `${key}: refreshed`;
+        if (item.fromKv) return `${key}: KV`;
+        return `${key}: —`;
       });
-      return parts.join(" · ") || "—";
+      return parts.join(" · ");
     }
+
 
     /* =========================================================
        7. CSV
@@ -1183,11 +1279,21 @@
     function sanitizeWorkerUrl(value) { return String(value || "").trim().replace(/\/+$/, ""); }
     async function fetchJsonFromUrl(url) { const response = await fetch(url); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`); return payload; }
     function formatDateTime(value) { if (!value) return "Never"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Never"; return date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
+    function getQuoteUpdatedAt(ticker) { return liveData && liveData.quotes && liveData.quotes[ticker] ? liveData.quotes[ticker].updatedAt : null; }
+    function quoteCacheAgeText() { const time = latestQuoteTime(); if (!time) return "—"; const minutes = Math.max(0, Math.floor((Date.now() - new Date(time).getTime()) / 60000)); return minutes < 1 ? "Just now" : `${minutes} min old`; }
+    function nextQuoteRefreshText() { const time = latestQuoteTime(); if (!time) return "Now"; const next = new Date(new Date(time).getTime() + 15 * 60 * 1000); const remaining = Math.ceil((next.getTime() - Date.now()) / 60000); return remaining <= 0 ? "Now" : `${formatDateTime(next.toISOString())} (${remaining} min)`; }
+    function latestQuoteTime() {
+      const times = Object.values((liveData && liveData.quotes) || {}).map(row => row && row.updatedAt).filter(Boolean);
+      if (times.length) return times.sort((a, b) => new Date(b) - new Date(a))[0];
+      return liveData.lastQuoteRefresh;
+    }
+    function parsePercentValue(value) { const n = Number(String(value || "").replace(/[%+,]/g, "")); return Number.isFinite(n) ? n : NaN; }
+    function bestBy(items, getter) { return items.filter(item => Number.isFinite(getter(item))).sort((a,b) => getter(b) - getter(a))[0] || null; }
+    function worstBy(items, getter) { return items.filter(item => Number.isFinite(getter(item))).sort((a,b) => getter(a) - getter(b))[0] || null; }
     function downloadCsv(filename, rows) { const csv = rows.map(row => row.map(csvEscape).join(",")).join("\n"); const blob = new Blob([csv], { type: "text/csv;charset=utf-8" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
     function csvEscape(value) { const text = String(value ?? ""); return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text; }
     function parseCsv(text) { const rows = []; let row = [], field = "", inQuotes = false; for (let i = 0; i < text.length; i++) { const char = text[i], next = text[i + 1]; if (char === '"') { if (inQuotes && next === '"') { field += '"'; i++; } else inQuotes = !inQuotes; } else if (char === "," && !inQuotes) { row.push(field); field = ""; } else if ((char === "\n" || char === "\r") && !inQuotes) { if (char === "\r" && next === "\n") i++; row.push(field); rows.push(row); row = []; field = ""; } else field += char; } if (field !== "" || row.length) { row.push(field); rows.push(row); } return rows.filter(r => r.some(cell => String(cell).trim() !== "")); }
     function normalizeHeader(value) { return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, ""); }
-    function parseNumberFromText(value) { const n = Number(String(value || "").replace(/[^0-9.-]/g, "")); return Number.isFinite(n) ? n : NaN; }
     function escapeHtml(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;"); }
     function escapeAttr(value) { return escapeHtml(value); }
   </script>
