@@ -347,7 +347,7 @@
             <div><h4>Risk</h4><p>Low = diversified and established. Moderate = real business with cycle or valuation risk. High / Very High = more execution, cash-burn, volatility, or early-stage risk.</p></div>
             <div><h4>Valuation</h4><p>Reasonable = easier to justify from current business quality. Overvalued = priced for a lot of optimism. Speculative = future-potential driven.</p></div>
             <div><h4>AI / Data Center Relevance</h4><p>Shows whether the company may benefit from AI, cloud, chips, power, cooling, or data-center demand while quantum matures.</p></div>
-            <div><h4>Pro Metrics</h4><p>6M average, 6M return, price vs averages, volatility, drawdown, relative strength vs QQQ, and share dilution.</p></div>
+            <div><h4>Pro Metrics</h4><p>6M average, 6M return, price vs averages, volatility, drawdown, and relative strength vs QQQ. Market cap, volume, P/S, and revenue growth come from fundamentals.</p></div>
           </div>
         </details>
 
@@ -386,7 +386,7 @@
               <button class="button danger" id="resetData" type="button">Reset local changes</button>
               <input class="file-input" id="importCsv" type="file" accept=".csv,text/csv" />
             </div>
-            <p class="meta">Stock edits, pro metrics, and watchlists save on this device.</p>
+            <p class="meta">Manual edits, pro metrics, fundamentals, and watchlists save on this device.</p>
           </div>
           <div class="card">
             <h3>Live Data</h3>
@@ -401,6 +401,7 @@
               <div class="status-line"><span>Status</span><span id="liveStatus">Not connected</span></div>
               <div class="status-line"><span>Last quote refresh</span><span id="lastQuoteRefresh">Never</span></div>
               <div class="status-line"><span>Last performance refresh</span><span id="lastPerformanceRefresh">Never</span></div>
+              <div class="status-line"><span>Last fundamentals refresh</span><span id="lastFundamentalsRefresh">Never</span></div>
             </div>
           </div>
         </div>
@@ -484,11 +485,11 @@
        2. App Configuration
        ========================================================= */
     const DEFAULT_WORKER_URL = "https://quantum-dashboard-api.benhayek12.workers.dev";
-    const CORE_FIELDS = ["livePrice", "dayChange", "marketCap", "psRatio", "revenueGrowth", "cashRunway", "analystNotes"];
+    const CORE_FIELDS = ["livePrice", "dayChange", "marketCap", "volume", "psRatio", "revenueGrowth", "cashRunway", "analystNotes"];
     const PRO_FIELDS = ["sixMonthAvgPrice", "sixMonthReturn", "priceVsSixMonthAvg", "priceVs200DaySma", "sixMonthVolatility", "sixMonthMaxDrawdown", "relativeStrengthVsQqq", "shareDilution"];
     const EDITABLE_FIELDS = [...CORE_FIELDS, ...PRO_FIELDS];
     const FIELD_LABELS = {
-      livePrice: "Live Price", dayChange: "Day Change", marketCap: "Market Cap", psRatio: "P/S Ratio", revenueGrowth: "Revenue Growth", cashRunway: "Cash Runway", analystNotes: "Analyst Notes",
+      livePrice: "Live Price", dayChange: "Day Change", marketCap: "Market Cap", volume: "Volume", psRatio: "P/S Ratio", revenueGrowth: "Revenue Growth", cashRunway: "Cash Runway", analystNotes: "Analyst Notes",
       sixMonthAvgPrice: "6M Avg Price", sixMonthReturn: "6M Return", priceVsSixMonthAvg: "Price vs 6M Avg", priceVs200DaySma: "Price vs 200D SMA", sixMonthVolatility: "6M Volatility", sixMonthMaxDrawdown: "6M Max Drawdown", relativeStrengthVsQqq: "Relative vs QQQ", shareDilution: "Share Dilution"
     };
     const DEFAULT_WATCHLISTS = [
@@ -501,14 +502,14 @@
       edits: "qsd.edits.v4",
       prefs: "qsd.prefs.v4",
       watchlists: "qsd.watchlists.v4",
-      live: "qsd.live.finnhub.tiingo.v4",
+      live: "qsd.live.finnhub.tiingo.fundamentals.v5",
       liveSettings: "qsd.liveSettings.v4"
     };
 
     let manualEdits = loadJson(STORAGE.edits, {});
     let prefs = loadJson(STORAGE.prefs, { darkMode: true, compactCards: false });
     let watchlists = loadJson(STORAGE.watchlists, DEFAULT_WATCHLISTS);
-    let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null });
+    let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null });
     let liveSettings = loadJson(STORAGE.liveSettings, { workerUrl: DEFAULT_WORKER_URL, autoRefresh: false });
     let filters = { search: "", category: "all", risk: "all" };
     let activeEditTicker = null;
@@ -566,6 +567,8 @@
       els.liveStatus = document.getElementById("liveStatus");
       els.lastQuoteRefresh = document.getElementById("lastQuoteRefresh");
       els.lastPerformanceRefresh = document.getElementById("lastPerformanceRefresh");
+      els.lastFundamentalsRefresh = document.getElementById("lastFundamentalsRefresh");
+      els.lastFundamentalsRefresh = document.getElementById("lastFundamentalsRefresh");
       els.editModal = document.getElementById("editModal");
       els.editTitle = document.getElementById("editTitle");
       els.editSubtitle = document.getElementById("editSubtitle");
@@ -677,7 +680,7 @@
     function getMergedStock(ticker) {
       const base = stocks.find(stock => stock.ticker === ticker);
       const empty = Object.fromEntries(EDITABLE_FIELDS.map(field => [field, ""]));
-      return { ...empty, ...base, ...(manualEdits[ticker] || {}), ...(liveData.quotes[ticker] || {}), ...(liveData.performance[ticker] || {}) };
+      return { ...empty, ...base, ...(manualEdits[ticker] || {}), ...(liveData.quotes[ticker] || {}), ...(liveData.performance[ticker] || {}), ...((liveData.fundamentals && liveData.fundamentals[ticker]) || {}) };
     }
 
     /* =========================================================
@@ -801,7 +804,7 @@
 
     function resetLocalData() {
       if (!confirm("Clear saved manual stock fields, watchlists, and live cache from this device?")) return;
-      manualEdits = {}; watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS)); liveData = { quotes: {}, performance: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null };
+      manualEdits = {}; watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS)); liveData = { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null };
       saveJson(STORAGE.edits, manualEdits); saveJson(STORAGE.watchlists, watchlists); saveJson(STORAGE.live, liveData);
       renderAll();
     }
@@ -838,6 +841,14 @@
           liveData.performance = perfPayload.data || {};
           liveData.lastPerformanceRefresh = perfPayload.generatedAt || new Date().toISOString();
         }
+        const fundamentalsAreOld = !liveData.lastFundamentalsRefresh || Date.now() - Date.parse(liveData.lastFundamentalsRefresh) > 11 * 60 * 60 * 1000;
+        if (force || fundamentalsAreOld) {
+          const fundamentalsUrl = `${workerUrl}/api/fundamentals?symbols=${encodeURIComponent(symbols)}${force ? "&force=1" : ""}`;
+          const fundamentalsPayload = await fetchJsonFromUrl(fundamentalsUrl);
+          if (!fundamentalsPayload.ok) throw new Error(fundamentalsPayload.error || "Fundamentals refresh failed.");
+          liveData.fundamentals = fundamentalsPayload.data || {};
+          liveData.lastFundamentalsRefresh = fundamentalsPayload.generatedAt || new Date().toISOString();
+        }
         saveJson(STORAGE.live, liveData);
         setLiveStatus("Connected");
         renderStocks(); updateLiveStatus();
@@ -853,7 +864,7 @@
     }
 
     function clearLiveCache() {
-      liveData = { quotes: {}, performance: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null };
+      liveData = { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null };
       saveJson(STORAGE.live, liveData);
       renderStocks(); updateLiveStatus(); setLiveStatus("Live cache cleared");
     }
@@ -872,6 +883,7 @@
       els.autoRefreshToggle.checked = Boolean(liveSettings.autoRefresh);
       els.lastQuoteRefresh.textContent = formatDateTime(liveData.lastQuoteRefresh);
       els.lastPerformanceRefresh.textContent = formatDateTime(liveData.lastPerformanceRefresh);
+      if (els.lastFundamentalsRefresh) els.lastFundamentalsRefresh.textContent = formatDateTime(liveData.lastFundamentalsRefresh);
       if (!els.liveStatus.textContent || els.liveStatus.textContent === "Not connected") els.liveStatus.textContent = liveData.lastQuoteRefresh ? "Connected" : "Not connected";
     }
 
