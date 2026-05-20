@@ -741,7 +741,7 @@
       els.importCsv.addEventListener("change", importStocksCsv);
       els.resetData.addEventListener("click", resetLocalData);
       els.saveWorkerUrl.addEventListener("click", saveWorkerUrl);
-      els.refreshNow.addEventListener("click", () => refreshLiveData(true));
+      els.refreshNow.addEventListener("click", () => refreshLiveData(false));
       els.clearLiveCache.addEventListener("click", clearLiveCache);
       els.autoRefreshToggle.addEventListener("change", () => { liveSettings.autoRefresh = els.autoRefreshToggle.checked; saveLiveSettings(); configureAutoRefresh(); });
       els.loadHistory.addEventListener("click", () => loadHistoryData());
@@ -975,6 +975,8 @@
       setLiveStatus("Refreshing...");
       try {
         const symbols = stocks.map(stock => stock.ticker).join(",");
+        // Normal Refresh Now should NOT force all providers. The Worker decides what is stale/missing.
+        // Force refresh is intentionally avoided here to protect free API limits.
         const url = `${workerUrl}/api/dashboard?symbols=${encodeURIComponent(symbols)}${force ? "&force=1" : ""}`;
         const payload = await fetchJsonFromUrl(url);
         if (!payload.ok) throw new Error(payload.error || "Dashboard refresh failed.");
@@ -982,11 +984,12 @@
         liveData.quotes = (payload.data && payload.data.quotes) || {};
         liveData.performance = (payload.data && payload.data.performance) || {};
         liveData.fundamentals = (payload.data && payload.data.fundamentals) || {};
-        liveData.cache = payload.cache || {};
+        liveData.cache = payload.cache || payload.refresh || {};
+        liveData.coverage = payload.coverage || {};
         liveData.lastDashboardRefresh = payload.generatedAt || new Date().toISOString();
-        liveData.lastQuoteRefresh = (payload.cache && payload.cache.quotes && payload.cache.quotes.savedAt) || liveData.lastDashboardRefresh;
-        liveData.lastPerformanceRefresh = (payload.cache && payload.cache.performance && payload.cache.performance.savedAt) || liveData.lastDashboardRefresh;
-        liveData.lastFundamentalsRefresh = (payload.cache && payload.cache.fundamentals && payload.cache.fundamentals.savedAt) || liveData.lastDashboardRefresh;
+        liveData.lastQuoteRefresh = (payload.cache && payload.cache.quotes && payload.cache.quotes.savedAt) || (payload.refresh && payload.refresh.quotes && payload.refresh.quotes.generatedAt) || liveData.lastDashboardRefresh;
+        liveData.lastPerformanceRefresh = (payload.cache && payload.cache.performance && payload.cache.performance.savedAt) || (payload.refresh && payload.refresh.performance && payload.refresh.performance.generatedAt) || liveData.lastDashboardRefresh;
+        liveData.lastFundamentalsRefresh = (payload.cache && payload.cache.fundamentals && payload.cache.fundamentals.savedAt) || (payload.refresh && payload.refresh.fundamentals && payload.refresh.fundamentals.generatedAt) || liveData.lastDashboardRefresh;
         liveData.snapshotSaved = true;
 
         saveJson(STORAGE.live, liveData);
@@ -1040,7 +1043,10 @@
       try {
         if (showStatus) setLiveStatus("Loading history...");
         const payload = await fetchJsonFromUrl(`${workerUrl}/api/history?days=30`);
-        historyState.snapshots = Array.isArray(payload.items) ? payload.items : [];
+        const rawSnapshots = Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.data) ? payload.data : []);
+        historyState.snapshots = rawSnapshots
+          .map(normalizeSnapshot)
+          .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
         renderHistory();
         if (showStatus) setLiveStatus("History loaded");
       } catch (error) {
@@ -1054,7 +1060,8 @@
       try {
         if (showStatus) setLiveStatus("Loading refresh log...");
         const payload = await fetchJsonFromUrl(`${workerUrl}/api/refresh-log?limit=60`);
-        historyState.refreshLog = Array.isArray(payload.items) ? payload.items : [];
+        const rawLog = Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.data) ? payload.data : []);
+        historyState.refreshLog = normalizeRefreshLog(rawLog);
         renderRefreshLog();
         if (showStatus) setLiveStatus("Refresh log loaded");
       } catch (error) {
@@ -1079,7 +1086,7 @@
       const entries = Object.entries(data).map(([ticker, row]) => ({ ticker, ...row }));
       els.historySnapshotDate.textContent = latest.date || "—";
       els.historySymbolCount.textContent = `${entries.length} symbols`;
-      els.historySavedAt.textContent = formatDateTime(latest.generatedAt);
+      els.historySavedAt.textContent = formatDateTime(latest.generatedAt || latest.at);
       renderHistoryCoverage(latest);
 
       const topReturn = bestBy(entries, row => parsePercentValue(row.sixMonthReturn));
@@ -1151,10 +1158,49 @@
 
     function renderRefreshLog() {
       if (!historyState.refreshLog.length) {
-        els.refreshLogList.innerHTML = `<div class="meta">No refresh activity loaded yet.</div>`;
+        els.refreshLogList.innerHTML = `<div class="meta">No refresh activity loaded yet. The next scheduled backfill or Refresh Now will add entries.</div>`;
         return;
       }
-      els.refreshLogList.innerHTML = historyState.refreshLog.map(item => `<div class="refresh-log-item"><strong>${escapeHtml(item.type || "refresh")} · ${escapeHtml(item.provider || "provider")}</strong><span>${escapeHtml(formatDateTime(item.refreshedAt))} · ${escapeHtml(String(item.symbolCount || 0))} symbols · ${item.force ? "forced refresh" : "scheduled/cache refresh"}</span><span>${escapeHtml((item.symbols || []).slice(0, 12).join(", "))}${(item.symbols || []).length > 12 ? "…" : ""}</span></div>`).join("");
+      els.refreshLogList.innerHTML = historyState.refreshLog.map(item => {
+        const label = item.label || item.type || "refresh";
+        const provider = item.provider || "Worker";
+        const at = item.refreshedAt || item.at || item.generatedAt;
+        const count = item.symbolCount || item.requested || 0;
+        const detail = item.detail || item.status || (item.force ? "forced refresh" : "cache/backfill refresh");
+        return `<div class="refresh-log-item"><strong>${escapeHtml(label)} · ${escapeHtml(provider)}</strong><span>${escapeHtml(formatDateTime(at))} · ${escapeHtml(String(count))} symbols · ${escapeHtml(detail)}</span></div>`;
+      }).join("");
+    }
+
+    function normalizeSnapshot(snapshot) {
+      if (!snapshot || typeof snapshot !== "object") return { date: "", generatedAt: "", symbols: [], data: {} };
+      return {
+        ...snapshot,
+        generatedAt: snapshot.generatedAt || snapshot.at || snapshot.savedAt || "",
+        symbols: Array.isArray(snapshot.symbols) ? snapshot.symbols : Object.keys(snapshot.data || {}),
+        data: snapshot.data || {}
+      };
+    }
+
+    function normalizeRefreshLog(rawLog) {
+      const out = [];
+      rawLog.forEach(item => {
+        if (item && item.refresh) {
+          ["quotes", "performance", "fundamentals"].forEach(key => {
+            const refresh = item.refresh[key] || {};
+            const coverage = item.coverage && item.coverage[key] ? item.coverage[key] : null;
+            out.push({
+              label: key,
+              provider: key === "performance" ? "Tiingo" : "Finnhub",
+              refreshedAt: item.at || item.generatedAt,
+              symbolCount: item.symbolCount || (coverage ? coverage.total : 0),
+              detail: coverage ? `${coverage.filled}/${coverage.total} filled` : `${refresh.attempted || 0} attempted`
+            });
+          });
+        } else if (item) {
+          out.push(item);
+        }
+      });
+      return out.slice(0, 60);
     }
 
     function insightCardHtml(label, value, sub) {
@@ -1163,14 +1209,18 @@
 
     function cacheStatusText(cache) {
       if (!cache) return "—";
+      const coverage = liveData.coverage || {};
       const parts = ["quotes", "performance", "fundamentals"].map(key => {
         const item = cache[key] || {};
-        if (item.refreshed) return `${key}: refreshed`;
-        if (item.fromKv) return `${key}: KV`;
-        return `${key}: —`;
+        const cov = coverage[key] ? `${coverage[key].filled || 0}/${coverage[key].total || 0}` : "";
+        if (item.refreshed) return `${key}: refreshed${cov ? " " + cov : ""}`;
+        if (item.fromKv) return `${key}: KV${cov ? " " + cov : ""}`;
+        if (item.attempted !== undefined) return `${key}: ${item.attempted} tried${cov ? " " + cov : ""}`;
+        return `${key}: ${cov || "—"}`;
       });
       return parts.join(" · ");
     }
+
 
 
     /* =========================================================
