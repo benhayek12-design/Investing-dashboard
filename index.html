@@ -1106,6 +1106,7 @@
             <div class="settings-actions">
               <button class="button" id="refreshLiveData" type="button">Refresh Now</button>
               <button class="button secondary" id="saveWorkerUrl" type="button">Save Worker URL</button>
+              <button class="button secondary" id="clearLiveCache" type="button">Clear Live Cache</button>
             </div>
 
             <div class="live-status-grid">
@@ -1731,7 +1732,7 @@
     const PREFS_KEY = "quantumStockDashboard.preferences.v1";
     const WATCHLISTS_KEY = "quantumStockDashboard.watchlists.v1";
     const LIVE_CONFIG_KEY = "quantumStockDashboard.liveConfig.v1";
-    const LIVE_DATA_KEY = "quantumStockDashboard.liveData.v1";
+    const LIVE_DATA_KEY = "quantumStockDashboard.liveData.tiingo.v2";
     const LEGACY_FULL_STOCKS_KEY = "quantumDashboardStocks.v3";
     const AUTO_REFRESH_MS = 15 * 60 * 1000;
     const PERFORMANCE_REFRESH_MS = 24 * 60 * 60 * 1000;
@@ -1739,7 +1740,8 @@
     let manualEdits = loadManualEdits();
     let watchlists = loadWatchlists();
     let prefs = loadJson(PREFS_KEY, { darkMode: true, compactCards: false });
-    let liveConfig = loadJson(LIVE_CONFIG_KEY, { workerUrl: "", autoRefresh: false });
+    let liveConfig = loadJson(LIVE_CONFIG_KEY, { workerUrl: "https://quantum-dashboard-api.benhayek12.workers.dev", autoRefresh: false });
+    if (!liveConfig.workerUrl) liveConfig.workerUrl = "https://quantum-dashboard-api.benhayek12.workers.dev";
     let liveData = loadJson(LIVE_DATA_KEY, { quotes: {}, performance: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null });
     let liveRefreshTimer = null;
     let activeEditTicker = null;
@@ -1860,6 +1862,7 @@
 
       els.saveWorkerUrl.addEventListener("click", saveLiveConfigFromControls);
       els.refreshLiveData.addEventListener("click", () => refreshLiveData({ forcePerformance: true }));
+      els.clearLiveCache.addEventListener("click", clearLiveCache);
       els.liveAutoToggle.addEventListener("change", () => {
         liveConfig.autoRefresh = els.liveAutoToggle.checked;
         saveJson(LIVE_CONFIG_KEY, liveConfig);
@@ -2452,6 +2455,19 @@
       setStatus(workerUrl ? "Worker URL saved." : "Worker URL cleared.");
     }
 
+    function clearLiveCache() {
+      liveData = {
+        quotes: {},
+        performance: {},
+        lastQuoteRefresh: null,
+        lastPerformanceRefresh: null
+      };
+      localStorage.removeItem(LIVE_DATA_KEY);
+      renderAll();
+      syncLiveControls();
+      setStatus("Live cache cleared. Tap Refresh Now to reload quotes and performance metrics.");
+    }
+
     function startOrStopAutoRefresh() {
       window.clearInterval(liveRefreshTimer);
       liveRefreshTimer = null;
@@ -2537,6 +2553,7 @@
     function setLiveLoading(isLoading) {
       if (!els.refreshLiveData) return;
       els.refreshLiveData.disabled = isLoading;
+      if (els.clearLiveCache) els.clearLiveCache.disabled = isLoading;
       els.refreshLiveData.textContent = isLoading ? "Refreshing..." : "Refresh Now";
     }
 
