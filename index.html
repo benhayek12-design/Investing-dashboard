@@ -7,28 +7,23 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Quantum Stocks" />
-  <meta name="application-name" content="Quantum Stocks" />
-  <meta name="format-detection" content="telephone=no" />
   <title>Quantum Stock Dashboard</title>
 
   <style>
     /* =========================================================
        Quantum Stock Dashboard
-       CSS organization:
        1. Theme variables
        2. Base reset
-       3. App layout and navigation
-       4. Cards, summaries, and categories
-       5. Stock cards, filters, and label guide
-       6. Settings and modal
+       3. Layout
+       4. Components
+       5. Forms / settings
+       6. Modals
        7. Responsive rules
        ========================================================= */
 
-    /* 1. Theme variables */
     :root {
       color-scheme: dark;
       --bg: #050914;
-      --bg-soft: #07111f;
       --panel: #101a2e;
       --panel-2: #142039;
       --panel-top: #16233d;
@@ -51,11 +46,10 @@
     body.light {
       color-scheme: light;
       --bg: #f5f7fb;
-      --bg-soft: #eef3fb;
       --panel: #ffffff;
       --panel-2: #f6f8fc;
       --panel-top: #ffffff;
-      --glass: rgba(255, 255, 255, 0.92);
+      --glass: rgba(255, 255, 255, 0.94);
       --border: #dce4ef;
       --text: #111827;
       --muted: #5f6b7f;
@@ -65,10 +59,8 @@
       --shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
     }
 
-    /* 2. Base reset */
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       min-height: 100vh;
@@ -82,25 +74,11 @@
       line-height: 1.45;
     }
 
-    button,
-    input,
-    select,
-    textarea { font: inherit; }
-
-    button,
-    a,
-    input,
-    select,
-    textarea { -webkit-tap-highlight-color: transparent; }
-
+    button, input, select, textarea { font: inherit; }
+    button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
     a { color: inherit; }
+    h1, h2, h3, p { margin-top: 0; }
 
-    h1,
-    h2,
-    h3,
-    p { margin-top: 0; }
-
-    /* 3. App layout and navigation */
     .app {
       width: min(1120px, 100%);
       margin: 0 auto;
@@ -118,7 +96,7 @@
       border-radius: 999px;
       background: var(--glass);
       backdrop-filter: blur(16px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
     }
 
     .tab-button {
@@ -127,8 +105,7 @@
       border-radius: 999px;
       background: transparent;
       color: var(--muted);
-      font-weight: 800;
-      letter-spacing: 0.01em;
+      font-weight: 850;
       cursor: pointer;
     }
 
@@ -138,12 +115,7 @@
       outline: 1px solid rgba(126, 216, 255, 0.38);
     }
 
-    .hero {
-      display: grid;
-      gap: 14px;
-      margin-bottom: 22px;
-    }
-
+    .hero { display: grid; gap: 14px; margin-bottom: 22px; }
     .eyebrow {
       color: var(--accent);
       font-size: 0.78rem;
@@ -152,49 +124,26 @@
       letter-spacing: 0.18em;
       margin: 0;
     }
-
     h1 {
       margin-bottom: 4px;
       font-size: clamp(2.25rem, 12vw, 4.6rem);
       line-height: 0.95;
       letter-spacing: -0.065em;
     }
-
-    .hero p {
-      max-width: 720px;
-      margin-bottom: 0;
-      color: var(--muted);
-      font-size: clamp(1.05rem, 5vw, 1.45rem);
-    }
+    .hero p { max-width: 760px; margin-bottom: 0; color: var(--muted); font-size: clamp(1.05rem, 5vw, 1.45rem); }
 
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
+    .section-title { display: flex; justify-content: space-between; align-items: end; gap: 12px; margin: 10px 0 14px; }
+    .section-title h2 { margin: 0; font-size: 1.45rem; letter-spacing: -0.035em; }
+    .section-title p { margin: 4px 0 0; color: var(--muted); }
 
-    .section-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 12px;
-      margin: 10px 0 14px;
-    }
-
-    .section-title h2 {
-      margin: 0;
-      font-size: 1.45rem;
-      letter-spacing: -0.035em;
-    }
-
-    .section-title p {
-      margin: 4px 0 0;
-      color: var(--muted);
-    }
-
-    /* 4. Cards, summaries, and categories */
     .grid { display: grid; gap: 14px; }
     .summary-grid { grid-template-columns: repeat(2, 1fr); }
     .category-grid { grid-template-columns: 1fr; }
+    .stock-list, .watchlist-grid, .settings-grid { display: grid; gap: 14px; }
 
-    .card {
+    .card, .stock-card, .watch-card {
       border: 1px solid var(--border);
       border-radius: var(--radius);
       background: linear-gradient(180deg, var(--panel-top), var(--panel));
@@ -202,139 +151,28 @@
       padding: 18px;
     }
 
-    .metric-card .label {
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
+    .metric-card .label { color: var(--muted); font-size: 0.82rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.08em; }
+    .metric-card .number { display: block; margin-top: 6px; font-size: 2rem; font-weight: 950; letter-spacing: -0.06em; }
+    .category-card { display: grid; gap: 8px; }
+    .category-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .category-name { font-size: 1.05rem; font-weight: 900; letter-spacing: -0.025em; }
+    .category-count { color: var(--accent); font-size: 1.5rem; font-weight: 950; }
 
-    .metric-card .number {
-      display: block;
-      margin-top: 6px;
-      color: var(--text);
-      font-size: 2rem;
-      font-weight: 900;
-      letter-spacing: -0.06em;
-    }
-
-    .category-card { display: grid; gap: 12px; }
-
-    .category-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .category-name {
-      font-size: 1.05rem;
-      font-weight: 900;
-      letter-spacing: -0.025em;
-      line-height: 1.25;
-    }
-
-    .category-count {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 38px;
-      min-height: 38px;
-      border-radius: 999px;
-      background: rgba(126, 216, 255, 0.11);
-      color: var(--accent);
-      font-size: 1.25rem;
-      font-weight: 900;
-    }
-
-    /* 5. Stock cards and filters */
     .controls {
       position: static;
       display: grid;
       gap: 10px;
       padding: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       background: var(--glass);
       backdrop-filter: blur(16px);
     }
 
-    .label-guide {
-      margin: 0 0 14px;
-      border: 1px solid rgba(170, 184, 216, 0.18);
-      border-radius: 16px;
-      background: rgba(170, 184, 216, 0.055);
-      color: var(--muted);
-      overflow: hidden;
-    }
-
-    .label-guide summary {
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 0 13px;
-      cursor: pointer;
-      font-size: 0.84rem;
-      font-weight: 800;
-      list-style: none;
-    }
-
-    .label-guide summary::-webkit-details-marker { display: none; }
-
-    .label-guide summary::after {
-      content: "+";
-      color: var(--accent);
-      font-size: 1.15rem;
-      font-weight: 900;
-    }
-
-    .label-guide[open] summary::after { content: "−"; }
-
-    .label-guide summary span {
-      color: var(--accent);
-      font-weight: 950;
-    }
-
-    .label-guide-content {
-      display: grid;
-      gap: 10px;
-      padding: 0 13px 13px;
-      border-top: 1px solid rgba(170, 184, 216, 0.12);
-    }
-
-    .label-guide-item {
-      padding-top: 10px;
-    }
-
-    .label-guide-item strong {
-      display: block;
-      margin-bottom: 4px;
-      color: var(--text);
-      font-size: 0.82rem;
-    }
-
-    .label-guide-item p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.82rem;
-      line-height: 1.35;
-    }
-
     .field { display: grid; gap: 7px; }
-
-    label {
-      color: var(--muted);
-      font-size: 0.83rem;
-      font-weight: 850;
-    }
-
-    input,
-    select,
-    textarea {
+    label { color: var(--muted); font-size: 0.83rem; font-weight: 850; }
+    input, select, textarea {
       width: 100%;
       min-height: var(--tap);
       border: 1px solid var(--border);
@@ -344,600 +182,120 @@
       padding: 11px 13px;
       outline: none;
     }
-
-    option { background: var(--panel); color: var(--text); }
     textarea { min-height: 96px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: rgba(126, 216, 255, 0.75); box-shadow: 0 0 0 3px rgba(126, 216, 255, 0.12); }
 
-    input:focus,
-    select:focus,
-    textarea:focus {
-      border-color: rgba(126, 216, 255, 0.75);
-      box-shadow: 0 0 0 3px rgba(126, 216, 255, 0.12);
-    }
-
-    .stock-list { display: grid; gap: 14px; }
-
-    .stock-card {
+    .label-guide {
+      margin: 0 0 14px;
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      background: linear-gradient(180deg, var(--panel-2), var(--panel));
-      box-shadow: var(--shadow);
-      padding: 18px;
-    }
-
-    .stock-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-
-    .ticker {
-      color: var(--accent);
-      font-size: 1.9rem;
-      line-height: 1;
-      font-weight: 950;
-      letter-spacing: -0.055em;
-    }
-
-    .company {
-      margin: 7px 0 0;
-      font-size: 1.08rem;
-      font-weight: 850;
-      letter-spacing: -0.03em;
-    }
-
-    .meta {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      justify-content: flex-end;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      min-height: 30px;
-      padding: 0 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(170, 184, 216, 0.25);
-      background: rgba(170, 184, 216, 0.10);
-      color: var(--muted);
-      font-size: 0.78rem;
-      font-weight: 900;
-      white-space: nowrap;
-    }
-
-    .risk-low {
-      color: var(--good);
-      border-color: rgba(99, 230, 190, 0.35);
-      background: rgba(99, 230, 190, 0.10);
-    }
-
-    .risk-moderate {
-      color: #93c5fd;
-      border-color: rgba(147, 197, 253, 0.35);
-      background: rgba(147, 197, 253, 0.10);
-    }
-
-    .risk-high {
-      color: var(--warn);
-      border-color: rgba(255, 209, 102, 0.38);
-      background: rgba(255, 209, 102, 0.12);
-    }
-
-    .risk-very-high {
-      color: var(--bad);
-      border-color: rgba(255, 138, 138, 0.42);
-      background: rgba(255, 138, 138, 0.12);
-    }
-
-    .val-undervalued {
-      color: var(--good);
-      border-color: rgba(99, 230, 190, 0.35);
-      background: rgba(99, 230, 190, 0.10);
-    }
-
-    .val-reasonable {
-      color: #93c5fd;
-      border-color: rgba(147, 197, 253, 0.35);
-      background: rgba(147, 197, 253, 0.10);
-    }
-
-    .val-overvalued {
-      color: var(--warn);
-      border-color: rgba(255, 209, 102, 0.38);
-      background: rgba(255, 209, 102, 0.12);
-    }
-
-    .val-speculative {
-      color: var(--bad);
-      border-color: rgba(255, 138, 138, 0.42);
-      background: rgba(255, 138, 138, 0.12);
-    }
-
-    .text-block {
-      display: grid;
-      gap: 5px;
-      margin: 13px 0;
-    }
-
-    .text-block .small-label {
-      color: var(--accent);
-      font-size: 0.77rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .text-block p { margin: 0; color: var(--muted); }
-
-    .manual-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin: 14px 0;
-    }
-
-    .manual-item {
-      min-height: 64px;
-      padding: 10px;
-      border: 1px solid rgba(170, 184, 216, 0.16);
-      border-radius: 14px;
-      background: rgba(170, 184, 216, 0.055);
-    }
-
-    .manual-item .mini-label {
-      display: block;
-      color: var(--muted-2);
-      font-size: 0.72rem;
-      font-weight: 850;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .manual-item .mini-value {
-      display: block;
-      margin-top: 4px;
-      color: var(--text);
-      font-weight: 850;
-      word-break: break-word;
-    }
-
-    .notes-item { grid-column: 1 / -1; }
-
-    .pro-metrics {
-      margin: 12px 0 0;
-      border: 1px solid rgba(126, 216, 255, 0.18);
-      border-radius: 16px;
-      background: rgba(126, 216, 255, 0.055);
+      background: rgba(170,184,216,0.06);
       overflow: hidden;
     }
+    .label-guide summary { min-height: 46px; display: flex; align-items: center; padding: 0 14px; color: var(--accent); font-weight: 900; cursor: pointer; }
+    .guide-grid { display: grid; gap: 10px; padding: 0 14px 14px; }
+    .guide-grid h4 { margin: 0 0 4px; color: var(--text); }
+    .guide-grid p { margin: 0; color: var(--muted); font-size: 0.92rem; }
 
-    .pro-metrics summary {
-      min-height: 46px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 0 12px;
-      color: var(--muted);
-      cursor: pointer;
-      list-style: none;
-      font-size: 0.84rem;
-      font-weight: 850;
+    .stock-card { background: linear-gradient(180deg, var(--panel-2), var(--panel)); }
+    .stock-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+    .ticker { color: var(--accent); font-size: 1.9rem; line-height: 1; font-weight: 950; letter-spacing: -0.055em; }
+    .company { margin: 7px 0 0; font-size: 1.08rem; font-weight: 850; letter-spacing: -0.03em; }
+    .meta { margin: 4px 0 0; color: var(--muted); font-size: 0.92rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 7px; justify-content: flex-end; }
+    .tag {
+      display: inline-flex; align-items: center; min-height: 30px; padding: 0 10px; border-radius: 999px;
+      border: 1px solid rgba(170,184,216,0.25); background: rgba(170,184,216,0.10); color: var(--muted);
+      font-size: 0.78rem; font-weight: 900; white-space: nowrap;
     }
+    .risk-low { color: var(--good); border-color: rgba(99,230,190,0.35); background: rgba(99,230,190,0.10); }
+    .risk-moderate { color: #93c5fd; border-color: rgba(147,197,253,0.35); background: rgba(147,197,253,0.10); }
+    .risk-high { color: var(--warn); border-color: rgba(255,209,102,0.38); background: rgba(255,209,102,0.12); }
+    .risk-very-high { color: var(--bad); border-color: rgba(255,138,138,0.42); background: rgba(255,138,138,0.12); }
+    .val-undervalued { color: var(--good); border-color: rgba(99,230,190,0.35); background: rgba(99,230,190,0.10); }
+    .val-reasonable { color: #93c5fd; border-color: rgba(147,197,253,0.35); background: rgba(147,197,253,0.10); }
+    .val-overvalued { color: var(--warn); border-color: rgba(255,209,102,0.38); background: rgba(255,209,102,0.12); }
+    .val-speculative { color: var(--bad); border-color: rgba(255,138,138,0.42); background: rgba(255,138,138,0.12); }
 
-    .pro-metrics summary::-webkit-details-marker { display: none; }
+    .text-block { display: grid; gap: 5px; margin: 13px 0; }
+    .small-label { color: var(--accent); font-size: 0.77rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
+    .text-block p { margin: 0; color: var(--muted); }
+    .manual-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }
+    .manual-item { min-height: 64px; padding: 10px; border: 1px solid rgba(170,184,216,0.16); border-radius: 14px; background: rgba(170,184,216,0.055); }
+    .manual-item .mini-label { display: block; color: var(--muted-2); font-size: 0.72rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.06em; }
+    .manual-item .mini-value { display: block; margin-top: 4px; color: var(--text); font-weight: 850; word-break: break-word; }
+    .notes-item { grid-column: 1 / -1; }
+    details.pro-metrics { margin-top: 10px; border: 1px solid rgba(170,184,216,0.16); border-radius: 16px; background: rgba(170,184,216,0.05); overflow: hidden; }
+    details.pro-metrics summary { min-height: 46px; padding: 0 12px; display: flex; align-items: center; color: var(--accent); font-weight: 900; cursor: pointer; }
+    details.pro-metrics .manual-grid { margin: 0; padding: 0 10px 10px; }
 
-    .pro-metrics summary::after {
-      content: "+";
-      color: var(--accent);
-      font-size: 1.15rem;
-      font-weight: 950;
+    .actions, .settings-actions, .watch-actions { display: grid; gap: 9px; margin-top: 14px; }
+    .actions { grid-template-columns: repeat(3, 1fr); }
+    .button, .link-button {
+      display: inline-flex; align-items: center; justify-content: center; min-height: var(--tap);
+      border: 1px solid var(--border); border-radius: 16px; background: rgba(126,216,255,0.12); color: var(--accent);
+      font-weight: 900; text-decoration: none; cursor: pointer; padding: 0 12px;
     }
+    .button.secondary, .link-button.secondary { background: rgba(170,184,216,0.08); color: var(--text); }
+    .button.danger { background: rgba(255,138,138,0.12); color: var(--bad); border-color: rgba(255,138,138,0.34); }
+    .button.small { min-height: 38px; font-size: 0.88rem; }
+    .empty { display: none; padding: 22px; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--muted); text-align: center; }
 
-    .pro-metrics[open] summary::after { content: "−"; }
+    .watch-card h3 { margin-bottom: 8px; font-size: 1.14rem; letter-spacing: -0.025em; }
+    .watch-card-header { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .watch-note { color: var(--muted); margin: 8px 0 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { border: 1px solid rgba(126,216,255,0.28); border-radius: 999px; background: rgba(126,216,255,0.09); color: var(--accent); min-height: 38px; padding: 0 12px; font-weight: 900; cursor: pointer; }
 
-    .pro-metrics summary span {
-      color: var(--accent);
-      font-weight: 950;
-    }
-
-    .pro-metrics summary small {
-      color: var(--muted-2);
-      font-size: 0.74rem;
-      font-weight: 850;
-      white-space: nowrap;
-    }
-
-    .pro-metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      padding: 0 12px 12px;
-      border-top: 1px solid rgba(170, 184, 216, 0.12);
-    }
-
-    .actions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 9px;
-      margin-top: 14px;
-    }
-
-    .button,
-    .link-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: var(--tap);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: rgba(126, 216, 255, 0.12);
-      color: var(--accent);
-      font-weight: 900;
-      text-decoration: none;
-      cursor: pointer;
-      padding: 0 12px;
-    }
-
-    .button.secondary,
-    .link-button.secondary {
-      background: rgba(170, 184, 216, 0.08);
-      color: var(--text);
-    }
-
-    .button.danger {
-      background: rgba(255, 138, 138, 0.12);
-      color: var(--bad);
-      border-color: rgba(255, 138, 138, 0.34);
-    }
-
-    .button.small {
-      min-height: 38px;
-      border-radius: 14px;
-      font-size: 0.84rem;
-      padding: 0 11px;
-    }
-
-    .empty {
-      display: none;
-      padding: 22px;
-      border: 1px dashed var(--border);
-      border-radius: var(--radius);
-      color: var(--muted);
-      text-align: center;
-    }
-
-    /* 6. Watchlists, settings, and modal */
-    .watchlist-toolbar {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 0 0 14px;
-    }
-
-    .watchlist-grid { display: grid; gap: 14px; }
-
-    .watch-card-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .watch-card h3 {
-      margin: 0;
-      font-size: 1.14rem;
-      letter-spacing: -0.025em;
-      line-height: 1.2;
-    }
-
-    .watch-note {
-      margin: 0 0 12px;
-      color: var(--muted);
-      font-size: 0.88rem;
-      line-height: 1.4;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .chip {
-      border: 1px solid rgba(126, 216, 255, 0.28);
-      border-radius: 999px;
-      background: rgba(126, 216, 255, 0.09);
-      color: var(--accent);
-      min-height: 38px;
-      padding: 0 12px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .watch-card .meta {
-      margin-bottom: 12px;
-    }
-
-    .checkbox-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .checkbox-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      min-height: var(--tap);
-      padding: 12px;
-      border: 1px solid rgba(170, 184, 216, 0.18);
-      border-radius: 16px;
-      background: rgba(170, 184, 216, 0.055);
-      color: var(--text);
-      cursor: pointer;
-    }
-
-    .checkbox-card input {
-      width: 20px;
-      min-height: 20px;
-      margin: 2px 0 0;
-      accent-color: var(--accent);
-    }
-
-    .checkbox-card strong {
-      display: block;
-      font-size: 0.9rem;
-      line-height: 1.25;
-    }
-
-    .checkbox-card span {
-      display: block;
-      margin-top: 3px;
-      color: var(--muted);
-      font-size: 0.78rem;
-      line-height: 1.3;
-    }
-
-    .settings-grid { display: grid; gap: 14px; }
-
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      min-height: 52px;
-      border-top: 1px solid rgba(170, 184, 216, 0.14);
-      padding-top: 12px;
-      margin-top: 12px;
-    }
-
-    .setting-row:first-of-type {
-      border-top: 0;
-      padding-top: 0;
-      margin-top: 0;
-    }
-
-    .switch {
-      width: 54px;
-      height: 32px;
-      appearance: none;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(170, 184, 216, 0.20);
-      padding: 0;
-      position: relative;
-      cursor: pointer;
-    }
-
-    .switch::after {
-      content: "";
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: #fff;
-      transition: transform 0.2s ease;
-    }
-
+    .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 1px solid rgba(170,184,216,0.14); padding-top: 12px; margin-top: 12px; }
+    .setting-row:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+    .switch { width: 54px; height: 32px; appearance: none; border-radius: 999px; border: 1px solid var(--border); background: rgba(170,184,216,0.20); padding: 0; position: relative; cursor: pointer; }
+    .switch::after { content: ""; position: absolute; top: 4px; left: 4px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform 0.2s ease; }
     .switch:checked { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
     .switch:checked::after { transform: translateX(22px); }
-
-    .settings-actions {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .disabled-box {
-      margin-top: 12px;
-      padding: 14px;
-      border: 1px dashed var(--border);
-      border-radius: 16px;
-      color: var(--muted);
-      background: rgba(170, 184, 216, 0.06);
-    }
-
-    .status-text {
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.45;
-    }
-
-    .live-status-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .live-status-item {
-      padding: 10px;
-      border: 1px solid rgba(170, 184, 216, 0.14);
-      border-radius: 14px;
-      background: rgba(170, 184, 216, 0.055);
-    }
-
-    .live-status-item span {
-      display: block;
-      color: var(--muted-2);
-      font-size: 0.72rem;
-      font-weight: 850;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .live-status-item strong {
-      display: block;
-      margin-top: 4px;
-      color: var(--text);
-      font-size: 0.9rem;
-      word-break: break-word;
-    }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      display: none;
-      align-items: flex-end;
-      justify-content: center;
-      padding: 14px;
-      background: rgba(0, 0, 0, 0.56);
-    }
-
-    .modal.active { display: flex; }
-
-    .modal-card {
-      width: min(640px, 100%);
-      max-height: min(88vh, 760px);
-      overflow: auto;
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      padding: 18px;
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 12px;
-    }
-
-    .modal-header h2 { margin: 0; letter-spacing: -0.04em; }
-
-    .close-button {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: rgba(170, 184, 216, 0.10);
-      color: var(--text);
-      font-size: 1.4rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .form-grid { display: grid; gap: 12px; }
-
-    .form-section {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(170, 184, 216, 0.14);
-    }
-
-    .form-section:first-child {
-      margin-top: 0;
-      padding-top: 0;
-      border-top: 0;
-    }
-
-    .form-section h3 {
-      margin: 0;
-      color: var(--text);
-      font-size: 1rem;
-      letter-spacing: -0.02em;
-    }
-
-    .form-hint {
-      margin: -4px 0 0;
-      color: var(--muted);
-      font-size: 0.82rem;
-      line-height: 1.4;
-    }
-
-    .field.full { grid-column: 1 / -1; }
-
-    .form-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .form-actions.three {
-      grid-template-columns: 0.85fr 1fr 1fr;
-    }
-
+    .status-grid { display: grid; gap: 8px; margin-top: 12px; }
+    .status-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; border-radius: 14px; background: rgba(170,184,216,0.055); border: 1px solid rgba(170,184,216,0.13); }
+    .status-line span:first-child { color: var(--muted); font-size: 0.82rem; font-weight: 850; }
+    .status-line span:last-child { color: var(--text); font-weight: 850; text-align: right; }
     .file-input { display: none; }
 
-    body.compact .stock-card,
-    body.compact .card {
-      padding: 14px;
-      border-radius: 18px;
-    }
+    .modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; justify-content: center; padding: 14px; background: rgba(0,0,0,0.56); }
+    .modal.active { display: flex; }
+    .modal-card { width: min(660px, 100%); max-height: min(88vh, 760px); overflow: auto; border: 1px solid var(--border); border-radius: 28px; background: var(--panel); box-shadow: var(--shadow); padding: 18px; }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+    .modal-header h2 { margin: 0; letter-spacing: -0.04em; }
+    .close-button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: rgba(170,184,216,0.10); color: var(--text); font-size: 1.4rem; font-weight: 700; cursor: pointer; }
+    .form-grid { display: grid; gap: 12px; }
+    .form-section { display: grid; gap: 12px; margin-top: 14px; }
+    .form-section h3 { margin: 0; color: var(--accent); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .checkbox-grid { display: grid; gap: 8px; }
+    .checkbox-row { display: flex; align-items: center; gap: 9px; min-height: 38px; color: var(--muted); }
+    .checkbox-row input { width: auto; min-height: auto; }
+    .form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
 
+    .error-box { display: none; margin-bottom: 14px; padding: 14px; border-radius: 16px; border: 1px solid rgba(255,138,138,0.42); color: var(--bad); background: rgba(255,138,138,0.10); }
+
+    body.compact .stock-card, body.compact .card, body.compact .watch-card { padding: 14px; border-radius: 18px; }
     body.compact .manual-grid { gap: 6px; }
+    body.compact .manual-item { min-height: 54px; padding: 8px; }
 
-    body.compact .manual-item {
-      min-height: 54px;
-      padding: 8px;
-    }
-
-    /* 7. Responsive rules */
     @media (min-width: 720px) {
       .app { padding-inline: 26px; }
       .summary-grid { grid-template-columns: repeat(4, 1fr); }
-      .category-grid { grid-template-columns: repeat(2, 1fr); }
-      .controls { grid-template-columns: 1.4fr 1fr 1fr; }
-      .label-guide-content { grid-template-columns: repeat(2, 1fr); }
-      .form-grid { grid-template-columns: repeat(2, 1fr); }
-      .pro-metrics-grid { grid-template-columns: repeat(4, 1fr); }
-      .stock-list { grid-template-columns: repeat(2, 1fr); }
-      .watchlist-grid { grid-template-columns: repeat(2, 1fr); }
-      .watchlist-toolbar { grid-template-columns: repeat(2, minmax(0, 220px)); }
+      .category-grid, .stock-list, .watchlist-grid { grid-template-columns: repeat(2, 1fr); }
+      .controls { grid-template-columns: 1.3fr 1fr 1fr auto; align-items: end; }
       .settings-grid { grid-template-columns: repeat(3, 1fr); }
       .modal { align-items: center; }
+      .guide-grid { grid-template-columns: repeat(2, 1fr); }
+      .settings-actions { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 430px) {
       .app { padding-inline: 14px; }
       .top-tabs { gap: 5px; padding: 7px; }
       .tab-button { min-height: 43px; font-size: 0.88rem; }
-      .summary-grid { gap: 10px; }
-      .card,
-      .stock-card { padding: 16px; }
+      .card, .stock-card, .watch-card { padding: 16px; }
       .actions { grid-template-columns: 1fr; }
-      .watchlist-toolbar { grid-template-columns: 1fr; }
-      .form-actions.three { grid-template-columns: 1fr; }
       .stock-header { display: grid; }
       .tags { justify-content: flex-start; }
     }
@@ -957,174 +315,93 @@
       <div>
         <p class="eyebrow">Quantum Stocks</p>
         <h1>Dashboard</h1>
-        <p>A simple mobile watchlist for quantum, infrastructure, photonics, cybersecurity, and ETFs.</p>
+        <p>A mobile watchlist for quantum, infrastructure, photonics, cybersecurity, ETFs, and AI/data-center relevance.</p>
       </div>
     </header>
 
     <main>
-      <section class="tab-panel active" id="homePanel" data-panel="home">
+      <div class="error-box" id="startupError"></div>
+
+      <section class="tab-panel active" data-panel="home">
         <div class="grid summary-grid" id="summaryCards"></div>
-
         <div class="section-title" style="margin-top: 24px;">
-          <div>
-            <h2>Categories</h2>
-            <p>Static coverage.</p>
-          </div>
+          <div><h2>Categories</h2><p>Static coverage with live data layered on top.</p></div>
         </div>
-
         <div class="grid category-grid" id="categoryCards"></div>
       </section>
 
-      <section class="tab-panel" id="stocksPanel" data-panel="stocks">
+      <section class="tab-panel" data-panel="stocks">
         <div class="section-title">
-          <div>
-            <h2>Stocks</h2>
-            <p>Search, filter, and edit your notes.</p>
-          </div>
+          <div><h2>Stocks</h2><p>Search, filter, and edit your notes.</p></div>
         </div>
-
         <div class="controls">
-          <div class="field">
-            <label for="searchInput">Search</label>
-            <input id="searchInput" type="search" placeholder="Ticker, company, thesis..." autocomplete="off" />
-          </div>
-
-          <div class="field">
-            <label for="categoryFilter">Category</label>
-            <select id="categoryFilter"></select>
-          </div>
-
-          <div class="field">
-            <label for="riskFilter">Risk</label>
-            <select id="riskFilter"></select>
-          </div>
+          <div class="field"><label for="searchInput">Search</label><input id="searchInput" type="search" placeholder="Ticker, company, thesis..." autocomplete="off" /></div>
+          <div class="field"><label for="categoryFilter">Category</label><select id="categoryFilter"></select></div>
+          <div class="field"><label for="riskFilter">Risk</label><select id="riskFilter"></select></div>
+          <button class="button secondary" id="resetFilters" type="button">Reset</button>
         </div>
 
         <details class="label-guide">
-          <summary><span>Label guide</span> Risk · valuation · metrics · watchlists</summary>
-          <div class="label-guide-content">
-            <div class="label-guide-item">
-              <strong>Risk</strong>
-              <p>Low = diversified and established. Moderate = real business with cycle or valuation risk. High / Very High = more execution, cash-burn, volatility, or early-stage risk.</p>
-            </div>
-            <div class="label-guide-item">
-              <strong>Valuation</strong>
-              <p>Reasonable = easier to justify from current business quality. Overvalued = priced for a lot of optimism. Speculative = future-potential driven. Undervalued = appears cheap versus potential.</p>
-            </div>
-            <div class="label-guide-item">
-              <strong>AI / Data Center Relevance</strong>
-              <p>Shows whether the company can benefit from AI, cloud, chips, power, cooling, or data-center demand while quantum matures.</p>
-            </div>
-            <div class="label-guide-item">
-              <strong>Pro Metrics</strong>
-              <p>Manual metrics for trend and risk: 6M average, 6M return, price vs averages, volatility, drawdown, relative strength vs QQQ, share dilution, and custom watchlist membership.</p>
-            </div>
+          <summary>Label guide · risk, valuation, metrics</summary>
+          <div class="guide-grid">
+            <div><h4>Risk</h4><p>Low = diversified and established. Moderate = real business with cycle or valuation risk. High / Very High = more execution, cash-burn, volatility, or early-stage risk.</p></div>
+            <div><h4>Valuation</h4><p>Reasonable = easier to justify from current business quality. Overvalued = priced for a lot of optimism. Speculative = future-potential driven.</p></div>
+            <div><h4>AI / Data Center Relevance</h4><p>Shows whether the company may benefit from AI, cloud, chips, power, cooling, or data-center demand while quantum matures.</p></div>
+            <div><h4>Pro Metrics</h4><p>6M average, 6M return, price vs averages, volatility, drawdown, relative strength vs QQQ, and share dilution.</p></div>
           </div>
         </details>
 
         <div class="stock-list" id="stockList"></div>
-        <div class="empty" id="emptyState">No stocks match your filters.</div>
+        <div class="empty" id="emptyState">No stocks match your filters. Tap Reset above.</div>
       </section>
 
-      <section class="tab-panel" id="watchlistsPanel" data-panel="watchlists">
+      <section class="tab-panel" data-panel="watchlists">
         <div class="section-title">
-          <div>
-            <h2>Watchlists</h2>
-            <p>Curated groups. Tap a ticker to jump to its stock card.</p>
-          </div>
+          <div><h2>Watchlists</h2><p>Curated groups. Tap a ticker to jump to its stock card.</p></div>
         </div>
-
-        <div class="watchlist-toolbar" aria-label="Watchlist actions">
+        <div class="watch-actions" style="grid-template-columns: 1fr 1fr; margin-bottom: 14px;">
           <button class="button" id="addWatchlist" type="button">Add Watchlist</button>
           <button class="button secondary" id="resetWatchlists" type="button">Reset Lists</button>
         </div>
-
         <div class="watchlist-grid" id="watchlistGrid"></div>
       </section>
 
-      <section class="tab-panel" id="settingsPanel" data-panel="settings">
+      <section class="tab-panel" data-panel="settings">
         <div class="section-title">
-          <div>
-            <h2>Settings</h2>
-            <p>Display and saved data.</p>
-          </div>
+          <div><h2>Settings</h2><p>Display, saved data, and live updates.</p></div>
         </div>
-
         <div class="settings-grid">
           <div class="card">
             <h3>Display</h3>
-
-            <div class="setting-row">
-              <div>
-                <strong>Dark mode</strong>
-                <p class="meta">Default view.</p>
-              </div>
-              <input class="switch" id="darkToggle" type="checkbox" checked />
-            </div>
-
-            <div class="setting-row">
-              <div>
-                <strong>Compact cards</strong>
-                <p class="meta">Tighter layout.</p>
-              </div>
-              <input class="switch" id="compactToggle" type="checkbox" />
-            </div>
+            <div class="setting-row"><div><strong>Dark mode</strong><p class="meta">Default view.</p></div><input class="switch" id="darkToggle" type="checkbox" checked /></div>
+            <div class="setting-row"><div><strong>Compact cards</strong><p class="meta">Tighter layout.</p></div><input class="switch" id="compactToggle" type="checkbox" /></div>
           </div>
-
           <div class="card">
             <h3>Data</h3>
-            <p class="meta">Export stocks or watchlists separately so they open cleanly in Sheets or Excel.</p>
-
+            <p class="meta">Exports open cleanly in Excel, Sheets, or Numbers.</p>
             <div class="settings-actions">
-              <button class="button" id="exportCsv" type="button">Export Stocks CSV</button>
-              <button class="button secondary" id="exportWatchlistsCsv" type="button">Export Watchlists CSV</button>
+              <button class="button" id="exportStocksCsv" type="button">Export Stocks CSV</button>
+              <button class="button" id="exportWatchlistsCsv" type="button">Export Watchlists CSV</button>
               <button class="button secondary" id="importCsvButton" type="button">Import Stock CSV</button>
               <button class="button danger" id="resetData" type="button">Reset local changes</button>
               <input class="file-input" id="importCsv" type="file" accept=".csv,text/csv" />
             </div>
-
-            <p class="status-text" id="dataStatus">Stock edits, pro metrics, and watchlists save on this device.</p>
+            <p class="meta">Stock edits, pro metrics, and watchlists save on this device.</p>
           </div>
-
           <div class="card">
             <h3>Live Data</h3>
-            <p class="meta">Connect your Cloudflare Worker proxy. Finnhub handles live quotes and Tiingo handles 6-month performance metrics.</p>
-
-            <div class="field" style="margin-top: 12px;">
-              <label for="workerUrlInput">Cloudflare Worker URL</label>
-              <input id="workerUrlInput" type="url" inputmode="url" placeholder="https://your-worker.yourname.workers.dev" autocomplete="off" />
-            </div>
-
-            <div class="setting-row">
-              <div>
-                <strong>Auto-refresh</strong>
-                <p class="meta">Every 15 minutes when the app is open.</p>
-              </div>
-              <input class="switch" id="liveAutoToggle" type="checkbox" />
-            </div>
-
+            <div class="field"><label for="workerUrlInput">Cloudflare Worker URL</label><input id="workerUrlInput" type="url" placeholder="https://...workers.dev" /></div>
+            <div class="setting-row"><div><strong>Auto-refresh</strong><p class="meta">Every 15 minutes when open.</p></div><input class="switch" id="autoRefreshToggle" type="checkbox" /></div>
             <div class="settings-actions">
-              <button class="button" id="refreshLiveData" type="button">Refresh Now</button>
+              <button class="button" id="refreshNow" type="button">Refresh Now</button>
               <button class="button secondary" id="saveWorkerUrl" type="button">Save Worker URL</button>
               <button class="button secondary" id="clearLiveCache" type="button">Clear Live Cache</button>
             </div>
-
-            <div class="live-status-grid">
-              <div class="live-status-item">
-                <span>Status</span>
-                <strong id="liveStatus">Not connected</strong>
-              </div>
-              <div class="live-status-item">
-                <span>Last quote refresh</span>
-                <strong id="lastQuoteRefresh">Never</strong>
-              </div>
-              <div class="live-status-item">
-                <span>Last performance refresh</span>
-                <strong id="lastPerformanceRefresh">Never</strong>
-              </div>
+            <div class="status-grid">
+              <div class="status-line"><span>Status</span><span id="liveStatus">Not connected</span></div>
+              <div class="status-line"><span>Last quote refresh</span><span id="lastQuoteRefresh">Never</span></div>
+              <div class="status-line"><span>Last performance refresh</span><span id="lastPerformanceRefresh">Never</span></div>
             </div>
-
-            <p class="status-text">Quotes refresh every 15 minutes. Performance metrics refresh once per day to save API calls.</p>
           </div>
         </div>
       </section>
@@ -1133,150 +410,26 @@
 
   <div class="modal" id="editModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-card">
-      <div class="modal-header">
-        <div>
-          <p class="eyebrow">Edit stock</p>
-          <h2 id="editTitle">Edit</h2>
-          <p class="meta" id="editSubtitle"></p>
-        </div>
-        <button class="close-button" type="button" id="closeModal" aria-label="Close">×</button>
-      </div>
-
+      <div class="modal-header"><div><p class="eyebrow">Edit stock</p><h2 id="editTitle">Edit</h2><p class="meta" id="editSubtitle"></p></div><button class="close-button" type="button" id="closeModal">×</button></div>
       <form id="editForm">
-        <div class="form-section">
-          <h3>Core Data</h3>
-          <div class="form-grid">
-            <div class="field">
-              <label for="livePriceInput">Live Price</label>
-              <input id="livePriceInput" name="livePrice" type="text" placeholder="$0.00" />
-            </div>
-
-            <div class="field">
-              <label for="marketCapInput">Market Cap</label>
-              <input id="marketCapInput" name="marketCap" type="text" placeholder="$0.0B" />
-            </div>
-
-            <div class="field">
-              <label for="psRatioInput">P/S Ratio</label>
-              <input id="psRatioInput" name="psRatio" type="text" placeholder="0.0x" />
-            </div>
-
-            <div class="field">
-              <label for="revenueGrowthInput">Revenue Growth</label>
-              <input id="revenueGrowthInput" name="revenueGrowth" type="text" placeholder="+0% YoY" />
-            </div>
-
-            <div class="field">
-              <label for="cashRunwayInput">Cash Runway</label>
-              <input id="cashRunwayInput" name="cashRunway" type="text" placeholder="Example: 18 months" />
-            </div>
-
-            <div class="field full">
-              <label for="analystNotesInput">Analyst Notes</label>
-              <textarea id="analystNotesInput" name="analystNotes" placeholder="Your notes..."></textarea>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h3>Pro Metrics</h3>
-          <p class="form-hint">Manual metrics. Use percentages like +12%, prices like $100.50, or labels like High / Moderate.</p>
-          <div class="form-grid">
-            <div class="field">
-              <label for="sixMonthAvgPriceInput">6M Avg Price</label>
-              <input id="sixMonthAvgPriceInput" name="sixMonthAvgPrice" type="text" placeholder="$0.00" />
-            </div>
-
-            <div class="field">
-              <label for="sixMonthReturnInput">6M Return</label>
-              <input id="sixMonthReturnInput" name="sixMonthReturn" type="text" placeholder="+0%" />
-            </div>
-
-            <div class="field">
-              <label for="priceVsSixMonthAvgInput">Price vs 6M Avg</label>
-              <input id="priceVsSixMonthAvgInput" name="priceVsSixMonthAvg" type="text" placeholder="+0%" />
-            </div>
-
-            <div class="field">
-              <label for="priceVs200DaySmaInput">Price vs 200D SMA</label>
-              <input id="priceVs200DaySmaInput" name="priceVs200DaySma" type="text" placeholder="+0%" />
-            </div>
-
-            <div class="field">
-              <label for="sixMonthVolatilityInput">6M Volatility</label>
-              <input id="sixMonthVolatilityInput" name="sixMonthVolatility" type="text" placeholder="Low / Moderate / High" />
-            </div>
-
-            <div class="field">
-              <label for="sixMonthMaxDrawdownInput">6M Max Drawdown</label>
-              <input id="sixMonthMaxDrawdownInput" name="sixMonthMaxDrawdown" type="text" placeholder="-0%" />
-            </div>
-
-            <div class="field">
-              <label for="relativeStrengthVsQqqInput">Relative vs QQQ</label>
-              <input id="relativeStrengthVsQqqInput" name="relativeStrengthVsQqq" type="text" placeholder="+0%" />
-            </div>
-
-            <div class="field">
-              <label for="shareDilutionInput">Share Dilution</label>
-              <input id="shareDilutionInput" name="shareDilution" type="text" placeholder="+0% YoY" />
-            </div>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h3>Watchlists</h3>
-          <p class="form-hint">Choose where this stock appears on the Watchlists tab. These choices save locally and export to CSV.</p>
-          <div class="checkbox-grid" id="watchlistCheckboxes"></div>
-        </div>
-
-        <div class="form-actions">
-          <button class="button secondary" id="cancelEdit" type="button">Cancel</button>
-          <button class="button" type="submit">Save</button>
-        </div>
+        <div class="form-section"><h3>Core Data</h3><div class="form-grid" id="coreEditFields"></div></div>
+        <div class="form-section"><h3>Pro Metrics</h3><p class="meta">Use percentages like +12%, prices like $100.50, or notes.</p><div class="form-grid" id="proEditFields"></div></div>
+        <div class="form-section"><h3>Watchlists</h3><p class="meta">Choose where this stock appears.</p><div class="checkbox-grid" id="watchlistCheckboxes"></div></div>
+        <div class="form-actions"><button class="button secondary" id="cancelEdit" type="button">Cancel</button><button class="button" type="submit">Save</button></div>
       </form>
     </div>
   </div>
 
-
-
   <div class="modal" id="watchlistModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-card">
-      <div class="modal-header">
-        <div>
-          <p class="eyebrow">Edit watchlist</p>
-          <h2 id="watchlistEditTitle">Watchlist</h2>
-          <p class="meta" id="watchlistEditSubtitle">Rename the list, update tickers, or add a short note.</p>
-        </div>
-        <button class="close-button" type="button" id="closeWatchlistModal" aria-label="Close">×</button>
-      </div>
-
+      <div class="modal-header"><div><p class="eyebrow">Edit watchlist</p><h2 id="watchlistTitle">Watchlist</h2><p class="meta">Rename the list, update tickers, or add a short note.</p></div><button class="close-button" type="button" id="closeWatchlistModal">×</button></div>
       <form id="watchlistForm">
-        <div class="form-section">
-          <h3>Watchlist Details</h3>
-          <div class="form-grid">
-            <div class="field full">
-              <label for="watchlistTitleInput">List Name</label>
-              <input id="watchlistTitleInput" name="watchlistTitle" type="text" placeholder="Example: AI infrastructure watchlist" />
-            </div>
-
-            <div class="field full">
-              <label for="watchlistTickersInput">Tickers</label>
-              <textarea id="watchlistTickersInput" name="watchlistTickers" placeholder="Example: NVDA, TSM, ASML, VRT"></textarea>
-            </div>
-
-            <div class="field full">
-              <label for="watchlistNoteInput">Short Note</label>
-              <textarea id="watchlistNoteInput" name="watchlistNote" placeholder="Why this list matters..."></textarea>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-actions three">
-          <button class="button danger" id="deleteWatchlist" type="button">Delete</button>
-          <button class="button secondary" id="cancelWatchlistEdit" type="button">Cancel</button>
-          <button class="button" type="submit">Save</button>
-        </div>
+        <div class="form-section"><h3>Watchlist Details</h3><div class="form-grid">
+          <div class="field"><label for="watchlistNameInput">List Name</label><input id="watchlistNameInput" name="watchlistName" type="text" /></div>
+          <div class="field"><label for="watchlistTickersInput">Tickers</label><textarea id="watchlistTickersInput" name="watchlistTickers" placeholder="IONQ, NVDA, IBM"></textarea></div>
+          <div class="field"><label for="watchlistNoteInput">Short Note</label><textarea id="watchlistNoteInput" name="watchlistNote" placeholder="Why this list matters..."></textarea></div>
+        </div></div>
+        <div class="form-actions"><button class="button danger" id="deleteWatchlist" type="button">Delete</button><button class="button secondary" id="cancelWatchlistEdit" type="button">Cancel</button><button class="button" type="submit">Save</button></div>
       </form>
     </div>
   </div>
@@ -1287,467 +440,80 @@
        Edit this section to add, remove, or update stocks.
        ========================================================= */
     const stocks = [
-      {
-        ticker: "IONQ",
-        company: "IonQ, Inc.",
-        exchange: "NYSE",
-        category: "Pure-play quantum",
-        risk: "High",
-        valuation: "Speculative",
-        thesis: "Direct pure-play exposure to trapped-ion quantum computing, cloud access, and enterprise quantum experiments.",
-        aiHpc: "Could benefit from quantum workloads being paired with cloud and data-center compute systems, but it is not a classic AI infrastructure stock."
-      },
-      {
-        ticker: "RGTI",
-        company: "Rigetti Computing, Inc.",
-        exchange: "NASDAQ",
-        category: "Pure-play quantum",
-        risk: "Very High",
-        valuation: "Speculative",
-        thesis: "Pure-play superconducting quantum hardware and full-stack quantum systems exposure.",
-        aiHpc: "Potential quantum and data-center compute integration story, but commercialization risk remains high."
-      },
-      {
-        ticker: "QBTS",
-        company: "D-Wave Quantum Inc.",
-        exchange: "NYSE",
-        category: "Pure-play quantum",
-        risk: "Very High",
-        valuation: "Speculative",
-        thesis: "Quantum annealing and gate-model quantum roadmap with customer-facing optimization use cases.",
-        aiHpc: "Potential use in optimization workloads that may sit beside AI and data-center workflows."
-      },
-      {
-        ticker: "QUBT",
-        company: "Quantum Computing Inc.",
-        exchange: "NASDAQ",
-        category: "Pure-play quantum",
-        risk: "Very High",
-        valuation: "Speculative",
-        thesis: "Small-cap quantum and photonic computing exposure with early-stage commercialization risk.",
-        aiHpc: "Possible optimization and photonics angle, but still highly speculative."
-      },
-      {
-        ticker: "LAES",
-        company: "SEALSQ Corp.",
-        exchange: "NASDAQ",
-        category: "Pure-play quantum",
-        risk: "Very High",
-        valuation: "Speculative",
-        thesis: "Security-chip and post-quantum cryptography angle tied to quantum-resistant identity and hardware security.",
-        aiHpc: "More relevant to secure hardware and post-quantum security than AI and data-center infrastructure."
-      },
-      {
-        ticker: "HON",
-        company: "Honeywell International Inc.",
-        exchange: "NASDAQ",
-        category: "Pure-play quantum",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Diversified industrial company with indirect quantum exposure through Quantinuum.",
-        aiHpc: "Industrial automation and data-center-adjacent exposure, but quantum is only one part of the story."
-      },
-      {
-        ticker: "IBM",
-        company: "International Business Machines Corp.",
-        exchange: "NYSE",
-        category: "Big Tech quantum",
-        risk: "Low",
-        valuation: "Reasonable",
-        thesis: "Large enterprise technology company with one of the deepest public quantum hardware, software, and developer ecosystems.",
-        aiHpc: "Hybrid cloud, mainframe, AI software, and quantum research can support enterprise compute demand."
-      },
-      {
-        ticker: "GOOGL",
-        company: "Alphabet Inc.",
-        exchange: "NASDAQ",
-        category: "Big Tech quantum",
-        risk: "Low",
-        valuation: "Reasonable",
-        thesis: "Quantum research through Google Quantum AI with a long-term focus on useful quantum computing.",
-        aiHpc: "Major AI and cloud platform with data-center infrastructure and custom AI chips."
-      },
-      {
-        ticker: "MSFT",
-        company: "Microsoft Corp.",
-        exchange: "NASDAQ",
-        category: "Big Tech quantum",
-        risk: "Low",
-        valuation: "Reasonable",
-        thesis: "Azure Quantum gives Microsoft exposure to quantum software, cloud access, and long-term hardware research.",
-        aiHpc: "Major AI cloud and enterprise software platform with strong data-center demand."
-      },
-      {
-        ticker: "AMZN",
-        company: "Amazon.com, Inc.",
-        exchange: "NASDAQ",
-        category: "Big Tech quantum",
-        risk: "Low",
-        valuation: "Reasonable",
-        thesis: "AWS Braket provides cloud access to quantum systems and keeps Amazon involved in quantum workflows.",
-        aiHpc: "AWS is a core AI and data-center cloud infrastructure platform."
-      },
-      {
-        ticker: "NVDA",
-        company: "NVIDIA Corp.",
-        exchange: "NASDAQ",
-        category: "Big Tech quantum",
-        risk: "Moderate",
-        valuation: "Overvalued",
-        thesis: "Quantum-adjacent through simulation, accelerated computing, CUDA-Q, and the classical compute needed around quantum systems.",
-        aiHpc: "Core AI and data-center infrastructure leader."
-      },
-      {
-        ticker: "INTC",
-        company: "Intel Corp.",
-        exchange: "NASDAQ",
-        category: "Big Tech quantum",
-        risk: "High",
-        valuation: "Reasonable",
-        thesis: "Quantum-adjacent through silicon spin-qubit research, cryogenic control, chips, and foundry ambitions.",
-        aiHpc: "AI accelerator and foundry turnaround potential, but execution risk is elevated."
-      },
-      {
-        ticker: "TSM",
-        company: "Taiwan Semiconductor Manufacturing Co. Ltd.",
-        exchange: "NYSE",
-        category: "Semiconductor infrastructure",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Advanced foundry infrastructure that supports high-end chips used in AI, data-center, and quantum-adjacent systems.",
-        aiHpc: "One of the most important manufacturing layers for AI and advanced-compute chips."
-      },
-      {
-        ticker: "ASML",
-        company: "ASML Holding N.V.",
-        exchange: "NASDAQ",
-        category: "Semiconductor infrastructure",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Critical lithography equipment supplier for advanced semiconductor manufacturing.",
-        aiHpc: "Advanced AI and data-center chips depend on leading-edge lithography capacity."
-      },
-      {
-        ticker: "AMAT",
-        company: "Applied Materials, Inc.",
-        exchange: "NASDAQ",
-        category: "Semiconductor infrastructure",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Semiconductor manufacturing equipment exposure across deposition, materials engineering, and advanced chip production.",
-        aiHpc: "Benefits from semiconductor capex tied to AI and advanced computing."
-      },
-      {
-        ticker: "LRCX",
-        company: "Lam Research Corp.",
-        exchange: "NASDAQ",
-        category: "Semiconductor infrastructure",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Etch and deposition equipment supplier tied to advanced chip production.",
-        aiHpc: "AI and data-center chip production supports long-term wafer-fab equipment demand."
-      },
-      {
-        ticker: "KLAC",
-        company: "KLA Corp.",
-        exchange: "NASDAQ",
-        category: "Semiconductor infrastructure",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Process control and inspection equipment for advanced semiconductors.",
-        aiHpc: "Complex AI and data-center chips require strong process control and yield management."
-      },
-      {
-        ticker: "SKYT",
-        company: "SkyWater Technology, Inc.",
-        exchange: "NASDAQ",
-        category: "Semiconductor infrastructure",
-        risk: "High",
-        valuation: "Speculative",
-        thesis: "Specialty foundry exposure that may benefit from domestic semiconductor and emerging hardware demand.",
-        aiHpc: "More niche foundry exposure; higher execution risk than large semiconductor infrastructure names."
-      },
-      {
-        ticker: "MU",
-        company: "Micron Technology, Inc.",
-        exchange: "NASDAQ",
-        category: "Semiconductor infrastructure",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Memory and storage supplier important to AI servers and advanced compute systems.",
-        aiHpc: "High-bandwidth memory and data-center memory demand are key AI and data-center drivers."
-      },
-      {
-        ticker: "TSEM",
-        company: "Tower Semiconductor Ltd.",
-        exchange: "NASDAQ",
-        category: "Semiconductor infrastructure",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Specialty analog foundry exposure that can support sensors, power, photonics, and mixed-signal infrastructure.",
-        aiHpc: "Indirect AI and data-center exposure through specialty chip manufacturing."
-      },
-      {
-        ticker: "COHR",
-        company: "Coherent Corp.",
-        exchange: "NASDAQ",
-        category: "Photonics/lasers",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Photonics, lasers, optical components, and compound materials exposure relevant to advanced compute and quantum systems.",
-        aiHpc: "Optical interconnect and photonics demand can benefit from AI data-center growth."
-      },
-      {
-        ticker: "LITE",
-        company: "Lumentum Holdings Inc.",
-        exchange: "NASDAQ",
-        category: "Photonics/lasers",
-        risk: "High",
-        valuation: "Reasonable",
-        thesis: "Optical and photonic components that can benefit from data-center networking and advanced optical systems.",
-        aiHpc: "AI data centers need faster optical connectivity, making photonics an important infrastructure layer."
-      },
-      {
-        ticker: "IPGP",
-        company: "IPG Photonics Corp.",
-        exchange: "NASDAQ",
-        category: "Photonics/lasers",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Fiber laser leader with industrial laser expertise relevant to precision manufacturing and photonics infrastructure.",
-        aiHpc: "Less direct AI exposure, but photonics and advanced manufacturing remain relevant."
-      },
-      {
-        ticker: "MKSI",
-        company: "MKS Instruments, Inc.",
-        exchange: "NASDAQ",
-        category: "Photonics/lasers",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Photonics, lasers, vacuum, and process-control tools for semiconductor and advanced manufacturing markets.",
-        aiHpc: "AI chip capex can support demand for semiconductor manufacturing tools and photonics components."
-      },
-      {
-        ticker: "VRT",
-        company: "Vertiv Holdings Co.",
-        exchange: "NYSE",
-        category: "Power/cooling/infrastructure",
-        risk: "Moderate",
-        valuation: "Overvalued",
-        thesis: "Data-center power and thermal infrastructure supplier that can benefit from AI/data-center buildouts.",
-        aiHpc: "Strong AI and data-center infrastructure beneficiary through cooling, power, and data-center systems."
-      },
-      {
-        ticker: "ETN",
-        company: "Eaton Corp. plc",
-        exchange: "NYSE",
-        category: "Power/cooling/infrastructure",
-        risk: "Low",
-        valuation: "Reasonable",
-        thesis: "Power management and electrification exposure for data centers and industrial infrastructure.",
-        aiHpc: "AI data centers require reliable power distribution and electrical infrastructure."
-      },
-      {
-        ticker: "SMCI",
-        company: "Super Micro Computer, Inc.",
-        exchange: "NASDAQ",
-        category: "Power/cooling/infrastructure",
-        risk: "High",
-        valuation: "Speculative",
-        thesis: "AI server and rack systems company with liquid-cooling and data-center infrastructure exposure.",
-        aiHpc: "Direct AI and data-center server infrastructure candidate, but volatility and execution risk are high."
-      },
-      {
-        ticker: "CEG",
-        company: "Constellation Energy Corp.",
-        exchange: "NASDAQ",
-        category: "Power/cooling/infrastructure",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Large clean-power provider that can benefit from rising data-center electricity demand.",
-        aiHpc: "AI data centers need large, reliable power sources."
-      },
-      {
-        ticker: "TLN",
-        company: "Talen Energy Corp.",
-        exchange: "NYSE",
-        category: "Power/cooling/infrastructure",
-        risk: "High",
-        valuation: "Speculative",
-        thesis: "Power generation exposure with data-center power optionality.",
-        aiHpc: "Potential AI data-center power beneficiary, but higher risk than diversified utilities."
-      },
-      {
-        ticker: "DHR",
-        company: "Danaher Corp.",
-        exchange: "NYSE",
-        category: "Power/cooling/infrastructure",
-        risk: "Low",
-        valuation: "Reasonable",
-        thesis: "Scientific instrumentation and life-science tools exposure with indirect relevance to advanced research ecosystems.",
-        aiHpc: "Indirect; more research tools and instrumentation than AI and data-center infrastructure."
-      },
-      {
-        ticker: "SYK",
-        company: "Stryker Corp.",
-        exchange: "NYSE",
-        category: "Power/cooling/infrastructure",
-        risk: "Low",
-        valuation: "Reasonable",
-        thesis: "Large medical technology company; included as an indirect infrastructure-style large-cap watchlist item rather than a direct quantum play.",
-        aiHpc: "Indirect; not a core AI and data-center infrastructure name."
-      },
-      {
-        ticker: "PANW",
-        company: "Palo Alto Networks, Inc.",
-        exchange: "NASDAQ",
-        category: "Cybersecurity/post-quantum encryption",
-        risk: "Moderate",
-        valuation: "Overvalued",
-        thesis: "Cybersecurity leader that may benefit as enterprises upgrade encryption and network defenses for a post-quantum world.",
-        aiHpc: "AI security and cloud security are more direct drivers than quantum."
-      },
-      {
-        ticker: "CRWD",
-        company: "CrowdStrike Holdings, Inc.",
-        exchange: "NASDAQ",
-        category: "Cybersecurity/post-quantum encryption",
-        risk: "Moderate",
-        valuation: "Overvalued",
-        thesis: "Endpoint and cloud security platform that could benefit from long-term security modernization.",
-        aiHpc: "AI-powered security platform exposure."
-      },
-      {
-        ticker: "FTNT",
-        company: "Fortinet, Inc.",
-        exchange: "NASDAQ",
-        category: "Cybersecurity/post-quantum encryption",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "Network security and firewall exposure that can participate in encryption and infrastructure refresh cycles.",
-        aiHpc: "Less direct AI and data-center exposure; benefits from security demand around networks and data centers."
-      },
-      {
-        ticker: "ZS",
-        company: "Zscaler, Inc.",
-        exchange: "NASDAQ",
-        category: "Cybersecurity/post-quantum encryption",
-        risk: "High",
-        valuation: "Overvalued",
-        thesis: "Zero-trust cloud security platform that could benefit from broad security architecture upgrades.",
-        aiHpc: "AI security demand may support growth, but valuation risk is high."
-      },
-      {
-        ticker: "CSCO",
-        company: "Cisco Systems, Inc.",
-        exchange: "NASDAQ",
-        category: "Cybersecurity/post-quantum encryption",
-        risk: "Low",
-        valuation: "Reasonable",
-        thesis: "Networking and security incumbent that can participate in post-quantum encryption migration across enterprise networks.",
-        aiHpc: "Data-center networking and security exposure."
-      },
-      {
-        ticker: "QTUM",
-        company: "Defiance Quantum ETF",
-        exchange: "NASDAQ",
-        category: "ETFs",
-        risk: "Moderate",
-        valuation: "Reasonable",
-        thesis: "ETF basket exposure to quantum computing, machine learning, and related technology themes.",
-        aiHpc: "Diversified exposure can include AI, semiconductor, and quantum-related names."
-      },
-      {
-        ticker: "ARKQ",
-        company: "ARK Autonomous Technology & Robotics ETF",
-        exchange: "Cboe BZX",
-        category: "ETFs",
-        risk: "High",
-        valuation: "Speculative",
-        thesis: "Actively managed ETF focused on autonomous technology, robotics, and related innovation themes with indirect quantum overlap.",
-        aiHpc: "Broader AI, autonomy, robotics, and compute exposure."
-      }
+      { ticker: "IONQ", company: "IonQ, Inc.", exchange: "NYSE", category: "Pure-play quantum", risk: "High", valuation: "Speculative", thesis: "Direct pure-play exposure to trapped-ion quantum computing, cloud access, and enterprise quantum experiments.", aiData: "Quantum workloads could be paired with cloud and high-performance data-center systems, but this is not a classic AI infrastructure stock." },
+      { ticker: "RGTI", company: "Rigetti Computing, Inc.", exchange: "NASDAQ", category: "Pure-play quantum", risk: "Very High", valuation: "Speculative", thesis: "Pure-play superconducting quantum hardware and full-stack quantum systems exposure.", aiData: "Potential quantum/data-center integration story, but commercialization risk remains high." },
+      { ticker: "QBTS", company: "D-Wave Quantum Inc.", exchange: "NYSE", category: "Pure-play quantum", risk: "Very High", valuation: "Speculative", thesis: "Quantum annealing and gate-model roadmap with customer-facing optimization use cases.", aiData: "Optimization workloads may sit beside AI and data-center workflows." },
+      { ticker: "QUBT", company: "Quantum Computing Inc.", exchange: "NASDAQ", category: "Pure-play quantum", risk: "Very High", valuation: "Speculative", thesis: "Small-cap quantum and photonic computing exposure with early-stage commercialization risk.", aiData: "Possible optimization and photonics angle, but still highly speculative." },
+      { ticker: "LAES", company: "SEALSQ Corp.", exchange: "NASDAQ", category: "Pure-play quantum", risk: "Very High", valuation: "Speculative", thesis: "Security-chip and post-quantum cryptography angle tied to quantum-resistant identity and hardware security.", aiData: "More relevant to secure hardware and post-quantum security than AI infrastructure." },
+      { ticker: "HON", company: "Honeywell International Inc.", exchange: "NASDAQ", category: "Pure-play quantum", risk: "Moderate", valuation: "Reasonable", thesis: "Diversified industrial company with indirect quantum exposure through Quantinuum.", aiData: "Industrial automation and data-center-adjacent exposure, but quantum is only one part of the story." },
+      { ticker: "IBM", company: "International Business Machines Corp.", exchange: "NYSE", category: "Big Tech quantum", risk: "Low", valuation: "Reasonable", thesis: "Large enterprise technology company with a deep public quantum hardware, software, and developer ecosystem.", aiData: "Hybrid cloud, mainframe, AI software, and quantum research can support enterprise compute demand." },
+      { ticker: "GOOGL", company: "Alphabet Inc.", exchange: "NASDAQ", category: "Big Tech quantum", risk: "Low", valuation: "Reasonable", thesis: "Quantum research through Google Quantum AI with a long-term focus on useful quantum computing.", aiData: "Major AI and cloud platform with data-center infrastructure and custom AI chips." },
+      { ticker: "MSFT", company: "Microsoft Corp.", exchange: "NASDAQ", category: "Big Tech quantum", risk: "Low", valuation: "Reasonable", thesis: "Azure Quantum gives Microsoft exposure to quantum software, cloud access, and long-term hardware research.", aiData: "Major AI cloud and enterprise software platform with strong data-center demand." },
+      { ticker: "AMZN", company: "Amazon.com, Inc.", exchange: "NASDAQ", category: "Big Tech quantum", risk: "Low", valuation: "Reasonable", thesis: "AWS Braket provides cloud access to quantum systems and keeps Amazon involved in quantum workflows.", aiData: "AWS is a core AI and data-center cloud infrastructure platform." },
+      { ticker: "NVDA", company: "NVIDIA Corp.", exchange: "NASDAQ", category: "Big Tech quantum", risk: "Moderate", valuation: "Overvalued", thesis: "Quantum-adjacent through simulation, accelerated computing, CUDA-Q, and the classical compute needed around quantum systems.", aiData: "Core AI and high-performance data-center infrastructure leader." },
+      { ticker: "INTC", company: "Intel Corp.", exchange: "NASDAQ", category: "Big Tech quantum", risk: "High", valuation: "Reasonable", thesis: "Quantum-adjacent through silicon spin-qubit research, cryogenic control, chips, and foundry ambitions.", aiData: "AI accelerator and foundry turnaround potential, but execution risk is elevated." },
+      { ticker: "TSM", company: "Taiwan Semiconductor Manufacturing Co. Ltd.", exchange: "NYSE", category: "Semiconductor infrastructure", risk: "Moderate", valuation: "Reasonable", thesis: "Advanced foundry infrastructure that supports high-end chips used in AI, data centers, and quantum-adjacent systems.", aiData: "One of the most important manufacturing layers for AI and high-performance chips." },
+      { ticker: "ASML", company: "ASML Holding N.V.", exchange: "NASDAQ", category: "Semiconductor infrastructure", risk: "Moderate", valuation: "Reasonable", thesis: "Critical lithography equipment supplier for advanced semiconductor manufacturing.", aiData: "Advanced AI/data-center chips depend on leading-edge lithography capacity." },
+      { ticker: "AMAT", company: "Applied Materials, Inc.", exchange: "NASDAQ", category: "Semiconductor infrastructure", risk: "Moderate", valuation: "Reasonable", thesis: "Semiconductor manufacturing equipment exposure across deposition, materials engineering, and advanced chip production.", aiData: "Benefits from semiconductor capex tied to AI and high-performance computing." },
+      { ticker: "LRCX", company: "Lam Research Corp.", exchange: "NASDAQ", category: "Semiconductor infrastructure", risk: "Moderate", valuation: "Reasonable", thesis: "Etch and deposition equipment supplier tied to advanced chip production.", aiData: "AI and data-center chip production supports wafer-fab equipment demand." },
+      { ticker: "KLAC", company: "KLA Corp.", exchange: "NASDAQ", category: "Semiconductor infrastructure", risk: "Moderate", valuation: "Reasonable", thesis: "Process control and inspection equipment for advanced semiconductors.", aiData: "Complex AI chips require strong process control and yield management." },
+      { ticker: "SKYT", company: "SkyWater Technology, Inc.", exchange: "NASDAQ", category: "Semiconductor infrastructure", risk: "High", valuation: "Speculative", thesis: "Specialty foundry exposure that may benefit from domestic semiconductor and emerging hardware demand.", aiData: "Niche foundry exposure with higher execution risk than large semiconductor infrastructure names." },
+      { ticker: "MU", company: "Micron Technology, Inc.", exchange: "NASDAQ", category: "Semiconductor infrastructure", risk: "Moderate", valuation: "Reasonable", thesis: "Memory and storage supplier important to AI servers and advanced compute systems.", aiData: "High-bandwidth memory and data-center memory demand are key AI drivers." },
+      { ticker: "TSEM", company: "Tower Semiconductor Ltd.", exchange: "NASDAQ", category: "Semiconductor infrastructure", risk: "Moderate", valuation: "Reasonable", thesis: "Specialty analog foundry exposure that can support sensors, power, photonics, and mixed-signal infrastructure.", aiData: "Indirect AI/data-center exposure through specialty chip manufacturing." },
+      { ticker: "COHR", company: "Coherent Corp.", exchange: "NASDAQ", category: "Photonics/lasers", risk: "Moderate", valuation: "Reasonable", thesis: "Photonics, lasers, optical components, and compound materials exposure relevant to advanced compute and quantum systems.", aiData: "Optical interconnect and photonics demand can benefit from AI data-center growth." },
+      { ticker: "LITE", company: "Lumentum Holdings Inc.", exchange: "NASDAQ", category: "Photonics/lasers", risk: "High", valuation: "Reasonable", thesis: "Optical and photonic components that can benefit from data-center networking and advanced optical systems.", aiData: "AI data centers need faster optical connectivity, making photonics an important infrastructure layer." },
+      { ticker: "IPGP", company: "IPG Photonics Corp.", exchange: "NASDAQ", category: "Photonics/lasers", risk: "Moderate", valuation: "Reasonable", thesis: "Fiber laser leader with industrial laser expertise relevant to precision manufacturing and photonics infrastructure.", aiData: "Less direct AI exposure, but photonics and advanced manufacturing remain relevant." },
+      { ticker: "MKSI", company: "MKS Instruments, Inc.", exchange: "NASDAQ", category: "Photonics/lasers", risk: "Moderate", valuation: "Reasonable", thesis: "Photonics, lasers, vacuum, and process-control tools for semiconductor and advanced manufacturing markets.", aiData: "AI chip capex can support semiconductor manufacturing tools and photonics components." },
+      { ticker: "VRT", company: "Vertiv Holdings Co.", exchange: "NYSE", category: "Power/cooling/infrastructure", risk: "Moderate", valuation: "Overvalued", thesis: "Data-center power and thermal infrastructure supplier that can benefit from AI/data-center buildouts.", aiData: "Strong AI/data-center infrastructure beneficiary through cooling, power, and data-center systems." },
+      { ticker: "ETN", company: "Eaton Corp. plc", exchange: "NYSE", category: "Power/cooling/infrastructure", risk: "Low", valuation: "Reasonable", thesis: "Power management and electrification exposure for data centers and industrial infrastructure.", aiData: "AI data centers require reliable power distribution and electrical infrastructure." },
+      { ticker: "SMCI", company: "Super Micro Computer, Inc.", exchange: "NASDAQ", category: "Power/cooling/infrastructure", risk: "High", valuation: "Speculative", thesis: "AI server and rack systems company with liquid-cooling and data-center infrastructure exposure.", aiData: "Direct AI server infrastructure candidate, but volatility and execution risk are high." },
+      { ticker: "CEG", company: "Constellation Energy Corp.", exchange: "NASDAQ", category: "Power/cooling/infrastructure", risk: "Moderate", valuation: "Reasonable", thesis: "Large clean-power provider that can benefit from rising data-center electricity demand.", aiData: "AI data centers need large, reliable power sources." },
+      { ticker: "TLN", company: "Talen Energy Corp.", exchange: "NYSE", category: "Power/cooling/infrastructure", risk: "High", valuation: "Speculative", thesis: "Power generation exposure with data-center power optionality.", aiData: "Potential AI data-center power beneficiary, but higher risk than diversified utilities." },
+      { ticker: "DHR", company: "Danaher Corp.", exchange: "NYSE", category: "Power/cooling/infrastructure", risk: "Low", valuation: "Reasonable", thesis: "Scientific instrumentation and life-science tools exposure with indirect relevance to advanced research ecosystems.", aiData: "Indirect; more research tools and instrumentation than AI infrastructure." },
+      { ticker: "SYK", company: "Stryker Corp.", exchange: "NYSE", category: "Power/cooling/infrastructure", risk: "Low", valuation: "Reasonable", thesis: "Large medical technology company included as an indirect infrastructure-style large-cap watchlist item.", aiData: "Indirect; not a core AI/data-center infrastructure name." },
+      { ticker: "PANW", company: "Palo Alto Networks, Inc.", exchange: "NASDAQ", category: "Cybersecurity/post-quantum encryption", risk: "Moderate", valuation: "Overvalued", thesis: "Cybersecurity leader that may benefit as enterprises upgrade encryption and network defenses for a post-quantum world.", aiData: "AI security and cloud security are more direct drivers than quantum." },
+      { ticker: "CRWD", company: "CrowdStrike Holdings, Inc.", exchange: "NASDAQ", category: "Cybersecurity/post-quantum encryption", risk: "Moderate", valuation: "Overvalued", thesis: "Endpoint and cloud security platform that could benefit from long-term security modernization.", aiData: "AI-powered security platform exposure." },
+      { ticker: "FTNT", company: "Fortinet, Inc.", exchange: "NASDAQ", category: "Cybersecurity/post-quantum encryption", risk: "Moderate", valuation: "Reasonable", thesis: "Network security and firewall exposure that can participate in encryption and infrastructure refresh cycles.", aiData: "Less direct AI/data-center exposure; benefits from security demand around networks and data centers." },
+      { ticker: "ZS", company: "Zscaler, Inc.", exchange: "NASDAQ", category: "Cybersecurity/post-quantum encryption", risk: "High", valuation: "Overvalued", thesis: "Zero-trust cloud security platform that could benefit from broad security architecture upgrades.", aiData: "AI security demand may support growth, but valuation risk is high." },
+      { ticker: "CSCO", company: "Cisco Systems, Inc.", exchange: "NASDAQ", category: "Cybersecurity/post-quantum encryption", risk: "Low", valuation: "Reasonable", thesis: "Networking and security incumbent that can participate in post-quantum encryption migration across enterprise networks.", aiData: "Data-center networking and security exposure." },
+      { ticker: "QTUM", company: "Defiance Quantum ETF", exchange: "NASDAQ", category: "ETFs", risk: "Moderate", valuation: "Reasonable", thesis: "ETF basket exposure to quantum computing, machine learning, and related technology themes.", aiData: "Diversified exposure can include AI, semiconductor, and quantum-related names." },
+      { ticker: "ARKQ", company: "ARK Autonomous Technology & Robotics ETF", exchange: "Cboe BZX", category: "ETFs", risk: "High", valuation: "Speculative", thesis: "Actively managed ETF focused on autonomous technology, robotics, and related innovation themes with indirect quantum overlap.", aiData: "Broader AI, autonomy, robotics, and compute exposure." }
     ];
 
     /* =========================================================
        2. App Configuration
-       Manual fields, watchlists, and localStorage keys.
        ========================================================= */
-    const coreFields = ["livePrice", "dayChange", "marketCap", "volume", "psRatio", "revenueGrowth", "cashRunway", "analystNotes"];
-    const proMetricFields = [
-      "sixMonthAvgPrice",
-      "sixMonthReturn",
-      "priceVsSixMonthAvg",
-      "priceVs200DaySma",
-      "sixMonthVolatility",
-      "sixMonthMaxDrawdown",
-      "relativeStrengthVsQqq",
-      "shareDilution"
+    const DEFAULT_WORKER_URL = "https://quantum-dashboard-api.benhayek12.workers.dev";
+    const CORE_FIELDS = ["livePrice", "dayChange", "marketCap", "psRatio", "revenueGrowth", "cashRunway", "analystNotes"];
+    const PRO_FIELDS = ["sixMonthAvgPrice", "sixMonthReturn", "priceVsSixMonthAvg", "priceVs200DaySma", "sixMonthVolatility", "sixMonthMaxDrawdown", "relativeStrengthVsQqq", "shareDilution"];
+    const EDITABLE_FIELDS = [...CORE_FIELDS, ...PRO_FIELDS];
+    const FIELD_LABELS = {
+      livePrice: "Live Price", dayChange: "Day Change", marketCap: "Market Cap", psRatio: "P/S Ratio", revenueGrowth: "Revenue Growth", cashRunway: "Cash Runway", analystNotes: "Analyst Notes",
+      sixMonthAvgPrice: "6M Avg Price", sixMonthReturn: "6M Return", priceVsSixMonthAvg: "Price vs 6M Avg", priceVs200DaySma: "Price vs 200D SMA", sixMonthVolatility: "6M Volatility", sixMonthMaxDrawdown: "6M Max Drawdown", relativeStrengthVsQqq: "Relative vs QQQ", shareDilution: "Share Dilution"
+    };
+    const DEFAULT_WATCHLISTS = [
+      { title: "Safest Infrastructure Plays", tickers: ["NVDA", "TSM", "ASML", "AMAT", "VRT", "ETN", "CEG"], note: "Large or established infrastructure beneficiaries." },
+      { title: "Highest-Risk Quantum Pure Plays", tickers: ["IONQ", "RGTI", "QBTS", "QUBT"], note: "More direct quantum upside, but more volatility and funding risk." },
+      { title: "Big Tech Quantum Leaders", tickers: ["IBM", "GOOGL", "MSFT", "AMZN"], note: "Diversified companies with quantum research and cloud platforms." },
+      { title: "Underappreciated Photonics Plays", tickers: ["COHR", "LITE", "MKSI", "IPGP"], note: "Optics, lasers, and photonics exposure for advanced compute." }
     ];
-    const editableFields = [...coreFields, ...proMetricFields];
-
-    const fieldLabels = {
-      livePrice: "Live Price",
-      dayChange: "Day Change",
-      marketCap: "Market Cap",
-      volume: "Volume",
-      psRatio: "P/S Ratio",
-      revenueGrowth: "Revenue Growth",
-      cashRunway: "Cash Runway",
-      analystNotes: "Analyst Notes",
-      sixMonthAvgPrice: "6M Avg Price",
-      sixMonthReturn: "6M Return",
-      priceVsSixMonthAvg: "Price vs 6M Avg",
-      priceVs200DaySma: "Price vs 200D SMA",
-      sixMonthVolatility: "6M Volatility",
-      sixMonthMaxDrawdown: "6M Max Drawdown",
-      relativeStrengthVsQqq: "Relative vs QQQ",
-      shareDilution: "Share Dilution"
+    const STORAGE = {
+      edits: "qsd.edits.v4",
+      prefs: "qsd.prefs.v4",
+      watchlists: "qsd.watchlists.v4",
+      live: "qsd.live.finnhub.tiingo.v4",
+      liveSettings: "qsd.liveSettings.v4"
     };
 
-    const defaultWatchlists = [
-      {
-        title: "Safest Infrastructure Plays",
-        tickers: ["NVDA", "TSM", "ASML", "AMAT", "VRT", "ETN", "CEG"],
-        note: "Lower-risk picks tied to chips, power, cooling, and data-center infrastructure."
-      },
-      {
-        title: "Highest-Risk Quantum Pure Plays",
-        tickers: ["IONQ", "RGTI", "QBTS", "QUBT"],
-        note: "Direct quantum names with the most upside/risk and commercialization uncertainty."
-      },
-      {
-        title: "Big Tech Quantum Leaders",
-        tickers: ["IBM", "GOOGL", "MSFT", "AMZN"],
-        note: "Large platforms with quantum programs plus durable cloud, AI, and enterprise businesses."
-      },
-      {
-        title: "Underappreciated Photonics Plays",
-        tickers: ["COHR", "LITE", "MKSI", "IPGP"],
-        note: "Optics, lasers, and photonics names that may benefit from advanced compute buildouts."
-      }
-    ];
-
-    const STORAGE_KEY = "quantumStockDashboard.manualFields.v1";
-    const PREFS_KEY = "quantumStockDashboard.preferences.v1";
-    const WATCHLISTS_KEY = "quantumStockDashboard.watchlists.v1";
-    const LIVE_CONFIG_KEY = "quantumStockDashboard.liveConfig.v1";
-    const LIVE_DATA_KEY = "quantumStockDashboard.liveData.tiingo.v2";
-    const LEGACY_FULL_STOCKS_KEY = "quantumDashboardStocks.v3";
-    const AUTO_REFRESH_MS = 15 * 60 * 1000;
-    const PERFORMANCE_REFRESH_MS = 24 * 60 * 60 * 1000;
-
-    let manualEdits = loadManualEdits();
-    let watchlists = loadWatchlists();
-    let prefs = loadJson(PREFS_KEY, { darkMode: true, compactCards: false });
-    let liveConfig = loadJson(LIVE_CONFIG_KEY, { workerUrl: "https://quantum-dashboard-api.benhayek12.workers.dev", autoRefresh: false });
-    if (!liveConfig.workerUrl) liveConfig.workerUrl = "https://quantum-dashboard-api.benhayek12.workers.dev";
-    let liveData = loadJson(LIVE_DATA_KEY, { quotes: {}, performance: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null });
-    liveData = normalizeLiveData(liveData);
-    let liveRefreshTimer = null;
+    let manualEdits = loadJson(STORAGE.edits, {});
+    let prefs = loadJson(STORAGE.prefs, { darkMode: true, compactCards: false });
+    let watchlists = loadJson(STORAGE.watchlists, DEFAULT_WATCHLISTS);
+    let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null });
+    let liveSettings = loadJson(STORAGE.liveSettings, { workerUrl: DEFAULT_WORKER_URL, autoRefresh: false });
+    let filters = { search: "", category: "all", risk: "all" };
     let activeEditTicker = null;
     let activeWatchlistIndex = null;
-
+    let autoRefreshTimer = null;
     const els = {};
 
     /* =========================================================
@@ -1758,14 +524,14 @@
     function init() {
       try {
         cacheElements();
+        buildEditFields();
+        bindEvents();
         applyPrefs();
-        syncLiveControls();
         populateFilters();
         renderAll();
-        bindEvents();
-        startOrStopAutoRefresh();
+        updateLiveStatus();
+        configureAutoRefresh();
       } catch (error) {
-        console.error("Dashboard startup error:", error);
         showStartupError(error);
       }
     }
@@ -1773,11 +539,13 @@
     function cacheElements() {
       els.tabButtons = document.querySelectorAll(".tab-button");
       els.panels = document.querySelectorAll(".tab-panel");
+      els.startupError = document.getElementById("startupError");
       els.summaryCards = document.getElementById("summaryCards");
       els.categoryCards = document.getElementById("categoryCards");
       els.searchInput = document.getElementById("searchInput");
       els.categoryFilter = document.getElementById("categoryFilter");
       els.riskFilter = document.getElementById("riskFilter");
+      els.resetFilters = document.getElementById("resetFilters");
       els.stockList = document.getElementById("stockList");
       els.emptyState = document.getElementById("emptyState");
       els.watchlistGrid = document.getElementById("watchlistGrid");
@@ -1785,15 +553,14 @@
       els.resetWatchlists = document.getElementById("resetWatchlists");
       els.darkToggle = document.getElementById("darkToggle");
       els.compactToggle = document.getElementById("compactToggle");
-      els.exportCsv = document.getElementById("exportCsv");
+      els.exportStocksCsv = document.getElementById("exportStocksCsv");
       els.exportWatchlistsCsv = document.getElementById("exportWatchlistsCsv");
       els.importCsvButton = document.getElementById("importCsvButton");
       els.importCsv = document.getElementById("importCsv");
       els.resetData = document.getElementById("resetData");
-      els.dataStatus = document.getElementById("dataStatus");
       els.workerUrlInput = document.getElementById("workerUrlInput");
-      els.liveAutoToggle = document.getElementById("liveAutoToggle");
-      els.refreshLiveData = document.getElementById("refreshLiveData");
+      els.autoRefreshToggle = document.getElementById("autoRefreshToggle");
+      els.refreshNow = document.getElementById("refreshNow");
       els.saveWorkerUrl = document.getElementById("saveWorkerUrl");
       els.clearLiveCache = document.getElementById("clearLiveCache");
       els.liveStatus = document.getElementById("liveStatus");
@@ -1803,12 +570,13 @@
       els.editTitle = document.getElementById("editTitle");
       els.editSubtitle = document.getElementById("editSubtitle");
       els.editForm = document.getElementById("editForm");
+      els.coreEditFields = document.getElementById("coreEditFields");
+      els.proEditFields = document.getElementById("proEditFields");
       els.watchlistCheckboxes = document.getElementById("watchlistCheckboxes");
       els.closeModal = document.getElementById("closeModal");
       els.cancelEdit = document.getElementById("cancelEdit");
       els.watchlistModal = document.getElementById("watchlistModal");
-      els.watchlistEditTitle = document.getElementById("watchlistEditTitle");
-      els.watchlistEditSubtitle = document.getElementById("watchlistEditSubtitle");
+      els.watchlistTitle = document.getElementById("watchlistTitle");
       els.watchlistForm = document.getElementById("watchlistForm");
       els.closeWatchlistModal = document.getElementById("closeWatchlistModal");
       els.cancelWatchlistEdit = document.getElementById("cancelWatchlistEdit");
@@ -1816,1127 +584,368 @@
     }
 
     function bindEvents() {
-      const on = (element, eventName, handler) => {
-        if (element) element.addEventListener(eventName, handler);
-      };
-
-      els.tabButtons.forEach(button => {
-        on(button, "click", () => setActiveTab(button.dataset.tab));
-      });
-
-      on(els.searchInput, "input", renderStocks);
-      on(els.categoryFilter, "change", renderStocks);
-      on(els.riskFilter, "change", renderStocks);
-
-      on(els.stockList, "click", event => {
-        const editButton = event.target.closest("[data-edit]");
-        if (editButton) openEditor(editButton.dataset.edit);
-      });
-
-      on(els.watchlistGrid, "click", event => {
-        const editButton = event.target.closest("[data-edit-watchlist]");
-        if (editButton) {
-          openWatchlistEditor(Number(editButton.dataset.editWatchlist));
-          return;
-        }
-
-        const chip = event.target.closest("[data-ticker]");
-        if (!chip) return;
-
-        setActiveTab("stocks");
-        if (els.searchInput) els.searchInput.value = chip.dataset.ticker;
-        if (els.categoryFilter) els.categoryFilter.value = "all";
-        if (els.riskFilter) els.riskFilter.value = "all";
-        renderStocks();
-      });
-
-      on(els.addWatchlist, "click", () => openWatchlistEditor(null));
-      on(els.resetWatchlists, "click", resetWatchlistsToDefault);
-
-      on(els.darkToggle, "change", () => {
-        prefs.darkMode = els.darkToggle.checked;
-        savePrefs();
-        applyPrefs();
-      });
-
-      on(els.compactToggle, "change", () => {
-        prefs.compactCards = els.compactToggle.checked;
-        savePrefs();
-        applyPrefs();
-      });
-
-      on(els.exportCsv, "click", exportCsv);
-      on(els.exportWatchlistsCsv, "click", exportWatchlistsCsv);
-      on(els.importCsvButton, "click", () => els.importCsv && els.importCsv.click());
-      on(els.importCsv, "change", importCsv);
-      on(els.resetData, "click", resetLocalData);
-
-      on(els.saveWorkerUrl, "click", saveLiveConfigFromControls);
-      on(els.refreshLiveData, "click", () => refreshLiveData({ forcePerformance: true }));
-      on(els.clearLiveCache, "click", clearLiveCache);
-      on(els.liveAutoToggle, "change", () => {
-        liveConfig.autoRefresh = els.liveAutoToggle.checked;
-        saveJson(LIVE_CONFIG_KEY, liveConfig);
-        syncLiveControls();
-        startOrStopAutoRefresh();
-      });
-
-      on(els.closeModal, "click", closeEditor);
-      on(els.cancelEdit, "click", closeEditor);
-
-      on(els.editModal, "click", event => {
-        if (event.target === els.editModal) closeEditor();
-      });
-
-      on(els.editForm, "submit", saveEditor);
-
-      on(els.closeWatchlistModal, "click", closeWatchlistEditor);
-      on(els.cancelWatchlistEdit, "click", closeWatchlistEditor);
-      on(els.deleteWatchlist, "click", deleteActiveWatchlist);
-
-      on(els.watchlistModal, "click", event => {
-        if (event.target === els.watchlistModal) closeWatchlistEditor();
-      });
-
-      on(els.watchlistForm, "submit", saveWatchlistEditor);
+      els.tabButtons.forEach(button => button.addEventListener("click", () => setActiveTab(button.dataset.tab)));
+      els.searchInput.addEventListener("input", () => { filters.search = els.searchInput.value; renderStocks(); });
+      els.categoryFilter.addEventListener("change", () => { filters.category = els.categoryFilter.value || "all"; renderStocks(); });
+      els.riskFilter.addEventListener("change", () => { filters.risk = els.riskFilter.value || "all"; renderStocks(); });
+      els.resetFilters.addEventListener("click", resetFilters);
+      els.stockList.addEventListener("click", handleStockListClick);
+      els.watchlistGrid.addEventListener("click", handleWatchlistClick);
+      els.addWatchlist.addEventListener("click", () => openWatchlistEditor(null));
+      els.resetWatchlists.addEventListener("click", resetWatchlists);
+      els.darkToggle.addEventListener("change", () => { prefs.darkMode = els.darkToggle.checked; savePrefs(); applyPrefs(); });
+      els.compactToggle.addEventListener("change", () => { prefs.compactCards = els.compactToggle.checked; savePrefs(); applyPrefs(); });
+      els.exportStocksCsv.addEventListener("click", exportStocksCsv);
+      els.exportWatchlistsCsv.addEventListener("click", exportWatchlistsCsv);
+      els.importCsvButton.addEventListener("click", () => els.importCsv.click());
+      els.importCsv.addEventListener("change", importStocksCsv);
+      els.resetData.addEventListener("click", resetLocalData);
+      els.saveWorkerUrl.addEventListener("click", saveWorkerUrl);
+      els.refreshNow.addEventListener("click", () => refreshLiveData(true));
+      els.clearLiveCache.addEventListener("click", clearLiveCache);
+      els.autoRefreshToggle.addEventListener("change", () => { liveSettings.autoRefresh = els.autoRefreshToggle.checked; saveLiveSettings(); configureAutoRefresh(); });
+      els.closeModal.addEventListener("click", closeEditor);
+      els.cancelEdit.addEventListener("click", closeEditor);
+      els.editModal.addEventListener("click", event => { if (event.target === els.editModal) closeEditor(); });
+      els.editForm.addEventListener("submit", saveEditor);
+      els.closeWatchlistModal.addEventListener("click", closeWatchlistEditor);
+      els.cancelWatchlistEdit.addEventListener("click", closeWatchlistEditor);
+      els.watchlistModal.addEventListener("click", event => { if (event.target === els.watchlistModal) closeWatchlistEditor(); });
+      els.watchlistForm.addEventListener("submit", saveWatchlistEditor);
+      els.deleteWatchlist.addEventListener("click", deleteWatchlist);
     }
 
     /* =========================================================
        4. Render Functions
-       These functions draw the app on the screen.
        ========================================================= */
-    function renderAll() {
-      renderHome();
-      renderStocks();
-      renderWatchlists();
-    }
+    function renderAll() { renderHome(); renderStocks(); renderWatchlists(); updateLiveStatus(); }
 
     function renderHome() {
       const totalStocks = stocks.length;
       const totalCategories = unique(stocks.map(stock => stock.category)).length;
-      const highRiskStocks = stocks.filter(stock => stock.risk === "High" || stock.risk === "Very High").length;
-      const infrastructureStocks = stocks.filter(stock =>
-        stock.category === "Semiconductor infrastructure" ||
-        stock.category === "Power/cooling/infrastructure"
-      ).length;
-
-      const summary = [
-        ["Total stocks", totalStocks],
-        ["Categories", totalCategories],
-        ["High-risk stocks", highRiskStocks],
-        ["Infrastructure", infrastructureStocks]
-      ];
-
-      if (!els.summaryCards || !els.categoryCards) return;
-
-      els.summaryCards.innerHTML = summary.map(([label, value]) => `
-        <article class="card metric-card">
-          <span class="label">${escapeHtml(label)}</span>
-          <span class="number">${escapeHtml(String(value))}</span>
-        </article>
-      `).join("");
-
-      const categoryCounts = unique(stocks.map(stock => stock.category)).map(category => ({
-        category,
-        count: stocks.filter(stock => stock.category === category).length
-      }));
-
-      els.categoryCards.innerHTML = categoryCounts.map(item => `
-        <article class="card category-card">
-          <div class="category-row">
-            <span class="category-name">${escapeHtml(item.category)}</span>
-            <span class="category-count">${item.count}</span>
-          </div>
-        </article>
-      `).join("");
+      const highRiskStocks = stocks.filter(stock => ["High", "Very High"].includes(stock.risk)).length;
+      const infrastructureStocks = stocks.filter(stock => stock.category === "Semiconductor infrastructure" || stock.category === "Power/cooling/infrastructure").length;
+      const summary = [["Total stocks", totalStocks], ["Categories", totalCategories], ["High-risk stocks", highRiskStocks], ["Infrastructure", infrastructureStocks]];
+      els.summaryCards.innerHTML = summary.map(([label, value]) => `<article class="card metric-card"><span class="label">${escapeHtml(label)}</span><span class="number">${escapeHtml(value)}</span></article>`).join("");
+      const categories = unique(stocks.map(stock => stock.category)).map(category => ({ category, count: stocks.filter(stock => stock.category === category).length }));
+      els.categoryCards.innerHTML = categories.map(item => `<article class="card category-card"><div class="category-row"><span class="category-name">${escapeHtml(item.category)}</span><span class="category-count">${item.count}</span></div></article>`).join("");
     }
 
     function renderStocks() {
-      if (!els.stockList) return;
-
-      const query = els.searchInput ? els.searchInput.value.trim().toLowerCase() : "";
-      const category = els.categoryFilter ? els.categoryFilter.value : "all";
-      const risk = els.riskFilter ? els.riskFilter.value : "all";
-
-      const filtered = stocks.filter(stock => {
-        const merged = getMergedStock(stock.ticker);
-        const text = [
-          merged.ticker,
-          merged.company,
-          merged.exchange,
-          merged.category,
-          merged.risk,
-          merged.valuation,
-          merged.thesis,
-          merged.aiHpc,
-          getStockWatchlists(merged.ticker).join(" "),
-          ...editableFields.map(field => merged[field] || "")
-        ].join(" ").toLowerCase();
-
-        const matchesSearch = !query || text.includes(query);
-        const matchesCategory = category === "all" || stock.category === category;
-        const matchesRisk = risk === "all" || stock.risk === risk;
-
-        return matchesSearch && matchesCategory && matchesRisk;
-      });
-
-      if (els.emptyState) els.emptyState.style.display = filtered.length ? "none" : "block";
-      els.stockList.innerHTML = filtered.map(stock => stockCardHtml(getMergedStock(stock.ticker))).join("");
-    }
-
-    function stockCardHtml(stock) {
-      const coreValues = coreFields.map(field => metricItemHtml(field, stock[field], field === "analystNotes")).join("");
-      const proMetricValues = proMetricFields.map(field => metricItemHtml(field, stock[field], false)).join("");
-      const filledProMetrics = proMetricFields.filter(field => stock[field] && String(stock[field]).trim()).length;
-
-      return `
-        <article class="stock-card">
-          <div class="stock-header">
-            <div>
-              <div class="ticker">${escapeHtml(stock.ticker)}</div>
-              <h3 class="company">${escapeHtml(stock.company)}</h3>
-              <p class="meta">${escapeHtml(stock.exchange)} · ${escapeHtml(stock.category)}</p>
-            </div>
-
-            <div class="tags">
-              <span class="tag risk-${className(stock.risk)}">${escapeHtml(stock.risk)}</span>
-              <span class="tag val-${className(stock.valuation)}">${escapeHtml(stock.valuation)}</span>
-            </div>
-          </div>
-
-          <div class="text-block">
-            <span class="small-label">Quantum thesis</span>
-            <p>${escapeHtml(stock.thesis)}</p>
-          </div>
-
-          ${stock.aiHpc ? `
-            <div class="text-block">
-              <span class="small-label">AI / Data Center Relevance</span>
-              <p>${escapeHtml(stock.aiHpc)}</p>
-            </div>
-          ` : ""}
-
-          <div class="manual-grid">
-            ${coreValues}
-          </div>
-
-          <details class="pro-metrics">
-            <summary>
-              <span>Pro Metrics</span>
-              <small>${filledProMetrics}/${proMetricFields.length} filled</small>
-            </summary>
-            <div class="pro-metrics-grid">
-              ${proMetricValues}
-            </div>
-          </details>
-
-          <div class="actions">
-            <a class="link-button secondary" href="${yahooUrl(stock.ticker)}" target="_blank" rel="noopener">Yahoo</a>
-            <a class="link-button secondary" href="${tradingViewUrl(stock.ticker)}" target="_blank" rel="noopener">TradingView</a>
-            <button class="button" type="button" data-edit="${escapeAttr(stock.ticker)}">Edit</button>
-          </div>
-        </article>
-      `;
-    }
-
-    function metricItemHtml(field, value, isNotes) {
-      const displayValue = value && String(value).trim() ? value : "—";
-      return `
-        <div class="manual-item ${isNotes ? "notes-item" : ""}">
-          <span class="mini-label">${escapeHtml(fieldLabels[field])}</span>
-          <span class="mini-value">${escapeHtml(displayValue)}</span>
-        </div>
-      `;
+      const rows = getFilteredStocks();
+      els.emptyState.style.display = rows.length ? "none" : "block";
+      els.stockList.innerHTML = rows.map(stock => stockCardHtml(getMergedStock(stock.ticker))).join("");
     }
 
     function renderWatchlists() {
-      if (!els.watchlistGrid) return;
-
-      if (!watchlists.length) {
-        els.watchlistGrid.innerHTML = `
-          <article class="card watch-card">
-            <h3>No watchlists yet</h3>
-            <p class="watch-note">Tap Add Watchlist to create your first custom list.</p>
-          </article>
-        `;
-        return;
-      }
-
       els.watchlistGrid.innerHTML = watchlists.map((list, index) => {
-        const tickers = getWatchlistTickers(list.title);
-        const chips = tickers.length
-          ? tickers.map(ticker => `
-              <button class="chip" type="button" data-ticker="${escapeAttr(ticker)}">${escapeHtml(ticker)}</button>
-            `).join("")
-          : `<span class="meta">No stocks assigned yet.</span>`;
-
-        return `
-          <article class="card watch-card">
-            <div class="watch-card-header">
-              <div>
-                <h3>${escapeHtml(list.title)}</h3>
-                <p class="meta">${tickers.length} ticker${tickers.length === 1 ? "" : "s"}</p>
-              </div>
-              <button class="button secondary small" type="button" data-edit-watchlist="${index}">Edit</button>
-            </div>
-
-            ${list.note ? `<p class="watch-note">${escapeHtml(list.note)}</p>` : ""}
-
-            <div class="chips">
-              ${chips}
-            </div>
-          </article>
-        `;
+        const tickers = parseTickerList(list.tickers.join(","));
+        const chips = tickers.length ? tickers.map(ticker => `<button class="chip" type="button" data-ticker="${escapeAttr(ticker)}">${escapeHtml(ticker)}</button>`).join("") : `<span class="meta">No stocks assigned yet.</span>`;
+        return `<article class="watch-card"><div class="watch-card-header"><div><h3>${escapeHtml(list.title)}</h3><p class="meta">${tickers.length} ticker${tickers.length === 1 ? "" : "s"}</p></div><button class="button secondary small" type="button" data-edit-watchlist="${index}">Edit</button></div>${list.note ? `<p class="watch-note">${escapeHtml(list.note)}</p>` : ""}<div class="chips">${chips}</div></article>`;
       }).join("");
     }
 
-    /* =========================================================
-       5. User Actions
-       Editing, saving, exporting, importing, and resetting.
-       ========================================================= */
-    function setActiveTab(tabName) {
-      els.tabButtons.forEach(button => {
-        button.classList.toggle("active", button.dataset.tab === tabName);
-      });
-
-      els.panels.forEach(panel => {
-        panel.classList.toggle("active", panel.dataset.panel === tabName);
-      });
-
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    function stockCardHtml(stock) {
+      const coreValues = CORE_FIELDS.map(field => metricItemHtml(field, stock[field], field === "analystNotes")).join("");
+      const proValues = PRO_FIELDS.map(field => metricItemHtml(field, stock[field], false)).join("");
+      return `<article class="stock-card" id="stock-${escapeAttr(stock.ticker)}"><div class="stock-header"><div><div class="ticker">${escapeHtml(stock.ticker)}</div><h3 class="company">${escapeHtml(stock.company)}</h3><p class="meta">${escapeHtml(stock.exchange)} · ${escapeHtml(stock.category)}</p></div><div class="tags"><span class="tag risk-${className(stock.risk)}">${escapeHtml(stock.risk)}</span><span class="tag val-${className(stock.valuation)}">${escapeHtml(stock.valuation)}</span></div></div><div class="text-block"><span class="small-label">Quantum thesis</span><p>${escapeHtml(stock.thesis)}</p></div><div class="text-block"><span class="small-label">AI / Data Center Relevance</span><p>${escapeHtml(stock.aiData)}</p></div><div class="manual-grid">${coreValues}</div><details class="pro-metrics"><summary>Pro Metrics</summary><div class="manual-grid">${proValues}</div></details><div class="actions"><a class="link-button secondary" href="${yahooUrl(stock.ticker)}" target="_blank" rel="noopener">Yahoo</a><a class="link-button secondary" href="${tradingViewUrl(stock.ticker)}" target="_blank" rel="noopener">TradingView</a><button class="button" type="button" data-edit="${escapeAttr(stock.ticker)}">Edit</button></div></article>`;
     }
 
-    function applyPrefs() {
-      document.body.classList.toggle("light", !prefs.darkMode);
-      document.body.classList.toggle("compact", Boolean(prefs.compactCards));
-      if (els.darkToggle) els.darkToggle.checked = Boolean(prefs.darkMode);
-      if (els.compactToggle) els.compactToggle.checked = Boolean(prefs.compactCards);
+    function metricItemHtml(field, value, isNotes) {
+      const display = value && String(value).trim() ? value : "—";
+      return `<div class="manual-item ${isNotes ? "notes-item" : ""}"><span class="mini-label">${escapeHtml(FIELD_LABELS[field])}</span><span class="mini-value">${escapeHtml(display)}</span></div>`;
     }
 
     function populateFilters() {
       const categories = ["all", ...unique(stocks.map(stock => stock.category))];
-      const risks = ["all", ...unique(stocks.map(stock => stock.risk))];
+      const risks = ["all", "Low", "Moderate", "High", "Very High"];
+      els.categoryFilter.innerHTML = categories.map(value => `<option value="${escapeAttr(value)}">${escapeHtml(value === "all" ? "All categories" : value)}</option>`).join("");
+      els.riskFilter.innerHTML = risks.map(value => `<option value="${escapeAttr(value)}">${escapeHtml(value === "all" ? "All risks" : value)}</option>`).join("");
+      els.categoryFilter.value = filters.category;
+      els.riskFilter.value = filters.risk;
+    }
 
-      els.categoryFilter.innerHTML = categories.map(value => {
-        const label = value === "all" ? "All categories" : value;
-        return `<option value="${escapeAttr(value)}">${escapeHtml(label)}</option>`;
-      }).join("");
+    function getFilteredStocks() {
+      const query = String(filters.search || "").trim().toLowerCase();
+      return stocks.filter(stock => {
+        const merged = getMergedStock(stock.ticker);
+        const text = [merged.ticker, merged.company, merged.exchange, merged.category, merged.risk, merged.valuation, merged.thesis, merged.aiData, merged.analystNotes].join(" ").toLowerCase();
+        return (!query || text.includes(query)) && (filters.category === "all" || merged.category === filters.category) && (filters.risk === "all" || merged.risk === filters.risk);
+      });
+    }
 
-      els.riskFilter.innerHTML = risks.map(value => {
-        const label = value === "all" ? "All risks" : value;
-        return `<option value="${escapeAttr(value)}">${escapeHtml(label)}</option>`;
-      }).join("");
+    function getMergedStock(ticker) {
+      const base = stocks.find(stock => stock.ticker === ticker);
+      const empty = Object.fromEntries(EDITABLE_FIELDS.map(field => [field, ""]));
+      return { ...empty, ...base, ...(manualEdits[ticker] || {}), ...(liveData.quotes[ticker] || {}), ...(liveData.performance[ticker] || {}) };
+    }
+
+    /* =========================================================
+       5. User Actions
+       ========================================================= */
+    function setActiveTab(tabName) {
+      els.tabButtons.forEach(button => button.classList.toggle("active", button.dataset.tab === tabName));
+      els.panels.forEach(panel => panel.classList.toggle("active", panel.dataset.panel === tabName));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function resetFilters() {
+      filters = { search: "", category: "all", risk: "all" };
+      els.searchInput.value = "";
+      els.categoryFilter.value = "all";
+      els.riskFilter.value = "all";
+      renderStocks();
+    }
+
+    function handleStockListClick(event) {
+      const button = event.target.closest("[data-edit]");
+      if (button) openEditor(button.dataset.edit);
+    }
+
+    function handleWatchlistClick(event) {
+      const editButton = event.target.closest("[data-edit-watchlist]");
+      if (editButton) { openWatchlistEditor(Number(editButton.dataset.editWatchlist)); return; }
+      const chip = event.target.closest("[data-ticker]");
+      if (chip) {
+        setActiveTab("stocks");
+        filters.search = chip.dataset.ticker;
+        filters.category = "all";
+        filters.risk = "all";
+        els.searchInput.value = filters.search;
+        els.categoryFilter.value = "all";
+        els.riskFilter.value = "all";
+        renderStocks();
+      }
+    }
+
+    function buildEditFields() {
+      els.coreEditFields.innerHTML = CORE_FIELDS.map(field => editInputHtml(field, field === "analystNotes")).join("");
+      els.proEditFields.innerHTML = PRO_FIELDS.map(field => editInputHtml(field, false)).join("");
+    }
+
+    function editInputHtml(field, textarea) {
+      const id = `edit-${field}`;
+      return `<div class="field"><label for="${id}">${escapeHtml(FIELD_LABELS[field])}</label>${textarea ? `<textarea id="${id}" name="${field}" placeholder="Your notes..."></textarea>` : `<input id="${id}" name="${field}" type="text" />`}</div>`;
     }
 
     function openEditor(ticker) {
       const stock = getMergedStock(ticker);
       activeEditTicker = ticker;
-
       els.editTitle.textContent = stock.ticker;
       els.editSubtitle.textContent = `${stock.company} · ${stock.exchange}`;
-
-      editableFields.forEach(field => {
-        const input = els.editForm.elements[field];
-        if (input) input.value = stock[field] || "";
-      });
-
-      renderEditorWatchlists(stock.ticker);
-
-      els.editModal.classList.add("active");
-      els.editModal.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
+      EDITABLE_FIELDS.forEach(field => { if (els.editForm.elements[field]) els.editForm.elements[field].value = (manualEdits[ticker] && manualEdits[ticker][field]) || stock[field] || ""; });
+      els.watchlistCheckboxes.innerHTML = watchlists.map((list, index) => `<label class="checkbox-row"><input type="checkbox" data-watchlist-box="${index}" ${list.tickers.includes(ticker) ? "checked" : ""} /> ${escapeHtml(list.title)}</label>`).join("");
+      openModal(els.editModal);
     }
 
-    function closeEditor() {
-      activeEditTicker = null;
-      els.editModal.classList.remove("active");
-      els.editModal.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-      els.editForm.reset();
-    }
+    function closeEditor() { activeEditTicker = null; closeModal(els.editModal); els.editForm.reset(); }
 
     function saveEditor(event) {
       event.preventDefault();
       if (!activeEditTicker) return;
-
       const next = {};
-      editableFields.forEach(field => {
-        const input = els.editForm.elements[field];
-        next[field] = input ? input.value.trim() : "";
-      });
-      next.watchlists = getSelectedWatchlistsFromEditor();
-
+      EDITABLE_FIELDS.forEach(field => { const input = els.editForm.elements[field]; next[field] = input ? input.value.trim() : ""; });
       manualEdits[activeEditTicker] = next;
-      saveJson(STORAGE_KEY, manualEdits);
-
-      closeEditor();
-      renderAll();
-      setStatus("Saved manual edits on this device.");
+      saveJson(STORAGE.edits, manualEdits);
+      document.querySelectorAll("[data-watchlist-box]").forEach(box => {
+        const list = watchlists[Number(box.dataset.watchlistBox)];
+        if (!list) return;
+        list.tickers = parseTickerList(list.tickers.join(","));
+        const hasTicker = list.tickers.includes(activeEditTicker);
+        if (box.checked && !hasTicker) list.tickers.push(activeEditTicker);
+        if (!box.checked && hasTicker) list.tickers = list.tickers.filter(t => t !== activeEditTicker);
+      });
+      saveJson(STORAGE.watchlists, watchlists);
+      closeEditor(); renderAll();
     }
 
     function openWatchlistEditor(index) {
       activeWatchlistIndex = index;
-      const isNew = index === null;
-      const list = isNew ? { title: "", tickers: [], note: "" } : watchlists[index];
-      const tickers = isNew ? [] : getWatchlistTickers(list.title);
-
-      els.watchlistEditTitle.textContent = isNew ? "New Watchlist" : "Edit Watchlist";
-      els.watchlistEditSubtitle.textContent = isNew
-        ? "Create a custom list with comma-separated tickers."
-        : "Update the list name, tickers, or note.";
-
-      els.watchlistForm.elements.watchlistTitle.value = list.title || "";
-      els.watchlistForm.elements.watchlistTickers.value = tickers.join(", ");
+      const list = index === null ? { title: "", tickers: [], note: "" } : watchlists[index];
+      els.watchlistTitle.textContent = index === null ? "New Watchlist" : list.title;
+      els.watchlistForm.elements.watchlistName.value = list.title || "";
+      els.watchlistForm.elements.watchlistTickers.value = (list.tickers || []).join(", ");
       els.watchlistForm.elements.watchlistNote.value = list.note || "";
-      els.deleteWatchlist.style.display = isNew ? "none" : "inline-flex";
-
-      els.watchlistModal.classList.add("active");
-      els.watchlistModal.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
+      els.deleteWatchlist.style.visibility = index === null ? "hidden" : "visible";
+      openModal(els.watchlistModal);
     }
 
-    function closeWatchlistEditor() {
-      activeWatchlistIndex = null;
-      els.watchlistModal.classList.remove("active");
-      els.watchlistModal.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-      els.watchlistForm.reset();
-    }
+    function closeWatchlistEditor() { activeWatchlistIndex = null; closeModal(els.watchlistModal); els.watchlistForm.reset(); }
 
     function saveWatchlistEditor(event) {
       event.preventDefault();
-
-      const title = els.watchlistForm.elements.watchlistTitle.value.trim();
+      const title = els.watchlistForm.elements.watchlistName.value.trim();
       const tickers = parseTickerList(els.watchlistForm.elements.watchlistTickers.value);
       const note = els.watchlistForm.elements.watchlistNote.value.trim();
-      const oldTitle = activeWatchlistIndex === null ? null : watchlists[activeWatchlistIndex].title;
-
-      if (!title) {
-        alert("Please enter a watchlist name.");
-        return;
-      }
-
-      if (!tickers.length) {
-        alert("Please add at least one ticker.");
-        return;
-      }
-
-      const duplicate = watchlists.some((list, index) => list.title === title && index !== activeWatchlistIndex);
-      if (duplicate) {
-        alert("A watchlist with that name already exists.");
-        return;
-      }
-
-      const previousMemberships = getAllWatchlistMemberships();
-      const nextList = { title, tickers, note };
-
-      if (activeWatchlistIndex === null) {
-        watchlists.push(nextList);
-      } else {
-        watchlists[activeWatchlistIndex] = nextList;
-      }
-
-      applyWatchlistTickerMembership(previousMemberships, oldTitle, title, tickers);
-      saveWatchlists();
-      closeWatchlistEditor();
-      renderAll();
+      if (!title || !tickers.length) { alert("Please enter a name and at least one ticker."); return; }
+      const next = { title, tickers, note };
+      if (activeWatchlistIndex === null) watchlists.push(next); else watchlists[activeWatchlistIndex] = next;
+      saveJson(STORAGE.watchlists, watchlists);
+      closeWatchlistEditor(); renderWatchlists();
     }
 
-    function deleteActiveWatchlist() {
+    function deleteWatchlist() {
       if (activeWatchlistIndex === null) return;
-
-      const list = watchlists[activeWatchlistIndex];
-      const ok = confirm(`Delete "${list.title}" from this device?`);
-      if (!ok) return;
-
-      removeWatchlistMembership(list.title);
+      if (!confirm("Delete this watchlist?")) return;
       watchlists.splice(activeWatchlistIndex, 1);
-      saveWatchlists();
-      closeWatchlistEditor();
-      renderAll();
+      saveJson(STORAGE.watchlists, watchlists);
+      closeWatchlistEditor(); renderWatchlists();
     }
 
-    function resetWatchlistsToDefault() {
-      const ok = confirm("Reset watchlists back to the default groups?");
-      if (!ok) return;
-
-      watchlists = cloneDefaultWatchlists();
-      clearSavedWatchlistMemberships();
-      localStorage.removeItem(WATCHLISTS_KEY);
-      saveJson(STORAGE_KEY, manualEdits);
-      renderAll();
-      setStatus("Watchlists reset to defaults.");
-    }
-
-    function getMergedStock(ticker) {
-      const base = stocks.find(stock => stock.ticker === ticker);
-      const emptyFields = Object.fromEntries(editableFields.map(field => [field, ""]));
-      const manual = manualEdits[ticker] || {};
-      const live = getLiveFieldsForTicker(ticker);
-
-      return {
-        ...emptyFields,
-        ...base,
-        ...manual,
-        ...live,
-        analystNotes: manual.analystNotes || "",
-        cashRunway: manual.cashRunway || live.cashRunway || "",
-        shareDilution: manual.shareDilution || live.shareDilution || "",
-        watchlists: getStockWatchlists(ticker)
-      };
-    }
-
-    function getLiveFieldsForTicker(ticker) {
-      return {
-        ...(liveData.performance?.[ticker] || {}),
-        ...(liveData.quotes?.[ticker] || {})
-      };
-    }
-
-    function exportCsv() {
-      const headers = [
-        "ticker",
-        "company",
-        "exchange",
-        "category",
-        "risk",
-        "valuation",
-        "watchlists",
-        "quantumThesis",
-        "aiDataCenterRelevance",
-        ...editableFields
-      ];
-
-      const rows = stocks.map(stock => {
-        const merged = getMergedStock(stock.ticker);
-        return [
-          merged.ticker,
-          merged.company,
-          merged.exchange,
-          merged.category,
-          merged.risk,
-          merged.valuation,
-          getStockWatchlists(merged.ticker).join(" | "),
-          merged.thesis,
-          merged.aiHpc,
-          ...editableFields.map(field => merged[field] || "")
-        ];
-      });
-
-      const csv = [headers, ...rows].map(row => row.map(csvEscape).join(",")).join("\n");
-      downloadCsv("quantum-stock-dashboard.csv", csv);
-      setStatus("Stock CSV exported. Open it in Excel, Numbers, or Google Sheets as a table.");
-    }
-
-    function exportWatchlistsCsv() {
-      const headers = [
-        "watchlistTitle",
-        "watchlistNote",
-        "position",
-        "ticker",
-        "company",
-        "category",
-        "risk",
-        "valuation"
-      ];
-
-      const rows = [];
-
-      watchlists.forEach(list => {
-        getWatchlistTickers(list.title).forEach((ticker, index) => {
-          const stock = stocks.find(item => item.ticker === ticker);
-          rows.push([
-            list.title,
-            list.note || "",
-            index + 1,
-            ticker,
-            stock ? stock.company : "",
-            stock ? stock.category : "",
-            stock ? stock.risk : "",
-            stock ? stock.valuation : ""
-          ]);
-        });
-      });
-
-      const csv = [headers, ...rows].map(row => row.map(csvEscape).join(",")).join("\n");
-      downloadCsv("quantum-watchlists.csv", csv);
-      setStatus("Watchlist CSV exported. Open it in Excel, Numbers, or Google Sheets as a table.");
-    }
-
-    function importCsv(event) {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        try {
-          const rows = parseCsv(String(reader.result || ""));
-          if (rows.length < 2) throw new Error("CSV is empty.");
-
-          const headers = rows[0].map(normalizeHeader);
-          const tickerIndex = headers.indexOf("ticker");
-
-          if (tickerIndex === -1) {
-            throw new Error("CSV must include a ticker column.");
-          }
-
-          const fieldIndex = {};
-          editableFields.forEach(field => {
-            const index = headers.indexOf(normalizeHeader(field));
-            if (index !== -1) fieldIndex[field] = index;
-          });
-          const watchlistsIndex = headers.indexOf("watchlists");
-
-          rows.slice(1).forEach(row => {
-            const ticker = String(row[tickerIndex] || "").trim().toUpperCase();
-            if (!ticker || !stocks.some(stock => stock.ticker === ticker)) return;
-
-            const next = manualEdits[ticker] || {};
-            editableFields.forEach(field => {
-              if (fieldIndex[field] !== undefined) {
-                next[field] = String(row[fieldIndex[field]] || "").trim();
-              }
-            });
-            if (watchlistsIndex !== -1) {
-              next.watchlists = parseWatchlistCell(row[watchlistsIndex]);
-            }
-            manualEdits[ticker] = next;
-          });
-
-          saveJson(STORAGE_KEY, manualEdits);
-          renderAll();
-          setStatus("CSV imported.");
-        } catch (error) {
-          alert(error.message || "Could not import CSV.");
-        } finally {
-          els.importCsv.value = "";
-        }
-      };
-
-      reader.readAsText(file);
+    function resetWatchlists() {
+      if (!confirm("Reset watchlists to defaults?")) return;
+      watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS));
+      saveJson(STORAGE.watchlists, watchlists);
+      renderWatchlists();
     }
 
     function resetLocalData() {
-      const ok = confirm("Clear saved manual fields, notes, pro metrics, live data, and watchlist edits from this device?");
-      if (!ok) return;
-
-      manualEdits = {};
-      liveData = { quotes: {}, performance: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null };
-      watchlists = cloneDefaultWatchlists();
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(WATCHLISTS_KEY);
-      localStorage.removeItem(LIVE_DATA_KEY);
-      localStorage.removeItem(LEGACY_FULL_STOCKS_KEY);
-
+      if (!confirm("Clear saved manual stock fields, watchlists, and live cache from this device?")) return;
+      manualEdits = {}; watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS)); liveData = { quotes: {}, performance: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null };
+      saveJson(STORAGE.edits, manualEdits); saveJson(STORAGE.watchlists, watchlists); saveJson(STORAGE.live, liveData);
       renderAll();
-      syncLiveControls();
-      setStatus("Local edits, live data, and custom watchlists cleared.");
     }
 
-    function savePrefs() {
-      saveJson(PREFS_KEY, prefs);
-      setStatus("Display settings saved.");
+    function applyPrefs() {
+      document.body.classList.toggle("light", !prefs.darkMode);
+      document.body.classList.toggle("compact", Boolean(prefs.compactCards));
+      els.darkToggle.checked = Boolean(prefs.darkMode);
+      els.compactToggle.checked = Boolean(prefs.compactCards);
+      els.workerUrlInput.value = liveSettings.workerUrl || DEFAULT_WORKER_URL;
+      els.autoRefreshToggle.checked = Boolean(liveSettings.autoRefresh);
     }
+    function savePrefs() { saveJson(STORAGE.prefs, prefs); }
 
-    function syncLiveControls() {
-      if (els.workerUrlInput) els.workerUrlInput.value = liveConfig.workerUrl || "";
-      if (els.liveAutoToggle) els.liveAutoToggle.checked = Boolean(liveConfig.autoRefresh);
-      if (els.lastQuoteRefresh) els.lastQuoteRefresh.textContent = formatTimestamp(liveData.lastQuoteRefresh);
-      if (els.lastPerformanceRefresh) els.lastPerformanceRefresh.textContent = formatTimestamp(liveData.lastPerformanceRefresh);
-
-      if (!els.liveStatus) return;
-
-      if (!liveConfig.workerUrl) {
-        els.liveStatus.textContent = "Not connected";
-      } else if (liveConfig.autoRefresh) {
-        els.liveStatus.textContent = "Connected · auto every 15 min";
-      } else {
-        els.liveStatus.textContent = "Connected · manual refresh";
+    /* =========================================================
+       6. Live Data
+       ========================================================= */
+    async function refreshLiveData(force = false) {
+      const workerUrl = sanitizeWorkerUrl(liveSettings.workerUrl || DEFAULT_WORKER_URL);
+      if (!workerUrl) { setLiveStatus("Missing Worker URL"); return; }
+      setLiveStatus("Refreshing...");
+      try {
+        const symbols = stocks.map(stock => stock.ticker).join(",");
+        const quoteUrl = `${workerUrl}/api/quotes?symbols=${encodeURIComponent(symbols)}${force ? "&force=1" : ""}`;
+        const quotePayload = await fetchJsonFromUrl(quoteUrl);
+        if (!quotePayload.ok) throw new Error(quotePayload.error || "Quote refresh failed.");
+        liveData.quotes = quotePayload.data || {};
+        liveData.lastQuoteRefresh = quotePayload.generatedAt || new Date().toISOString();
+        const perfIsOld = !liveData.lastPerformanceRefresh || Date.now() - Date.parse(liveData.lastPerformanceRefresh) > 23 * 60 * 60 * 1000;
+        if (force || perfIsOld) {
+          const perfUrl = `${workerUrl}/api/performance?symbols=${encodeURIComponent(symbols)}${force ? "&force=1" : ""}`;
+          const perfPayload = await fetchJsonFromUrl(perfUrl);
+          if (!perfPayload.ok) throw new Error(perfPayload.error || "Performance refresh failed.");
+          liveData.performance = perfPayload.data || {};
+          liveData.lastPerformanceRefresh = perfPayload.generatedAt || new Date().toISOString();
+        }
+        saveJson(STORAGE.live, liveData);
+        setLiveStatus("Connected");
+        renderStocks(); updateLiveStatus();
+      } catch (error) {
+        setLiveStatus("Error: " + (error.message || "Refresh failed"));
       }
     }
 
-    function saveLiveConfigFromControls() {
-      const workerUrl = normalizeWorkerUrl(els.workerUrlInput.value);
-
-      if (els.workerUrlInput.value.trim() && !workerUrl) {
-        alert("Please enter a valid Cloudflare Worker URL, for example https://your-worker.yourname.workers.dev");
-        return;
-      }
-
-      liveConfig.workerUrl = workerUrl;
-      liveConfig.autoRefresh = els.liveAutoToggle.checked;
-      saveJson(LIVE_CONFIG_KEY, liveConfig);
-      syncLiveControls();
-      startOrStopAutoRefresh();
-      setStatus(workerUrl ? "Worker URL saved." : "Worker URL cleared.");
+    function saveWorkerUrl() {
+      liveSettings.workerUrl = sanitizeWorkerUrl(els.workerUrlInput.value) || DEFAULT_WORKER_URL;
+      els.workerUrlInput.value = liveSettings.workerUrl;
+      saveLiveSettings(); updateLiveStatus();
     }
 
     function clearLiveCache() {
-      liveData = {
-        quotes: {},
-        performance: {},
-        lastQuoteRefresh: null,
-        lastPerformanceRefresh: null
-      };
-      localStorage.removeItem(LIVE_DATA_KEY);
-      renderAll();
-      syncLiveControls();
-      setStatus("Live cache cleared. Tap Refresh Now to reload quotes and performance metrics.");
+      liveData = { quotes: {}, performance: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null };
+      saveJson(STORAGE.live, liveData);
+      renderStocks(); updateLiveStatus(); setLiveStatus("Live cache cleared");
     }
 
-    function startOrStopAutoRefresh() {
-      window.clearInterval(liveRefreshTimer);
-      liveRefreshTimer = null;
-
-      if (!liveConfig.autoRefresh || !liveConfig.workerUrl) return;
-
-      if (isStale(liveData.lastQuoteRefresh, AUTO_REFRESH_MS)) {
-        refreshLiveData({ forcePerformance: false, silent: true });
-      }
-
-      liveRefreshTimer = window.setInterval(() => {
-        refreshLiveData({ forcePerformance: false, silent: true });
-      }, AUTO_REFRESH_MS);
-    }
-
-    async function refreshLiveData(options = {}) {
-      const { forcePerformance = false, silent = false } = options;
-      saveLiveConfigFromControlsWithoutStatus();
-
-      if (!liveConfig.workerUrl) {
-        alert("Add your Cloudflare Worker URL first.");
-        return;
-      }
-
-      const symbols = stocks.map(stock => stock.ticker).join(",");
-      const shouldRefreshPerformance = forcePerformance || isStale(liveData.lastPerformanceRefresh, PERFORMANCE_REFRESH_MS);
-
-      try {
-        setLiveLoading(true);
-        if (!silent) setStatus("Refreshing live quotes...");
-        els.liveStatus.textContent = "Refreshing...";
-
-        const quoteResult = await fetchWorkerJson(`/api/quotes?symbols=${encodeURIComponent(symbols)}${forcePerformance ? "&force=1" : ""}`);
-        liveData.quotes = {
-          ...(liveData.quotes || {}),
-          ...(quoteResult.data || {})
-        };
-        liveData.lastQuoteRefresh = quoteResult.generatedAt || new Date().toISOString();
-
-        if (shouldRefreshPerformance) {
-          if (!silent) setStatus("Refreshing 6-month performance metrics...");
-          const performanceResult = await fetchWorkerJson(`/api/performance?symbols=${encodeURIComponent(symbols)}${forcePerformance ? "&force=1" : ""}`);
-          liveData.performance = {
-            ...(liveData.performance || {}),
-            ...(performanceResult.data || {})
-          };
-          liveData.lastPerformanceRefresh = performanceResult.generatedAt || new Date().toISOString();
-        }
-
-        saveJson(LIVE_DATA_KEY, liveData);
-        renderAll();
-        syncLiveControls();
-        setStatus(shouldRefreshPerformance ? "Live quotes and performance metrics refreshed." : "Live quotes refreshed.");
-      } catch (error) {
-        console.error(error);
-        els.liveStatus.textContent = "Refresh failed";
-        alert(error.message || "Could not refresh live data.");
-      } finally {
-        setLiveLoading(false);
+    function configureAutoRefresh() {
+      window.clearInterval(autoRefreshTimer);
+      if (liveSettings.autoRefresh) {
+        autoRefreshTimer = window.setInterval(() => refreshLiveData(false), 15 * 60 * 1000);
       }
     }
 
-    function saveLiveConfigFromControlsWithoutStatus() {
-      const workerUrl = normalizeWorkerUrl(els.workerUrlInput.value);
-      liveConfig.workerUrl = workerUrl || liveConfig.workerUrl || "";
-      liveConfig.autoRefresh = els.liveAutoToggle.checked;
-      saveJson(LIVE_CONFIG_KEY, liveConfig);
-    }
-
-    async function fetchWorkerJson(path) {
-      const url = `${liveConfig.workerUrl}${path}`;
-      const response = await fetch(url, { cache: "no-store" });
-      const payload = await response.json().catch(() => null);
-
-      if (!response.ok || !payload?.ok) {
-        const message = payload?.error || `Worker request failed with HTTP ${response.status}`;
-        throw new Error(message);
-      }
-
-      return payload;
-    }
-
-    function setLiveLoading(isLoading) {
-      if (!els.refreshLiveData) return;
-      els.refreshLiveData.disabled = isLoading;
-      if (els.clearLiveCache) els.clearLiveCache.disabled = isLoading;
-      els.refreshLiveData.textContent = isLoading ? "Refreshing..." : "Refresh Now";
-    }
-
-    function normalizeWorkerUrl(value) {
-      const raw = String(value || "").trim();
-      if (!raw) return "";
-
-      try {
-        const url = new URL(raw);
-        if (url.protocol !== "https:") return "";
-        return url.origin.replace(/\/$/, "");
-      } catch (error) {
-        return "";
-      }
-    }
-
-    function isStale(timestamp, maxAgeMs) {
-      if (!timestamp) return true;
-      const time = new Date(timestamp).getTime();
-      if (!Number.isFinite(time)) return true;
-      return Date.now() - time > maxAgeMs;
-    }
-
-    function formatTimestamp(timestamp) {
-      if (!timestamp) return "Never";
-      const date = new Date(timestamp);
-      if (Number.isNaN(date.getTime())) return "Never";
-      return date.toLocaleString([], {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit"
-      });
-    }
-
-    function setStatus(text) {
-      if (els.dataStatus) {
-        els.dataStatus.textContent = text || "Stock edits, pro metrics, and watchlists save on this device.";
-      }
-      console.log(`Dashboard status: ${text}`);
+    function saveLiveSettings() { saveJson(STORAGE.liveSettings, liveSettings); configureAutoRefresh(); }
+    function setLiveStatus(message) { els.liveStatus.textContent = message; }
+    function updateLiveStatus() {
+      els.workerUrlInput.value = liveSettings.workerUrl || DEFAULT_WORKER_URL;
+      els.autoRefreshToggle.checked = Boolean(liveSettings.autoRefresh);
+      els.lastQuoteRefresh.textContent = formatDateTime(liveData.lastQuoteRefresh);
+      els.lastPerformanceRefresh.textContent = formatDateTime(liveData.lastPerformanceRefresh);
+      if (!els.liveStatus.textContent || els.liveStatus.textContent === "Not connected") els.liveStatus.textContent = liveData.lastQuoteRefresh ? "Connected" : "Not connected";
     }
 
     /* =========================================================
-       6. Helpers
-       Storage, CSV, links, escaping, and formatting.
+       7. CSV
        ========================================================= */
-    function normalizeLiveData(value) {
-      const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-      return {
-        quotes: source.quotes && typeof source.quotes === "object" && !Array.isArray(source.quotes) ? source.quotes : {},
-        performance: source.performance && typeof source.performance === "object" && !Array.isArray(source.performance) ? source.performance : {},
-        lastQuoteRefresh: source.lastQuoteRefresh || null,
-        lastPerformanceRefresh: source.lastPerformanceRefresh || null
-      };
-    }
-
-    function showStartupError(error) {
-      const message = error && error.message ? error.message : "Unknown startup error.";
-      const app = document.querySelector(".app") || document.body;
-      const box = document.createElement("div");
-      box.className = "card";
-      box.style.marginTop = "16px";
-      box.innerHTML = `
-        <h2>Dashboard startup error</h2>
-        <p class="meta">A saved setting or partial file edit blocked the app from rendering.</p>
-        <p class="meta"><strong>Error:</strong> ${escapeHtml(message)}</p>
-        <button class="button danger" type="button" id="emergencyResetApp">Clear saved app data</button>
-      `;
-      app.appendChild(box);
-      const resetButton = document.getElementById("emergencyResetApp");
-      if (resetButton) {
-        resetButton.addEventListener("click", () => {
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.removeItem(WATCHLISTS_KEY);
-          localStorage.removeItem(LIVE_DATA_KEY);
-          localStorage.removeItem(LIVE_CONFIG_KEY);
-          window.location.reload();
-        });
-      }
-    }
-
-    function loadWatchlists() {
-      const saved = loadJson(WATCHLISTS_KEY, null);
-      if (Array.isArray(saved)) {
-        const cleaned = saved.map(normalizeWatchlist).filter(list => list.title && list.tickers.length);
-        if (cleaned.length) return cleaned;
-      }
-
-      return cloneDefaultWatchlists();
-    }
-
-    function cloneDefaultWatchlists() {
-      return defaultWatchlists.map(normalizeWatchlist);
-    }
-
-    function normalizeWatchlist(list) {
-      return {
-        title: String(list?.title || "Untitled Watchlist").trim(),
-        tickers: parseTickerList(Array.isArray(list?.tickers) ? list.tickers.join(",") : list?.tickers),
-        note: String(list?.note || "").trim()
-      };
-    }
-
-    function saveWatchlists() {
-      watchlists = watchlists.map(normalizeWatchlist).filter(list => list.title && list.tickers.length);
-      saveJson(WATCHLISTS_KEY, watchlists);
-      setStatus("Watchlists saved on this device.");
-    }
-
-    function getDefaultWatchlists(ticker) {
-      return watchlists
-        .filter(list => list.tickers.includes(ticker))
-        .map(list => list.title);
-    }
-
-    function getStockWatchlists(ticker) {
-      const saved = manualEdits[ticker]?.watchlists;
-      const validTitles = watchlists.map(list => list.title);
-
-      if (Array.isArray(saved)) {
-        return saved.filter(title => validTitles.includes(title));
-      }
-
-      if (typeof saved === "string" && saved.trim()) {
-        return parseWatchlistCell(saved);
-      }
-
-      return getDefaultWatchlists(ticker);
-    }
-
-    function getWatchlistTickers(title) {
-      return stocks
-        .filter(stock => getStockWatchlists(stock.ticker).includes(title))
-        .map(stock => stock.ticker);
-    }
-
-    function renderEditorWatchlists(ticker) {
-      const selected = new Set(getStockWatchlists(ticker));
-
-      els.watchlistCheckboxes.innerHTML = watchlists.map(list => {
-        const inputId = `watchlist-${className(list.title)}`;
-        const isChecked = selected.has(list.title) ? "checked" : "";
-
-        return `
-          <label class="checkbox-card" for="${escapeAttr(inputId)}">
-            <input id="${escapeAttr(inputId)}" type="checkbox" name="watchlists" value="${escapeAttr(list.title)}" ${isChecked} />
-            <span>
-              <strong>${escapeHtml(list.title)}</strong>
-              <span>${escapeHtml(list.note || "Show this stock in this watchlist.")}</span>
-            </span>
-          </label>
-        `;
-      }).join("");
-    }
-
-    function getSelectedWatchlistsFromEditor() {
-      return Array.from(els.editForm.querySelectorAll('input[name="watchlists"]:checked'))
-        .map(input => input.value)
-        .filter(value => watchlists.some(list => list.title === value));
-    }
-
-    function getAllWatchlistMemberships() {
-      return Object.fromEntries(stocks.map(stock => [stock.ticker, getStockWatchlists(stock.ticker)]));
-    }
-
-    function applyWatchlistTickerMembership(previousMemberships, oldTitle, newTitle, selectedTickers) {
-      const selected = new Set(selectedTickers);
-      const validTitles = new Set(watchlists.map(list => list.title));
-
-      stocks.forEach(stock => {
-        const ticker = stock.ticker;
-        const memberships = new Set(previousMemberships[ticker] || []);
-
-        if (oldTitle) memberships.delete(oldTitle);
-        memberships.delete(newTitle);
-        if (selected.has(ticker)) memberships.add(newTitle);
-
-        const nextMemberships = [...memberships].filter(title => validTitles.has(title));
-        manualEdits[ticker] = {
-          ...(manualEdits[ticker] || {}),
-          watchlists: nextMemberships
-        };
+    function exportStocksCsv() {
+      const headers = ["ticker", "company", "exchange", "category", "risk", "valuation", "watchlists", "quantumThesis", "aiDataCenterRelevance", ...EDITABLE_FIELDS, "yahoo", "tradingView"];
+      const rows = stocks.map(base => {
+        const stock = getMergedStock(base.ticker);
+        return [stock.ticker, stock.company, stock.exchange, stock.category, stock.risk, stock.valuation, getStockWatchlists(stock.ticker).join("; "), stock.thesis, stock.aiData, ...EDITABLE_FIELDS.map(field => stock[field] || ""), yahooUrl(stock.ticker), tradingViewUrl(stock.ticker)];
       });
-
-      saveJson(STORAGE_KEY, manualEdits);
+      downloadCsv("quantum-dashboard-stocks.csv", [headers, ...rows]);
     }
 
-    function removeWatchlistMembership(title) {
-      stocks.forEach(stock => {
-        const memberships = getStockWatchlists(stock.ticker).filter(item => item !== title);
-        manualEdits[stock.ticker] = {
-          ...(manualEdits[stock.ticker] || {}),
-          watchlists: memberships
-        };
-      });
-
-      saveJson(STORAGE_KEY, manualEdits);
-    }
-
-    function clearSavedWatchlistMemberships() {
-      Object.keys(manualEdits).forEach(ticker => {
-        if (manualEdits[ticker] && Object.prototype.hasOwnProperty.call(manualEdits[ticker], "watchlists")) {
-          delete manualEdits[ticker].watchlists;
-        }
-      });
-    }
-
-    function parseTickerList(value) {
-      return unique(String(value || "")
-        .split(/[,\s]+/)
-        .map(ticker => ticker.trim().toUpperCase())
-        .filter(ticker => /^[A-Z0-9.]{1,8}$/.test(ticker))
-      );
-    }
-
-    function parseWatchlistCell(value) {
-      const validTitles = watchlists.map(list => list.title);
-      return String(value || "")
-        .split(/[;|]/)
-        .map(item => item.trim())
-        .filter(item => validTitles.includes(item));
-    }
-
-    function loadManualEdits() {
-      const direct = loadJson(STORAGE_KEY, null);
-      if (direct && typeof direct === "object" && !Array.isArray(direct)) {
-        return direct;
-      }
-
-      const legacyStocks = loadJson(LEGACY_FULL_STOCKS_KEY, null);
-      if (Array.isArray(legacyStocks)) {
-        const migrated = {};
-        legacyStocks.forEach(stock => {
-          if (!stock || !stock.ticker) return;
-          const ticker = String(stock.ticker).toUpperCase();
-          migrated[ticker] = Object.fromEntries(
-            editableFields.map(field => [field, stock[field] || ""])
-          );
-          if (Array.isArray(stock.watchlists)) {
-            migrated[ticker].watchlists = stock.watchlists;
-          }
-        });
-        return migrated;
-      }
-
-      return {};
-    }
-
-    function loadJson(key, fallback) {
-      try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : fallback;
-      } catch (error) {
-        return fallback;
-      }
-    }
-
-    function saveJson(key, value) {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch (error) {
-        alert("Could not save locally. Your browser storage may be full or blocked.");
-      }
-    }
-
-    function unique(values) {
-      return [...new Set(values)];
-    }
-
-    function className(value) {
-      return String(value)
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
-    }
-
-    function yahooUrl(ticker) {
-      return `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}`;
-    }
-
-    function tradingViewUrl(ticker) {
-      return `https://www.tradingview.com/search/?query=${encodeURIComponent(ticker)}`;
-    }
-
-    function downloadCsv(filename, csv) {
-      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-
-      link.href = url;
-      link.download = filename;
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
-
-    function csvEscape(value) {
-      const text = String(value ?? "");
-      if (/[",\n\r]/.test(text)) {
-        return `"${text.replace(/"/g, '""')}"`;
-      }
-      return text;
-    }
-
-    function parseCsv(text) {
+    function exportWatchlistsCsv() {
+      const headers = ["watchlist", "note", "position", "ticker", "company", "category", "risk", "valuation"];
       const rows = [];
-      let row = [];
-      let field = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const next = text[i + 1];
-
-        if (char === '"') {
-          if (inQuotes && next === '"') {
-            field += '"';
-            i++;
-          } else {
-            inQuotes = !inQuotes;
-          }
-        } else if (char === "," && !inQuotes) {
-          row.push(field);
-          field = "";
-        } else if ((char === "\n" || char === "\r") && !inQuotes) {
-          if (char === "\r" && next === "\n") i++;
-          row.push(field);
-          rows.push(row);
-          row = [];
-          field = "";
-        } else {
-          field += char;
-        }
-      }
-
-      if (field !== "" || row.length) {
-        row.push(field);
-        rows.push(row);
-      }
-
-      return rows.filter(r => r.some(cell => String(cell).trim() !== ""));
+      watchlists.forEach(list => parseTickerList(list.tickers.join(",")).forEach((ticker, index) => {
+        const stock = stocks.find(s => s.ticker === ticker) || {};
+        rows.push([list.title, list.note || "", index + 1, ticker, stock.company || "", stock.category || "", stock.risk || "", stock.valuation || ""]);
+      }));
+      downloadCsv("quantum-dashboard-watchlists.csv", [headers, ...rows]);
     }
 
-    function normalizeHeader(value) {
-      return String(value || "")
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "");
+    function importStocksCsv(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const rows = parseCsv(String(reader.result || ""));
+          const headers = rows[0].map(normalizeHeader);
+          const tickerIndex = headers.indexOf("ticker");
+          if (tickerIndex === -1) throw new Error("CSV must include ticker column.");
+          const fieldIndexes = {};
+          EDITABLE_FIELDS.forEach(field => { const index = headers.indexOf(normalizeHeader(field)); if (index !== -1) fieldIndexes[field] = index; });
+          rows.slice(1).forEach(row => {
+            const ticker = String(row[tickerIndex] || "").trim().toUpperCase();
+            if (!stocks.some(stock => stock.ticker === ticker)) return;
+            const next = manualEdits[ticker] || {};
+            Object.entries(fieldIndexes).forEach(([field, index]) => { next[field] = String(row[index] || "").trim(); });
+            manualEdits[ticker] = next;
+          });
+          saveJson(STORAGE.edits, manualEdits); renderStocks();
+        } catch (error) { alert(error.message || "Could not import CSV."); }
+        finally { els.importCsv.value = ""; }
+      };
+      reader.readAsText(file);
     }
 
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function escapeAttr(value) {
-      return escapeHtml(value);
-    }
+    /* =========================================================
+       8. Helpers
+       ========================================================= */
+    function openModal(modal) { modal.classList.add("active"); modal.setAttribute("aria-hidden", "false"); document.body.style.overflow = "hidden"; }
+    function closeModal(modal) { modal.classList.remove("active"); modal.setAttribute("aria-hidden", "true"); document.body.style.overflow = ""; }
+    function showStartupError(error) { if (els.startupError) { els.startupError.style.display = "block"; els.startupError.textContent = "Dashboard startup error: " + (error.message || error); } }
+    function loadJson(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(fallback)); } catch { return JSON.parse(JSON.stringify(fallback)); } }
+    function saveJson(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { alert("Could not save locally. Browser storage may be full or blocked."); } }
+    function unique(values) { return [...new Set(values)]; }
+    function className(value) { return String(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+    function parseTickerList(value) { return unique(String(value || "").split(/[,:;\s]+/).map(t => t.trim().toUpperCase()).filter(t => /^[A-Z0-9.]{1,8}$/.test(t) && stocks.some(s => s.ticker === t))); }
+    function getStockWatchlists(ticker) { return watchlists.filter(list => parseTickerList(list.tickers.join(",")).includes(ticker)).map(list => list.title); }
+    function yahooUrl(ticker) { return `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}`; }
+    function tradingViewUrl(ticker) { return `https://www.tradingview.com/search/?query=${encodeURIComponent(ticker)}`; }
+    function sanitizeWorkerUrl(value) { return String(value || "").trim().replace(/\/+$/, ""); }
+    async function fetchJsonFromUrl(url) { const response = await fetch(url); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`); return payload; }
+    function formatDateTime(value) { if (!value) return "Never"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Never"; return date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
+    function downloadCsv(filename, rows) { const csv = rows.map(row => row.map(csvEscape).join(",")).join("\n"); const blob = new Blob([csv], { type: "text/csv;charset=utf-8" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+    function csvEscape(value) { const text = String(value ?? ""); return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text; }
+    function parseCsv(text) { const rows = []; let row = [], field = "", inQuotes = false; for (let i = 0; i < text.length; i++) { const char = text[i], next = text[i + 1]; if (char === '"') { if (inQuotes && next === '"') { field += '"'; i++; } else inQuotes = !inQuotes; } else if (char === "," && !inQuotes) { row.push(field); field = ""; } else if ((char === "\n" || char === "\r") && !inQuotes) { if (char === "\r" && next === "\n") i++; row.push(field); rows.push(row); row = []; field = ""; } else field += char; } if (field !== "" || row.length) { row.push(field); rows.push(row); } return rows.filter(r => r.some(cell => String(cell).trim() !== "")); }
+    function normalizeHeader(value) { return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, ""); }
+    function escapeHtml(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;"); }
+    function escapeAttr(value) { return escapeHtml(value); }
   </script>
 </body>
 </html>
