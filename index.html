@@ -88,7 +88,7 @@
     .top-tabs {
       position: static;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 8px;
       padding: 10px;
       margin: 0 0 18px;
@@ -257,6 +257,14 @@
     .status-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; border-radius: 14px; background: rgba(170,184,216,0.055); border: 1px solid rgba(170,184,216,0.13); }
     .status-line span:first-child { color: var(--muted); font-size: 0.82rem; font-weight: 850; }
     .status-line span:last-child { color: var(--text); font-weight: 850; text-align: right; }
+    .history-list { display: grid; gap: 10px; }
+    .history-item { padding: 12px; border: 1px solid rgba(170,184,216,0.14); border-radius: 16px; background: rgba(170,184,216,0.055); }
+    .history-item strong { display: block; margin-bottom: 4px; color: var(--text); }
+    .history-item p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+    .history-mini-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+    .history-mini { padding: 9px; border: 1px solid rgba(170,184,216,0.12); border-radius: 12px; background: rgba(170,184,216,0.045); }
+    .history-mini span { display: block; color: var(--muted-2); font-size: 0.72rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.06em; }
+    .history-mini b { display: block; margin-top: 3px; color: var(--text); }
     .file-input { display: none; }
 
     .modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; justify-content: center; padding: 14px; background: rgba(0,0,0,0.56); }
@@ -293,7 +301,7 @@
     @media (max-width: 430px) {
       .app { padding-inline: 14px; }
       .top-tabs { gap: 5px; padding: 7px; }
-      .tab-button { min-height: 43px; font-size: 0.88rem; }
+      .tab-button { min-height: 43px; font-size: 0.78rem; }
       .card, .stock-card, .watch-card { padding: 16px; }
       .actions { grid-template-columns: 1fr; }
       .stock-header { display: grid; }
@@ -308,6 +316,7 @@
       <button class="tab-button active" type="button" data-tab="home">Home</button>
       <button class="tab-button" type="button" data-tab="stocks">Stocks</button>
       <button class="tab-button" type="button" data-tab="watchlists">Watchlists</button>
+      <button class="tab-button" type="button" data-tab="history">History</button>
       <button class="tab-button" type="button" data-tab="settings">Settings</button>
     </nav>
 
@@ -366,6 +375,48 @@
         <div class="watchlist-grid" id="watchlistGrid"></div>
       </section>
 
+      <section class="tab-panel" data-panel="history">
+        <div class="section-title">
+          <div><h2>History</h2><p>Saved refreshes and daily snapshots from Cloudflare KV.</p></div>
+        </div>
+
+        <div class="settings-grid" style="margin-bottom: 14px;">
+          <div class="card">
+            <h3>Refresh Summary</h3>
+            <p class="meta">Shows what the Worker refreshed and what it served from saved KV cache.</p>
+            <div class="status-grid">
+              <div class="status-line"><span>Latest dashboard pull</span><span id="historyLastPull">Never</span></div>
+              <div class="status-line"><span>Quotes cache</span><span id="historyQuotesCache">—</span></div>
+              <div class="status-line"><span>Performance cache</span><span id="historyPerformanceCache">—</span></div>
+              <div class="status-line"><span>Fundamentals cache</span><span id="historyFundamentalsCache">—</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>History Controls</h3>
+            <p class="meta">Use these after refreshing live data to see what was saved.</p>
+            <div class="settings-actions">
+              <button class="button" id="loadHistory" type="button">Load History</button>
+              <button class="button secondary" id="loadRefreshLog" type="button">Load Refresh Log</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">
+          <div><h2>Recent Refreshes</h2><p>Worker refresh log.</p></div>
+        </div>
+        <div class="history-list" id="refreshLogList">
+          <div class="empty" style="display:block;">Tap Load Refresh Log.</div>
+        </div>
+
+        <div class="section-title" style="margin-top: 24px;">
+          <div><h2>Daily Snapshots</h2><p>Saved market snapshots. More history appears over time.</p></div>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="empty" style="display:block;">Tap Load History.</div>
+        </div>
+      </section>
+
       <section class="tab-panel" data-panel="settings">
         <div class="section-title">
           <div><h2>Settings</h2><p>Display, saved data, and live updates.</p></div>
@@ -402,6 +453,8 @@
               <div class="status-line"><span>Last quote refresh</span><span id="lastQuoteRefresh">Never</span></div>
               <div class="status-line"><span>Last performance refresh</span><span id="lastPerformanceRefresh">Never</span></div>
               <div class="status-line"><span>Last fundamentals refresh</span><span id="lastFundamentalsRefresh">Never</span></div>
+              <div class="status-line"><span>Cache used</span><span id="cacheUsedStatus">—</span></div>
+              <div class="status-line"><span>Saved snapshot</span><span id="snapshotStatus">—</span></div>
             </div>
           </div>
         </div>
@@ -509,7 +562,7 @@
     let manualEdits = loadJson(STORAGE.edits, {});
     let prefs = loadJson(STORAGE.prefs, { darkMode: true, compactCards: false });
     let watchlists = loadJson(STORAGE.watchlists, DEFAULT_WATCHLISTS);
-    let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null });
+    let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null });
     let liveSettings = loadJson(STORAGE.liveSettings, { workerUrl: DEFAULT_WORKER_URL, autoRefresh: false });
     let filters = { search: "", category: "all", risk: "all" };
     let activeEditTicker = null;
@@ -568,7 +621,16 @@
       els.lastQuoteRefresh = document.getElementById("lastQuoteRefresh");
       els.lastPerformanceRefresh = document.getElementById("lastPerformanceRefresh");
       els.lastFundamentalsRefresh = document.getElementById("lastFundamentalsRefresh");
-      els.lastFundamentalsRefresh = document.getElementById("lastFundamentalsRefresh");
+      els.cacheUsedStatus = document.getElementById("cacheUsedStatus");
+      els.snapshotStatus = document.getElementById("snapshotStatus");
+      els.historyLastPull = document.getElementById("historyLastPull");
+      els.historyQuotesCache = document.getElementById("historyQuotesCache");
+      els.historyPerformanceCache = document.getElementById("historyPerformanceCache");
+      els.historyFundamentalsCache = document.getElementById("historyFundamentalsCache");
+      els.loadHistory = document.getElementById("loadHistory");
+      els.loadRefreshLog = document.getElementById("loadRefreshLog");
+      els.historyList = document.getElementById("historyList");
+      els.refreshLogList = document.getElementById("refreshLogList");
       els.editModal = document.getElementById("editModal");
       els.editTitle = document.getElementById("editTitle");
       els.editSubtitle = document.getElementById("editSubtitle");
@@ -606,6 +668,8 @@
       els.saveWorkerUrl.addEventListener("click", saveWorkerUrl);
       els.refreshNow.addEventListener("click", () => refreshLiveData(true));
       els.clearLiveCache.addEventListener("click", clearLiveCache);
+      if (els.loadHistory) els.loadHistory.addEventListener("click", loadHistory);
+      if (els.loadRefreshLog) els.loadRefreshLog.addEventListener("click", loadRefreshLog);
       els.autoRefreshToggle.addEventListener("change", () => { liveSettings.autoRefresh = els.autoRefreshToggle.checked; saveLiveSettings(); configureAutoRefresh(); });
       els.closeModal.addEventListener("click", closeEditor);
       els.cancelEdit.addEventListener("click", closeEditor);
@@ -804,7 +868,7 @@
 
     function resetLocalData() {
       if (!confirm("Clear saved manual stock fields, watchlists, and live cache from this device?")) return;
-      manualEdits = {}; watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS)); liveData = { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null };
+      manualEdits = {}; watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS)); liveData = { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null };
       saveJson(STORAGE.edits, manualEdits); saveJson(STORAGE.watchlists, watchlists); saveJson(STORAGE.live, liveData);
       renderAll();
     }
@@ -825,33 +889,35 @@
     async function refreshLiveData(force = false) {
       const workerUrl = sanitizeWorkerUrl(liveSettings.workerUrl || DEFAULT_WORKER_URL);
       if (!workerUrl) { setLiveStatus("Missing Worker URL"); return; }
+
       setLiveStatus("Refreshing...");
       try {
         const symbols = stocks.map(stock => stock.ticker).join(",");
-        const quoteUrl = `${workerUrl}/api/quotes?symbols=${encodeURIComponent(symbols)}${force ? "&force=1" : ""}`;
-        const quotePayload = await fetchJsonFromUrl(quoteUrl);
-        if (!quotePayload.ok) throw new Error(quotePayload.error || "Quote refresh failed.");
-        liveData.quotes = quotePayload.data || {};
-        liveData.lastQuoteRefresh = quotePayload.generatedAt || new Date().toISOString();
-        const perfIsOld = !liveData.lastPerformanceRefresh || Date.now() - Date.parse(liveData.lastPerformanceRefresh) > 23 * 60 * 60 * 1000;
-        if (force || perfIsOld) {
-          const perfUrl = `${workerUrl}/api/performance?symbols=${encodeURIComponent(symbols)}${force ? "&force=1" : ""}`;
-          const perfPayload = await fetchJsonFromUrl(perfUrl);
-          if (!perfPayload.ok) throw new Error(perfPayload.error || "Performance refresh failed.");
-          liveData.performance = perfPayload.data || {};
-          liveData.lastPerformanceRefresh = perfPayload.generatedAt || new Date().toISOString();
-        }
-        const fundamentalsAreOld = !liveData.lastFundamentalsRefresh || Date.now() - Date.parse(liveData.lastFundamentalsRefresh) > 11 * 60 * 60 * 1000;
-        if (force || fundamentalsAreOld) {
-          const fundamentalsUrl = `${workerUrl}/api/fundamentals?symbols=${encodeURIComponent(symbols)}${force ? "&force=1" : ""}`;
-          const fundamentalsPayload = await fetchJsonFromUrl(fundamentalsUrl);
-          if (!fundamentalsPayload.ok) throw new Error(fundamentalsPayload.error || "Fundamentals refresh failed.");
-          liveData.fundamentals = fundamentalsPayload.data || {};
-          liveData.lastFundamentalsRefresh = fundamentalsPayload.generatedAt || new Date().toISOString();
-        }
+        const dashboardUrl = `${workerUrl}/api/dashboard?symbols=${encodeURIComponent(symbols)}${force ? "&force=1" : ""}`;
+        const payload = await fetchJsonFromUrl(dashboardUrl);
+
+        if (!payload.ok) throw new Error(payload.error || "Dashboard refresh failed.");
+
+        liveData.quotes = (payload.data && payload.data.quotes) || {};
+        liveData.performance = (payload.data && payload.data.performance) || {};
+        liveData.fundamentals = (payload.data && payload.data.fundamentals) || {};
+        liveData.cache = payload.cache || {};
+        liveData.lastDashboardRefresh = payload.generatedAt || new Date().toISOString();
+
+        liveData.lastQuoteRefresh = cacheSavedAt(payload.cache && payload.cache.quotes, payload.generatedAt);
+        liveData.lastPerformanceRefresh = cacheSavedAt(payload.cache && payload.cache.performance, payload.generatedAt);
+        liveData.lastFundamentalsRefresh = cacheSavedAt(payload.cache && payload.cache.fundamentals, payload.generatedAt);
+
         saveJson(STORAGE.live, liveData);
         setLiveStatus("Connected");
-        renderStocks(); updateLiveStatus();
+        renderStocks();
+        updateLiveStatus();
+
+        const historyPanel = document.querySelector('[data-panel="history"]');
+        if (historyPanel && historyPanel.classList.contains("active")) {
+          loadRefreshLog();
+          loadHistory();
+        }
       } catch (error) {
         setLiveStatus("Error: " + (error.message || "Refresh failed"));
       }
@@ -864,7 +930,7 @@
     }
 
     function clearLiveCache() {
-      liveData = { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null };
+      liveData = { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null };
       saveJson(STORAGE.live, liveData);
       renderStocks(); updateLiveStatus(); setLiveStatus("Live cache cleared");
     }
@@ -884,8 +950,75 @@
       els.lastQuoteRefresh.textContent = formatDateTime(liveData.lastQuoteRefresh);
       els.lastPerformanceRefresh.textContent = formatDateTime(liveData.lastPerformanceRefresh);
       if (els.lastFundamentalsRefresh) els.lastFundamentalsRefresh.textContent = formatDateTime(liveData.lastFundamentalsRefresh);
-      if (!els.liveStatus.textContent || els.liveStatus.textContent === "Not connected") els.liveStatus.textContent = liveData.lastQuoteRefresh ? "Connected" : "Not connected";
+
+      const cacheText = cacheStatusText(liveData.cache);
+      if (els.cacheUsedStatus) els.cacheUsedStatus.textContent = cacheText;
+      if (els.snapshotStatus) els.snapshotStatus.textContent = liveData.lastDashboardRefresh ? "Saved to KV" : "—";
+
+      if (els.historyLastPull) els.historyLastPull.textContent = formatDateTime(liveData.lastDashboardRefresh);
+      if (els.historyQuotesCache) els.historyQuotesCache.textContent = datasetCacheText(liveData.cache && liveData.cache.quotes);
+      if (els.historyPerformanceCache) els.historyPerformanceCache.textContent = datasetCacheText(liveData.cache && liveData.cache.performance);
+      if (els.historyFundamentalsCache) els.historyFundamentalsCache.textContent = datasetCacheText(liveData.cache && liveData.cache.fundamentals);
+
+      if (!els.liveStatus.textContent || els.liveStatus.textContent === "Not connected") {
+        els.liveStatus.textContent = liveData.lastQuoteRefresh ? "Connected" : "Not connected";
+      }
     }
+
+    async function loadRefreshLog() {
+      const workerUrl = sanitizeWorkerUrl(liveSettings.workerUrl || DEFAULT_WORKER_URL);
+      if (!workerUrl || !els.refreshLogList) return;
+
+      els.refreshLogList.innerHTML = `<div class="empty" style="display:block;">Loading refresh log...</div>`;
+
+      try {
+        const payload = await fetchJsonFromUrl(`${workerUrl}/api/refresh-log?limit=20`);
+        const items = Array.isArray(payload.items) ? payload.items : [];
+
+        els.refreshLogList.innerHTML = items.length ? items.map(item => `
+          <article class="history-item">
+            <strong>${escapeHtml(item.type || "refresh")} · ${escapeHtml(item.provider || "provider")}</strong>
+            <p>${escapeHtml(formatDateTime(item.refreshedAt))} · ${escapeHtml(String(item.symbolCount || 0))} symbols · ${item.force ? "forced refresh" : "cache refresh"}</p>
+            <p>${escapeHtml((item.symbols || []).slice(0, 8).join(", "))}${(item.symbols || []).length > 8 ? "..." : ""}</p>
+          </article>
+        `).join("") : `<div class="empty" style="display:block;">No refresh log yet. Tap Refresh Now in Settings.</div>`;
+      } catch (error) {
+        els.refreshLogList.innerHTML = `<div class="empty" style="display:block;">Could not load refresh log: ${escapeHtml(error.message || "error")}</div>`;
+      }
+    }
+
+    async function loadHistory() {
+      const workerUrl = sanitizeWorkerUrl(liveSettings.workerUrl || DEFAULT_WORKER_URL);
+      if (!workerUrl || !els.historyList) return;
+
+      els.historyList.innerHTML = `<div class="empty" style="display:block;">Loading history...</div>`;
+
+      try {
+        const payload = await fetchJsonFromUrl(`${workerUrl}/api/history?days=30`);
+        const items = Array.isArray(payload.items) ? payload.items : [];
+
+        els.historyList.innerHTML = items.length ? items.map(snapshot => snapshotHtml(snapshot)).join("") : `<div class="empty" style="display:block;">No snapshots yet. Tap Refresh Now in Settings.</div>`;
+      } catch (error) {
+        els.historyList.innerHTML = `<div class="empty" style="display:block;">Could not load history: ${escapeHtml(error.message || "error")}</div>`;
+      }
+    }
+
+    function snapshotHtml(snapshot) {
+      const data = snapshot.data || {};
+      const symbols = Object.keys(data).slice(0, 6);
+
+      const mini = symbols.map(symbol => {
+        const row = data[symbol] || {};
+        return `<div class="history-mini"><span>${escapeHtml(symbol)}</span><b>${escapeHtml(row.livePrice || "—")}</b><span>6M</span><b>${escapeHtml(row.sixMonthReturn || "—")}</b></div>`;
+      }).join("");
+
+      return `<article class="history-item">
+        <strong>${escapeHtml(snapshot.date || "Snapshot")}</strong>
+        <p>${escapeHtml((snapshot.symbols || Object.keys(data)).length)} symbols · saved ${escapeHtml(formatDateTime(snapshot.generatedAt))}</p>
+        <div class="history-mini-grid">${mini || "<p>No snapshot data.</p>"}</div>
+      </article>`;
+    }
+
 
     /* =========================================================
        7. CSV
@@ -950,7 +1083,10 @@
     function yahooUrl(ticker) { return `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}`; }
     function tradingViewUrl(ticker) { return `https://www.tradingview.com/search/?query=${encodeURIComponent(ticker)}`; }
     function sanitizeWorkerUrl(value) { return String(value || "").trim().replace(/\/+$/, ""); }
-    async function fetchJsonFromUrl(url) { const response = await fetch(url); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`); return payload; }
+    async function fetchJsonFromUrl(url) { const response = await fetch(url); const payload = await response.json(); if (!response.ok || payload.ok === false) throw new Error(payload.error || `HTTP ${response.status}`); return payload; }
+    function cacheSavedAt(cacheEntry, fallback) { return (cacheEntry && cacheEntry.savedAt) || fallback || new Date().toISOString(); }
+    function datasetCacheText(entry) { if (!entry) return "—"; return entry.refreshed ? "Refreshed" : entry.fromKv ? "From KV" : "Updated"; }
+    function cacheStatusText(cache) { if (!cache) return "—"; const parts = ["quotes", "performance", "fundamentals"].map(key => datasetCacheText(cache[key])); return parts.filter(Boolean).join(" / ") || "—"; }
     function formatDateTime(value) { if (!value) return "Never"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Never"; return date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
     function downloadCsv(filename, rows) { const csv = rows.map(row => row.map(csvEscape).join(",")).join("\n"); const blob = new Blob([csv], { type: "text/csv;charset=utf-8" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
     function csvEscape(value) { const text = String(value ?? ""); return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text; }
