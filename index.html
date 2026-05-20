@@ -623,14 +623,14 @@
       edits: "qsd.edits.v4",
       prefs: "qsd.prefs.v4",
       watchlists: "qsd.watchlists.v4",
-      live: "qsd.live.finnhub.tiingo.fundamentals.v5",
+      live: "qsd.live.finnhub.tiingo.fundamentals.v6",
       liveSettings: "qsd.liveSettings.v4"
     };
 
     let manualEdits = loadJson(STORAGE.edits, {});
     let prefs = loadJson(STORAGE.prefs, { darkMode: true, compactCards: false });
     let watchlists = loadJson(STORAGE.watchlists, DEFAULT_WATCHLISTS);
-    let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null });
+    let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, coverage: {}, refresh: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false });
     let liveSettings = loadJson(STORAGE.liveSettings, { workerUrl: DEFAULT_WORKER_URL, autoRefresh: false });
     let historyState = { snapshots: [], refreshLog: [], selectedTicker: "IONQ" };
     let filters = { search: "", category: "all", risk: "all" };
@@ -951,7 +951,7 @@
 
     function resetLocalData() {
       if (!confirm("Clear saved manual stock fields, watchlists, and live cache from this device?")) return;
-      manualEdits = {}; watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS)); liveData = { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false };
+      manualEdits = {}; watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS)); liveData = { quotes: {}, performance: {}, fundamentals: {}, coverage: {}, refresh: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false };
       saveJson(STORAGE.edits, manualEdits); saveJson(STORAGE.watchlists, watchlists); saveJson(STORAGE.live, liveData);
       renderAll();
     }
@@ -972,36 +972,49 @@
     async function refreshLiveData(force = false) {
       const workerUrl = sanitizeWorkerUrl(liveSettings.workerUrl || DEFAULT_WORKER_URL);
       if (!workerUrl) { setLiveStatus("Missing Worker URL"); return; }
-      setLiveStatus("Refreshing...");
+
+      const originalText = els.refreshNow ? els.refreshNow.textContent : "Refresh Now";
+      if (els.refreshNow) {
+        els.refreshNow.disabled = true;
+        els.refreshNow.textContent = "Refreshing...";
+      }
+
+      setLiveStatus("Refreshing live data...");
       try {
         const symbols = stocks.map(stock => stock.ticker).join(",");
-        // Normal Refresh Now should NOT force all providers. The Worker decides what is stale/missing.
-        // Force refresh is intentionally avoided here to protect free API limits.
-        const url = `${workerUrl}/api/dashboard?symbols=${encodeURIComponent(symbols)}${force ? "&force=1" : ""}`;
+        // Do not force by default. The Worker decides what is stale/missing and protects free API limits.
+        const url = `${workerUrl}/api/dashboard?symbols=${encodeURIComponent(symbols)}&saveHistory=1${force ? "&force=1" : ""}&x=${Date.now()}`;
         const payload = await fetchJsonFromUrl(url);
         if (!payload.ok) throw new Error(payload.error || "Dashboard refresh failed.");
 
         liveData.quotes = (payload.data && payload.data.quotes) || {};
         liveData.performance = (payload.data && payload.data.performance) || {};
         liveData.fundamentals = (payload.data && payload.data.fundamentals) || {};
-        liveData.cache = payload.cache || payload.refresh || {};
+        liveData.cache = payload.cache || {};
+        liveData.refresh = payload.refresh || {};
         liveData.coverage = payload.coverage || {};
         liveData.lastDashboardRefresh = payload.generatedAt || new Date().toISOString();
-        liveData.lastQuoteRefresh = (payload.cache && payload.cache.quotes && payload.cache.quotes.savedAt) || (payload.refresh && payload.refresh.quotes && payload.refresh.quotes.generatedAt) || liveData.lastDashboardRefresh;
-        liveData.lastPerformanceRefresh = (payload.cache && payload.cache.performance && payload.cache.performance.savedAt) || (payload.refresh && payload.refresh.performance && payload.refresh.performance.generatedAt) || liveData.lastDashboardRefresh;
-        liveData.lastFundamentalsRefresh = (payload.cache && payload.cache.fundamentals && payload.cache.fundamentals.savedAt) || (payload.refresh && payload.refresh.fundamentals && payload.refresh.fundamentals.generatedAt) || liveData.lastDashboardRefresh;
+        liveData.lastQuoteRefresh = datasetRefreshTime(payload, "quotes") || liveData.lastDashboardRefresh;
+        liveData.lastPerformanceRefresh = datasetRefreshTime(payload, "performance") || liveData.lastDashboardRefresh;
+        liveData.lastFundamentalsRefresh = datasetRefreshTime(payload, "fundamentals") || liveData.lastDashboardRefresh;
         liveData.snapshotSaved = true;
 
         saveJson(STORAGE.live, liveData);
-        setLiveStatus("Connected");
         renderStocks();
         updateLiveStatus();
-        if (document.querySelector('[data-panel="history"]').classList.contains("active")) {
-          loadHistoryData(false);
-          loadRefreshLogData(false);
-        }
+        setLiveStatus("Connected · " + coverageStatusText(liveData.coverage));
+
+        // Give KV a moment to save, then reload history/log. This makes History feel reliable after Refresh Now.
+        await delay(800);
+        await loadHistoryData(false);
+        await loadRefreshLogData(false);
       } catch (error) {
         setLiveStatus("Error: " + (error.message || "Refresh failed"));
+      } finally {
+        if (els.refreshNow) {
+          els.refreshNow.disabled = false;
+          els.refreshNow.textContent = originalText;
+        }
       }
     }
 
@@ -1012,7 +1025,7 @@
     }
 
     function clearLiveCache() {
-      liveData = { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false };
+      liveData = { quotes: {}, performance: {}, fundamentals: {}, coverage: {}, refresh: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false };
       saveJson(STORAGE.live, liveData);
       renderStocks(); updateLiveStatus(); setLiveStatus("Live cache cleared");
     }
@@ -1042,15 +1055,30 @@
       if (!workerUrl) return;
       try {
         if (showStatus) setLiveStatus("Loading history...");
-        const payload = await fetchJsonFromUrl(`${workerUrl}/api/history?days=30`);
+        const payload = await fetchJsonFromUrl(`${workerUrl}/api/history?days=30&x=${Date.now()}`);
         const rawSnapshots = Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.data) ? payload.data : []);
         historyState.snapshots = rawSnapshots
           .map(normalizeSnapshot)
+          .filter(snapshot => snapshot && snapshot.data && Object.keys(snapshot.data).length)
           .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+
+        // If KV history has not appeared yet, show the current in-memory refresh as a temporary snapshot.
+        if (!historyState.snapshots.length) {
+          const fallback = buildSnapshotFromLiveData();
+          if (fallback) historyState.snapshots = [fallback];
+        }
+
         renderHistory();
-        if (showStatus) setLiveStatus("History loaded");
+        if (showStatus) setLiveStatus(historyState.snapshots.length ? "History loaded" : "No history yet — tap Refresh Now first");
       } catch (error) {
-        if (showStatus) setLiveStatus("History error: " + (error.message || "Could not load history"));
+        const fallback = buildSnapshotFromLiveData();
+        if (fallback) {
+          historyState.snapshots = [fallback];
+          renderHistory();
+          if (showStatus) setLiveStatus("Showing latest local refresh; KV history failed to load");
+        } else if (showStatus) {
+          setLiveStatus("History error: " + (error.message || "Could not load history"));
+        }
       }
     }
 
@@ -1059,7 +1087,7 @@
       if (!workerUrl) return;
       try {
         if (showStatus) setLiveStatus("Loading refresh log...");
-        const payload = await fetchJsonFromUrl(`${workerUrl}/api/refresh-log?limit=60`);
+        const payload = await fetchJsonFromUrl(`${workerUrl}/api/refresh-log?limit=60&x=${Date.now()}`);
         const rawLog = Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.data) ? payload.data : []);
         historyState.refreshLog = normalizeRefreshLog(rawLog);
         renderRefreshLog();
@@ -1171,6 +1199,53 @@
       }).join("");
     }
 
+    function buildSnapshotFromLiveData() {
+      const symbols = stocks.map(stock => stock.ticker).filter(ticker => {
+        return hasMeaningfulObject(liveData.quotes[ticker]) || hasMeaningfulObject(liveData.performance[ticker]) || hasMeaningfulObject(liveData.fundamentals[ticker]);
+      });
+      if (!symbols.length) return null;
+
+      const data = {};
+      symbols.forEach(ticker => {
+        const quote = liveData.quotes[ticker] || {};
+        const perf = liveData.performance[ticker] || {};
+        const fund = liveData.fundamentals[ticker] || {};
+        data[ticker] = {
+          livePrice: quote.livePrice || "",
+          priceRaw: quote.priceRaw ?? null,
+          dayChange: quote.dayChange || "",
+          marketCap: fund.marketCap || "",
+          marketCapRaw: fund.marketCapRaw ?? null,
+          volume: fund.volume || "",
+          psRatio: fund.psRatio || "",
+          psRatioRaw: fund.psRatioRaw ?? null,
+          revenueGrowth: fund.revenueGrowth || "",
+          revenueGrowthRaw: fund.revenueGrowthRaw ?? null,
+          sixMonthReturn: perf.sixMonthReturn || "",
+          priceVsSixMonthAvg: perf.priceVsSixMonthAvg || "",
+          priceVs200DaySma: perf.priceVs200DaySma || "",
+          sixMonthVolatility: perf.sixMonthVolatility || "",
+          sixMonthMaxDrawdown: perf.sixMonthMaxDrawdown || "",
+          relativeStrengthVsQqq: perf.relativeStrengthVsQqq || ""
+        };
+      });
+
+      const generatedAt = liveData.lastDashboardRefresh || new Date().toISOString();
+      return {
+        date: generatedAt.slice(0, 10),
+        generatedAt,
+        at: generatedAt,
+        symbols,
+        data,
+        localOnly: true
+      };
+    }
+
+    function hasMeaningfulObject(value) {
+      if (!value || typeof value !== "object" || value.error) return false;
+      return Object.entries(value).some(([key, item]) => key !== "updatedAt" && item !== null && item !== undefined && String(item).trim() !== "");
+    }
+
     function normalizeSnapshot(snapshot) {
       if (!snapshot || typeof snapshot !== "object") return { date: "", generatedAt: "", symbols: [], data: {} };
       return {
@@ -1188,106 +1263,60 @@
           ["quotes", "performance", "fundamentals"].forEach(key => {
             const refresh = item.refresh[key] || {};
             const coverage = item.coverage && item.coverage[key] ? item.coverage[key] : null;
+            const attempted = refresh.attempted || (Array.isArray(refresh.refreshed) ? refresh.refreshed.length : 0);
             out.push({
               label: key,
               provider: key === "performance" ? "Tiingo" : "Finnhub",
               refreshedAt: item.at || item.generatedAt,
               symbolCount: item.symbolCount || (coverage ? coverage.total : 0),
-              detail: coverage ? `${coverage.filled}/${coverage.total} filled` : `${refresh.attempted || 0} attempted`
+              detail: coverage ? `${coverage.filled}/${coverage.total} filled · ${attempted} attempted` : `${attempted} attempted`
             });
           });
         } else if (item) {
-          out.push(item);
+          out.push({
+            label: item.label || item.type || "refresh",
+            provider: item.provider || "Worker",
+            refreshedAt: item.refreshedAt || item.at || item.generatedAt,
+            symbolCount: item.symbolCount || item.requested || 0,
+            detail: item.detail || item.status || (item.force ? "forced refresh" : "cache/backfill refresh")
+          });
         }
       });
-      return out.slice(0, 60);
+      return out.slice(0, 80);
     }
 
     function insightCardHtml(label, value, sub) {
       return `<div class="insight-card"><span class="mini-label">${escapeHtml(label)}</span><span class="big-value">${escapeHtml(value || "—")}</span><span class="sub-value">${escapeHtml(sub || "")}</span></div>`;
     }
 
+    function datasetRefreshTime(payload, key) {
+      const refresh = payload.refresh && payload.refresh[key] ? payload.refresh[key] : null;
+      const cache = payload.cache && payload.cache[key] ? payload.cache[key] : null;
+      return (cache && cache.savedAt) || (refresh && refresh.generatedAt) || (refresh && refresh.at) || payload.generatedAt || null;
+    }
+
+    function coverageStatusText(coverage) {
+      if (!coverage) return "No coverage yet";
+      return ["quotes", "performance", "fundamentals"].map(key => {
+        const item = coverage[key] || {};
+        return `${key} ${item.filled || 0}/${item.total || stocks.length}`;
+      }).join(" · ");
+    }
+
     function cacheStatusText(cache) {
-      if (!cache) return "—";
       const coverage = liveData.coverage || {};
-      const parts = ["quotes", "performance", "fundamentals"].map(key => {
-        const item = cache[key] || {};
-        const cov = coverage[key] ? `${coverage[key].filled || 0}/${coverage[key].total || 0}` : "";
-        if (item.refreshed) return `${key}: refreshed${cov ? " " + cov : ""}`;
-        if (item.fromKv) return `${key}: KV${cov ? " " + cov : ""}`;
-        if (item.attempted !== undefined) return `${key}: ${item.attempted} tried${cov ? " " + cov : ""}`;
-        return `${key}: ${cov || "—"}`;
-      });
-      return parts.join(" · ");
+      const refresh = liveData.refresh || {};
+      return ["quotes", "performance", "fundamentals"].map(key => {
+        const cov = coverage[key] ? `${coverage[key].filled || 0}/${coverage[key].total || stocks.length}` : "—";
+        const ref = refresh[key] || {};
+        if (ref.attempted !== undefined) return `${key}: ${cov}, ${ref.attempted} tried`;
+        const item = cache && cache[key] ? cache[key] : {};
+        if (item.refreshed) return `${key}: refreshed ${cov}`;
+        if (item.fromKv) return `${key}: KV ${cov}`;
+        return `${key}: ${cov}`;
+      }).join(" · ");
     }
 
-
-
-    /* =========================================================
-       7. CSV
-       ========================================================= */
-    function exportStocksCsv() {
-      const headers = ["ticker", "company", "exchange", "category", "risk", "valuation", "watchlists", "quantumThesis", "aiDataCenterRelevance", ...EDITABLE_FIELDS, "yahoo", "tradingView"];
-      const rows = stocks.map(base => {
-        const stock = getMergedStock(base.ticker);
-        return [stock.ticker, stock.company, stock.exchange, stock.category, stock.risk, stock.valuation, getStockWatchlists(stock.ticker).join("; "), stock.thesis, stock.aiData, ...EDITABLE_FIELDS.map(field => stock[field] || ""), yahooUrl(stock.ticker), tradingViewUrl(stock.ticker)];
-      });
-      downloadCsv("quantum-dashboard-stocks.csv", [headers, ...rows]);
-    }
-
-    function exportWatchlistsCsv() {
-      const headers = ["watchlist", "note", "position", "ticker", "company", "category", "risk", "valuation"];
-      const rows = [];
-      watchlists.forEach(list => parseTickerList(list.tickers.join(",")).forEach((ticker, index) => {
-        const stock = stocks.find(s => s.ticker === ticker) || {};
-        rows.push([list.title, list.note || "", index + 1, ticker, stock.company || "", stock.category || "", stock.risk || "", stock.valuation || ""]);
-      }));
-      downloadCsv("quantum-dashboard-watchlists.csv", [headers, ...rows]);
-    }
-
-    function importStocksCsv(event) {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const rows = parseCsv(String(reader.result || ""));
-          const headers = rows[0].map(normalizeHeader);
-          const tickerIndex = headers.indexOf("ticker");
-          if (tickerIndex === -1) throw new Error("CSV must include ticker column.");
-          const fieldIndexes = {};
-          EDITABLE_FIELDS.forEach(field => { const index = headers.indexOf(normalizeHeader(field)); if (index !== -1) fieldIndexes[field] = index; });
-          rows.slice(1).forEach(row => {
-            const ticker = String(row[tickerIndex] || "").trim().toUpperCase();
-            if (!stocks.some(stock => stock.ticker === ticker)) return;
-            const next = manualEdits[ticker] || {};
-            Object.entries(fieldIndexes).forEach(([field, index]) => { next[field] = String(row[index] || "").trim(); });
-            manualEdits[ticker] = next;
-          });
-          saveJson(STORAGE.edits, manualEdits); renderStocks();
-        } catch (error) { alert(error.message || "Could not import CSV."); }
-        finally { els.importCsv.value = ""; }
-      };
-      reader.readAsText(file);
-    }
-
-    /* =========================================================
-       8. Helpers
-       ========================================================= */
-    function openModal(modal) { modal.classList.add("active"); modal.setAttribute("aria-hidden", "false"); document.body.style.overflow = "hidden"; }
-    function closeModal(modal) { modal.classList.remove("active"); modal.setAttribute("aria-hidden", "true"); document.body.style.overflow = ""; }
-    function showStartupError(error) { if (els.startupError) { els.startupError.style.display = "block"; els.startupError.textContent = "Dashboard startup error: " + (error.message || error); } }
-    function loadJson(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(fallback)); } catch { return JSON.parse(JSON.stringify(fallback)); } }
-    function saveJson(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { alert("Could not save locally. Browser storage may be full or blocked."); } }
-    function unique(values) { return [...new Set(values)]; }
-    function className(value) { return String(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
-    function parseTickerList(value) { return unique(String(value || "").split(/[,:;\s]+/).map(t => t.trim().toUpperCase()).filter(t => /^[A-Z0-9.]{1,8}$/.test(t) && stocks.some(s => s.ticker === t))); }
-    function getStockWatchlists(ticker) { return watchlists.filter(list => parseTickerList(list.tickers.join(",")).includes(ticker)).map(list => list.title); }
-    function yahooUrl(ticker) { return `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}`; }
-    function tradingViewUrl(ticker) { return `https://www.tradingview.com/search/?query=${encodeURIComponent(ticker)}`; }
-    function sanitizeWorkerUrl(value) { return String(value || "").trim().replace(/\/+$/, ""); }
-    async function fetchJsonFromUrl(url) { const response = await fetch(url); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`); return payload; }
-    function formatDateTime(value) { if (!value) return "Never"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Never"; return date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
     function parsePercentValue(value) { const n = Number(String(value || "").replace(/[%+,]/g, "")); return Number.isFinite(n) ? n : NaN; }
     function bestBy(items, getter) { return items.filter(item => Number.isFinite(getter(item))).sort((a,b) => getter(b) - getter(a))[0] || null; }
     function worstBy(items, getter) { return items.filter(item => Number.isFinite(getter(item))).sort((a,b) => getter(a) - getter(b))[0] || null; }
