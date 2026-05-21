@@ -229,6 +229,7 @@ input:focus, select:focus, textarea:focus { border-color: rgba(126, 216, 255, 0.
 .text-block { display: grid; gap: 5px; margin: 13px 0; }
 .small-label { color: var(--accent); font-size: 0.77rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
 .text-block p { margin: 0; color: var(--muted); }
+.metric-source { margin: 12px 0 -4px; color: var(--muted-2); font-size: 0.76rem; font-weight: 850; }
 .manual-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }
 .manual-item { min-height: 64px; padding: 10px; border: 1px solid rgba(170,184,216,0.16); border-radius: 14px; background: rgba(170,184,216,0.055); }
 .manual-item .mini-label { display: block; color: var(--muted-2); font-size: 0.72rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -236,6 +237,7 @@ input:focus, select:focus, textarea:focus { border-color: rgba(126, 216, 255, 0.
 .notes-item { grid-column: 1 / -1; }
 details.pro-metrics { margin-top: 10px; border: 1px solid rgba(170,184,216,0.16); border-radius: 16px; background: rgba(170,184,216,0.05); overflow: hidden; }
 details.pro-metrics summary { min-height: 46px; padding: 0 12px; display: flex; align-items: center; color: var(--accent); font-weight: 900; cursor: pointer; }
+details.pro-metrics .metric-source { margin: 0; padding: 0 10px 8px; }
 details.pro-metrics .manual-grid { margin: 0; padding: 0 10px 10px; }
 
 .actions, .settings-actions, .watch-actions { display: grid; gap: 9px; margin-top: 14px; }

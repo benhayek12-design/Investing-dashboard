@@ -134,7 +134,7 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
 - Add unit-like browser tests for parsing Worker responses.
 - Add data migration helpers for localStorage key changes.
 - Add a History chart only after snapshots exist for at least 7 to 30 days.
-- Add provider labels under each metric group.
+- [x] Add provider labels under each metric group.
 - Add a manual CSV backup reminder for local notes.
 
 ## Bigger tasks

@@ -55,6 +55,7 @@ Use Stocks for individual company review.
 - Search by ticker, company, category, thesis, or notes.
 - Filter by category or risk level.
 - Each card shows the static thesis, AI/data-center relevance, live fields, quote timestamp, and pro metrics.
+- Source labels under each metric group show whether the fields come from Finnhub, Tiingo, or your manual notes.
 - Tap Edit to add manual notes or override editable fields.
 - Yahoo and TradingView buttons open external research pages.
 
