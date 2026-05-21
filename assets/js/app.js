@@ -651,9 +651,10 @@ async function refreshMarketData() {
     liveData.lastQuoteRefresh = payload.generatedAt || new Date().toISOString();
     if (!liveData.cache || typeof liveData.cache !== "object") liveData.cache = {};
     liveData.cache.marketQuotes = marketQuoteCoverage(liveData.quotes);
+    liveData.cache.marketQuotes.workerLimited = Array.isArray(payload.symbols) && payload.symbols.length < marketAssets.length;
     saveJson(STORAGE.live, liveData);
     const coverage = liveData.cache.marketQuotes;
-    setLiveStatus(coverage.filled === coverage.total ? "Markets refreshed" : `Markets partial ${coverage.filled}/${coverage.total}`);
+    setLiveStatus(coverage.workerLimited ? `Deploy Worker for markets ${coverage.filled}/${coverage.total}` : coverage.filled === coverage.total ? "Markets refreshed" : `Markets partial ${coverage.filled}/${coverage.total}`);
     renderHome();
     updateLiveStatus();
   } catch (error) {
@@ -910,7 +911,7 @@ function coverageMissingText(item) {
 function marketCoverageText() {
   if (!marketAssets.length) return "Not configured";
   const cached = liveData.cache && liveData.cache.marketQuotes;
-  if (cached && Number(cached.total) === marketAssets.length) return coverageText(cached);
+  if (cached && Number(cached.total) === marketAssets.length) return cached.workerLimited ? `${coverageText(cached)} - deploy Worker` : coverageText(cached);
   const derived = marketQuoteCoverage(liveData.quotes);
   return derived.filled ? coverageText(derived) : "Refresh markets";
 }

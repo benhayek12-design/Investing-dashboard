@@ -22,6 +22,8 @@ If a card says `Refresh data`, the app is not broken. It means that field has no
 
 If Home still shows market coverage like `1/21` after tapping Refresh Markets, the Cloudflare Worker needs the latest broad-market allowlist deployed. The frontend can show the new market cards, but the Worker controls which symbols are allowed to refresh.
 
+If Settings says `Deploy Worker for markets` or `Market coverage 1/21 - deploy Worker`, GitHub Pages is updated but Cloudflare is still running older Worker code.
+
 ### Home
 
 Use Home for the daily overview.
