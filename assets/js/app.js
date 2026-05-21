@@ -3,6 +3,7 @@
    Stock data lives in assets/js/data/stocks.js.
    ========================================================= */
 const stocks = window.DASHBOARD_STOCKS || [];
+const marketAssets = window.DASHBOARD_MARKET_ASSETS || [];
 
 const DEFAULT_WORKER_URL = "https://quantum-dashboard-api.benhayek12.workers.dev";
 const CORE_FIELDS = ["livePrice", "dayChange", "marketCap", "volume", "psRatio", "revenueGrowth", "cashRunway", "analystNotes"];
@@ -101,6 +102,7 @@ function cacheElements() {
   els.autoRefreshToggle = document.getElementById("autoRefreshToggle");
   els.refreshNow = document.getElementById("refreshNow");
   els.forcePriceRefresh = document.getElementById("forcePriceRefresh");
+  els.refreshMarkets = document.getElementById("refreshMarkets");
   els.saveWorkerUrl = document.getElementById("saveWorkerUrl");
   els.clearLiveCache = document.getElementById("clearLiveCache");
   els.liveStatus = document.getElementById("liveStatus");
@@ -172,6 +174,7 @@ function bindEvents() {
   els.saveWorkerUrl.addEventListener("click", saveWorkerUrl);
   els.refreshNow.addEventListener("click", () => refreshLiveData(false));
   if (els.forcePriceRefresh) els.forcePriceRefresh.addEventListener("click", forcePriceRefresh);
+  if (els.refreshMarkets) els.refreshMarkets.addEventListener("click", refreshMarketData);
   els.clearLiveCache.addEventListener("click", clearLiveCache);
   els.autoRefreshToggle.addEventListener("change", () => { liveSettings.autoRefresh = els.autoRefreshToggle.checked; saveLiveSettings(); configureAutoRefresh(); });
   els.loadHistory.addEventListener("click", () => loadHistoryData());
@@ -251,19 +254,37 @@ function renderHomeSnapshot({ totalStocks, highRiskStocks, infrastructureStocks 
 
 function renderMarketSnapshot() {
   if (!els.marketSnapshot) return;
-  const cards = MARKET_GROUPS.map(group => {
+  const cards = marketAssets.length ? broadMarketCards() : thematicMarketCards();
+  els.marketSnapshot.innerHTML = cards.join("");
+}
+
+function broadMarketCards() {
+  return marketAssetGroups().map(group => {
+    const groupAssets = marketAssets.filter(asset => asset.group === group);
+    const movers = groupAssets.map(asset => ({ ...asset, ...(liveData.quotes[asset.ticker] || {}) })).filter(asset => Number.isFinite(parsePercentValue(asset.dayChange)));
+    const leader = bestBy(movers, asset => parsePercentValue(asset.dayChange));
+    const laggard = worstBy(movers, asset => parsePercentValue(asset.dayChange));
+    return snapshotCardHtml(group, [
+      ["Avg day", averagePercentText(movers.map(asset => parsePercentValue(asset.dayChange)))],
+      ["Leader", stockMoveText(leader, "dayChange")],
+      ["Weakest", stockMoveText(laggard, "dayChange")],
+      ["Assets", String(groupAssets.length)]
+    ]);
+  });
+}
+
+function thematicMarketCards() {
+  return MARKET_GROUPS.map(group => {
     const groupStocks = stocks.filter(stock => group.categories.includes(stock.category)).map(stock => getMergedStock(stock.ticker));
     const movers = groupStocks.filter(stock => Number.isFinite(parsePercentValue(stock.dayChange)));
     const leader = bestBy(movers, stock => parsePercentValue(stock.dayChange));
     const laggard = worstBy(movers, stock => parsePercentValue(stock.dayChange));
-    const averageMove = averagePercentText(movers.map(stock => parsePercentValue(stock.dayChange)));
     return snapshotCardHtml(group.title, [
-      ["Avg day", averageMove],
+      ["Avg day", averagePercentText(movers.map(stock => parsePercentValue(stock.dayChange)))],
       ["Leader", stockMoveText(leader, "dayChange")],
       ["Weakest", stockMoveText(laggard, "dayChange")]
     ]);
   });
-  els.marketSnapshot.innerHTML = cards.join("");
 }
 
 function snapshotCardHtml(title, rows) {
@@ -272,6 +293,14 @@ function snapshotCardHtml(title, rows) {
 
 function stockMoveText(stock, field) {
   return stock ? `${stock.ticker} ${stock[field] || "—"}` : "Refresh data";
+}
+
+function marketAssetGroups() {
+  return unique(marketAssets.map(asset => asset.group));
+}
+
+function currentMarketQuotes() {
+  return Object.fromEntries(marketAssets.filter(asset => liveData.quotes && liveData.quotes[asset.ticker]).map(asset => [asset.ticker, liveData.quotes[asset.ticker]]));
 }
 
 function renderStocks() {
@@ -549,7 +578,7 @@ async function refreshLiveData(force = false) {
     const payload = await fetchJsonFromUrl(url);
     if (!payload.ok) throw new Error(payload.error || "Dashboard refresh failed.");
 
-    liveData.quotes = (payload.data && payload.data.quotes) || {};
+    liveData.quotes = { ...currentMarketQuotes(), ...((payload.data && payload.data.quotes) || {}) };
     liveData.performance = (payload.data && payload.data.performance) || {};
     liveData.fundamentals = (payload.data && payload.data.fundamentals) || {};
     liveData.cache = payload.cache || payload.coverage || {};
@@ -585,7 +614,7 @@ async function forcePriceRefresh() {
     const url = `${workerUrl}/api/quotes?symbols=${encodeURIComponent(symbols)}&force=1`;
     const payload = await fetchJsonFromUrl(url);
     if (!payload.ok) throw new Error(payload.error || "Price refresh failed.");
-    liveData.quotes = payload.data || {};
+    liveData.quotes = { ...currentMarketQuotes(), ...(payload.data || {}) };
     liveData.lastQuoteRefresh = payload.generatedAt || new Date().toISOString();
     if (!liveData.cache || typeof liveData.cache !== "object") liveData.cache = {};
     liveData.cache.quotes = payload.coverage || { filled: Object.keys(liveData.quotes).length, total: stocks.length };
@@ -598,6 +627,32 @@ async function forcePriceRefresh() {
     setLiveStatus("Price error: " + (error.message || "Refresh failed"));
   } finally {
     if (els.forcePriceRefresh) { els.forcePriceRefresh.disabled = false; els.forcePriceRefresh.textContent = "Force Price Refresh"; }
+  }
+}
+
+async function refreshMarketData() {
+  const workerUrl = sanitizeWorkerUrl(liveSettings.workerUrl || DEFAULT_WORKER_URL);
+  if (!workerUrl) { setLiveStatus("Missing Worker URL"); return; }
+  if (!marketAssets.length) { setLiveStatus("No market assets configured"); return; }
+  if (els.refreshMarkets) { els.refreshMarkets.disabled = true; els.refreshMarkets.textContent = "Refreshing markets..."; }
+  setLiveStatus("Refreshing broad markets...");
+  try {
+    const symbols = marketAssets.map(asset => asset.ticker).join(",");
+    const url = `${workerUrl}/api/quotes?symbols=${encodeURIComponent(symbols)}`;
+    const payload = await fetchJsonFromUrl(url);
+    if (!payload.ok) throw new Error(payload.error || "Market refresh failed.");
+    liveData.quotes = { ...(liveData.quotes || {}), ...((payload.data && typeof payload.data === "object") ? payload.data : {}) };
+    liveData.lastQuoteRefresh = payload.generatedAt || new Date().toISOString();
+    if (!liveData.cache || typeof liveData.cache !== "object") liveData.cache = {};
+    liveData.cache.marketQuotes = payload.coverage || { filled: marketAssets.filter(asset => liveData.quotes[asset.ticker]).length, total: marketAssets.length };
+    saveJson(STORAGE.live, liveData);
+    setLiveStatus("Markets refreshed");
+    renderHome();
+    updateLiveStatus();
+  } catch (error) {
+    setLiveStatus("Market error: " + (error.message || "Refresh failed"));
+  } finally {
+    if (els.refreshMarkets) { els.refreshMarkets.disabled = false; els.refreshMarkets.textContent = "Refresh Markets"; }
   }
 }
 

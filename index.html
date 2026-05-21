@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#07111f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Quantum Stocks" />
-  <title>Quantum Stock Dashboard</title>
+  <meta name="apple-mobile-web-app-title" content="Investment Terminal" />
+  <title>Investment Terminal</title>
 
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
@@ -24,9 +24,9 @@
 
     <header class="hero">
       <div>
-        <p class="eyebrow">Quantum Stocks</p>
+        <p class="eyebrow">Personal Investment Terminal</p>
         <h1>Dashboard</h1>
-        <p>A mobile watchlist for quantum, infrastructure, photonics, cybersecurity, ETFs, and AI/data-center relevance.</p>
+        <p>A mobile terminal for broad markets, sectors, macro assets, watchlists, stock research, and AI/data-center themes.</p>
       </div>
     </header>
 
@@ -184,6 +184,7 @@
             <div class="settings-actions">
               <button class="button" id="refreshNow" type="button">Refresh Now</button>
               <button class="button secondary" id="forcePriceRefresh" type="button">Force Price Refresh</button>
+              <button class="button secondary" id="refreshMarkets" type="button">Refresh Markets</button>
               <button class="button secondary" id="saveWorkerUrl" type="button">Save Worker URL</button>
               <button class="button secondary" id="clearLiveCache" type="button">Clear Live Cache</button>
             </div>
@@ -238,6 +239,7 @@
   </div>
 
   <script src="assets/js/data/stocks.js" defer></script>
+  <script src="assets/js/data/markets.js" defer></script>
   <script src="assets/js/app.js" defer></script>
 </body>
 </html>

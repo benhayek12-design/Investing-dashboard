@@ -80,6 +80,11 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
 7b. [x] **Add app user guide**
    - Explain tabs, refresh behavior, backups, sync, iPhone use, and troubleshooting.
 
+7c. [x] **Add broad market universe**
+   - Add index, sector, and macro ETF groups.
+   - Keep broad markets quote-only to protect performance/fundamental API usage.
+   - Show broad markets inside Home instead of adding another iPhone tab.
+
 8. [x] **Improve History with KV snapshots**
    - Keep History readable on iPhone.
    - Default History view should show:

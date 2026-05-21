@@ -99,10 +99,11 @@ The synced blob currently contains manual stock edits and watchlists. Browser `l
 index.html
 assets/css/styles.css
 assets/js/data/stocks.js
+assets/js/data/markets.js
 assets/js/app.js
 ```
 
-The app remains static and GitHub Pages-compatible. `index.html` is the shell, CSS is in `assets/css/styles.css`, the stock universe is in `assets/js/data/stocks.js`, and behavior is in `assets/js/app.js`.
+The app remains static and GitHub Pages-compatible. `index.html` is the shell, CSS is in `assets/css/styles.css`, the stock universe is in `assets/js/data/stocks.js`, the quote-only broad market universe is in `assets/js/data/markets.js`, and behavior is in `assets/js/app.js`.
 
 ## Future code splitting plan
 

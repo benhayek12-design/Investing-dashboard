@@ -4,7 +4,7 @@ This guide explains how to use the dashboard day to day, how the data refreshes,
 
 ## 1. What This App Is
 
-The dashboard is a mobile-friendly investment terminal for a quantum, AI infrastructure, semiconductor, power, photonics, cybersecurity, and ETF watch universe.
+The dashboard is a mobile-friendly investment terminal for broad market context, sector ETFs, macro assets, stock research, quantum themes, AI infrastructure, semiconductor, power, photonics, cybersecurity, and ETF watchlists.
 
 It is not a brokerage account and does not place trades. It is a research and monitoring dashboard.
 
@@ -18,9 +18,19 @@ Use Home for the daily overview.
 - Watchlist Focus shows watched ticker coverage and the strongest watched mover when quote data exists.
 - Data Status shows quote freshness, quote coverage, and whether a snapshot has been saved.
 - Risk Mix summarizes high-risk exposure, infrastructure exposure, and fundamentals coverage.
-- Market context compares existing themes such as Big Tech, semiconductors, power/cooling, cybersecurity, and ETFs.
+- Market context compares broad market groups such as indexes, sectors, and macro ETFs when market quotes are loaded.
 
-If a field says `Refresh data`, use Settings -> Refresh Now.
+If a stock field says `Refresh data`, use Settings -> Refresh Now. If a market-context field says `Refresh data`, use Settings -> Refresh Markets.
+
+### Markets
+
+Markets are shown inside Home so the iPhone tab bar stays compact.
+
+- Indexes include SPY, QQQ, DIA, IWM, and VTI.
+- Sectors include XLK, XLF, XLV, XLE, XLI, XLU, XLY, XLP, XLC, XLB, and XLRE.
+- Macro assets include GLD, SLV, USO, TLT, and SHY.
+- Each market group shows average day move, the strongest asset, the weakest asset, and the number of assets in that group.
+- Market assets are quote-only. They are not part of the stock research card universe.
 
 ### Stocks
 
@@ -61,6 +71,7 @@ Use Settings for preferences, data refresh, backup, and sync.
 - Worker URL controls the Cloudflare backend endpoint.
 - Refresh Now calls the smart `/api/dashboard` endpoint.
 - Force Price Refresh calls `/api/quotes?force=1` and should be used sparingly.
+- Refresh Markets calls `/api/quotes` for broad market assets only.
 - Coverage diagnostics show what data is missing.
 - Cloud Sync uses a private token and stores manual edits/watchlists through the Worker.
 
@@ -70,9 +81,12 @@ Use Refresh Now for normal daily use. It lets the Worker decide what is stale an
 
 Use Force Price Refresh only when prices look stale or differ meaningfully from another quote source. It bypasses quote cache for quote data only.
 
+Use Refresh Markets when the Home market groups need broad index, sector, or macro ETF quote data. It does not request performance or fundamentals.
+
 Expected freshness:
 
 - Quotes: about 15 minutes
+- Market quotes: quote cache controlled by the Worker
 - Performance: about 24 hours
 - Fundamentals: about 12 hours
 - History: saved when the Worker records snapshots
@@ -84,6 +98,8 @@ The frontend calls only the Cloudflare Worker.
 - Finnhub provides quotes and fundamentals.
 - Tiingo provides historical performance metrics.
 - Cloudflare KV stores cached data, snapshots, refresh logs, and optional private sync data.
+
+The broad market universe lives in `assets/js/data/markets.js`. It is intentionally separate from the stock research universe in `assets/js/data/stocks.js`.
 
 API keys must never be placed in frontend files.
 
@@ -112,6 +128,7 @@ If the API fails, local browser data remains the fallback.
 The app is designed to stay usable on iPhone.
 
 - Use Home for quick daily checks.
+- Use Refresh Markets when you want broad market context without refreshing every stock metric.
 - Use Watchlists for fast ticker jumps.
 - Use Settings for refreshes.
 - Avoid repeated Force Price Refresh taps because it can consume quote limits.
