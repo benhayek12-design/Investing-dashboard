@@ -82,7 +82,7 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
      - selected stock drilldown
    - Do not show a giant raw 38-stock grid as the main view.
 
-9. **Refresh log display**
+9. [x] **Refresh log display**
    - Make refresh activity collapsed by default.
    - Show human-readable entries:
      - time
