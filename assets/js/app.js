@@ -650,9 +650,10 @@ async function refreshMarketData() {
     liveData.quotes = { ...(liveData.quotes || {}), ...((payload.data && typeof payload.data === "object") ? payload.data : {}) };
     liveData.lastQuoteRefresh = payload.generatedAt || new Date().toISOString();
     if (!liveData.cache || typeof liveData.cache !== "object") liveData.cache = {};
-    liveData.cache.marketQuotes = payload.coverage || { filled: marketAssets.filter(asset => liveData.quotes[asset.ticker]).length, total: marketAssets.length };
+    liveData.cache.marketQuotes = marketQuoteCoverage(liveData.quotes);
     saveJson(STORAGE.live, liveData);
-    setLiveStatus("Markets refreshed");
+    const coverage = liveData.cache.marketQuotes;
+    setLiveStatus(coverage.filled === coverage.total ? "Markets refreshed" : `Markets partial ${coverage.filled}/${coverage.total}`);
     renderHome();
     updateLiveStatus();
   } catch (error) {
@@ -909,8 +910,8 @@ function coverageMissingText(item) {
 function marketCoverageText() {
   if (!marketAssets.length) return "Not configured";
   const cached = liveData.cache && liveData.cache.marketQuotes;
-  if (cached && Number.isFinite(Number(cached.total))) return coverageText(cached);
-  const derived = { filled: quotedMarketAssets().length, total: marketAssets.length };
+  if (cached && Number(cached.total) === marketAssets.length) return coverageText(cached);
+  const derived = marketQuoteCoverage(liveData.quotes);
   return derived.filled ? coverageText(derived) : "Refresh markets";
 }
 
@@ -996,10 +997,15 @@ function hasDisplayValue(value) {
   const text = String(value ?? "").trim().toLowerCase();
   return Boolean(text) && !["—", "-", "n/a", "na", "not loaded", "refresh data", "never"].includes(text);
 }
+function marketQuoteCoverage(quotes = liveData.quotes) {
+  const missing = marketAssets.filter(asset => !hasQuoteData(quotes && quotes[asset.ticker])).map(asset => asset.ticker);
+  return { total: marketAssets.length, filled: marketAssets.length - missing.length, missing };
+}
 function parsePercentValue(value) {
   if (!hasDisplayValue(value)) return NaN;
   const text = String(value).trim();
-  const n = Number(text.replace(/[%+,]/g, ""));
+  const percentMatch = text.match(/([-+]?\d+(?:\.\d+)?)\s*%/);
+  const n = percentMatch ? Number(percentMatch[1]) : Number(text.replace(/[%+,]/g, ""));
   return Number.isFinite(n) ? n : NaN;
 }
 function averagePercentText(values) { const valid = values.filter(Number.isFinite); if (!valid.length) return "Refresh data"; const average = valid.reduce((sum, value) => sum + value, 0) / valid.length; return `${average >= 0 ? "+" : ""}${average.toFixed(1)}%`; }

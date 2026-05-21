@@ -25,7 +25,13 @@ const DASHBOARD_SYMBOLS = [
   "QTUM", "ARKQ"
 ];
 
-const ALLOWED_SYMBOLS = new Set([...DASHBOARD_SYMBOLS, "QQQ"]);
+const MARKET_SYMBOLS = [
+  "SPY", "QQQ", "DIA", "IWM", "VTI",
+  "XLK", "XLF", "XLV", "XLE", "XLI", "XLU", "XLY", "XLP", "XLC", "XLB", "XLRE",
+  "GLD", "SLV", "USO", "TLT", "SHY"
+];
+
+const ALLOWED_SYMBOLS = new Set([...DASHBOARD_SYMBOLS, ...MARKET_SYMBOLS]);
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",

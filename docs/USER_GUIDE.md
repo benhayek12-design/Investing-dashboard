@@ -20,6 +20,8 @@ It is not a brokerage account and does not place trades. It is a research and mo
 
 If a card says `Refresh data`, the app is not broken. It means that field has not been loaded yet or the provider did not return that specific value.
 
+If Home still shows market coverage like `1/21` after tapping Refresh Markets, the Cloudflare Worker needs the latest broad-market allowlist deployed. The frontend can show the new market cards, but the Worker controls which symbols are allowed to refresh.
+
 ### Home
 
 Use Home for the daily overview.
