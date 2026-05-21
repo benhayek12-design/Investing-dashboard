@@ -92,7 +92,7 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
 
 ## Cross-device sync tasks
 
-10. **Move user edits to Cloudflare KV later**
+10. [blocked] **Move user edits to Cloudflare KV later**
     - Future goal: make iPhone and computer share:
       - watchlists
       - analyst notes
@@ -101,6 +101,7 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
       - manual notes
     - For now, localStorage is device-specific.
     - Do not remove localStorage until KV sync is implemented and tested.
+    - Status: deferred until authenticated private mode is designed and tested.
 
 11. **KV-backed user data endpoint design**
     - Proposed future endpoints:
