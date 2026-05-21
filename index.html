@@ -507,7 +507,21 @@
               <button class="button danger" id="resetData" type="button">Reset local changes</button>
               <input class="file-input" id="importCsv" type="file" accept=".csv,text/csv" />
             </div>
-            <p class="meta">Manual edits, pro metrics, fundamentals, and watchlists save on this device only. Cloudflare KV sync should wait for authenticated private mode.</p>
+            <p class="meta">Manual edits, pro metrics, fundamentals, and watchlists save on this device unless you use Private Sync.</p>
+          </div>
+          <div class="card">
+            <h3>Private Sync</h3>
+            <p class="meta">Manual cloud sync for watchlists and stock notes. Requires the Worker secret USER_SYNC_TOKEN.</p>
+            <div class="field"><label for="syncTokenInput">Sync token</label><input id="syncTokenInput" type="password" autocomplete="off" placeholder="Private token" /></div>
+            <div class="settings-actions">
+              <button class="button secondary" id="saveSyncToken" type="button">Save Sync Token</button>
+              <button class="button" id="loadCloudData" type="button">Load from Cloud</button>
+              <button class="button secondary" id="saveCloudData" type="button">Save to Cloud</button>
+            </div>
+            <div class="status-grid">
+              <div class="status-line"><span>Sync status</span><span id="syncStatus">Not configured</span></div>
+              <div class="status-line"><span>Last cloud sync</span><span id="lastCloudSync">Never</span></div>
+            </div>
           </div>
           <div class="card">
             <h3>Live Data</h3>
@@ -634,7 +648,8 @@
       prefs: "qsd.prefs.v4",
       watchlists: "qsd.watchlists.v4",
       live: "qsd.live.finnhub.tiingo.fundamentals.v5",
-      liveSettings: "qsd.liveSettings.v4"
+      liveSettings: "qsd.liveSettings.v4",
+      syncSettings: "qsd.syncSettings.v1"
     };
 
     let manualEdits = loadJson(STORAGE.edits, {});
@@ -642,6 +657,7 @@
     let watchlists = loadJson(STORAGE.watchlists, DEFAULT_WATCHLISTS);
     let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null });
     let liveSettings = loadJson(STORAGE.liveSettings, { workerUrl: DEFAULT_WORKER_URL, autoRefresh: false });
+    let syncSettings = loadJson(STORAGE.syncSettings, { token: "", lastSyncAt: null });
     let historyState = { snapshots: [], refreshLog: [], selectedTicker: "IONQ" };
     let filters = { search: "", category: "all", risk: "all" };
     let activeEditTicker = null;
@@ -691,6 +707,12 @@
       els.importCsvButton = document.getElementById("importCsvButton");
       els.importCsv = document.getElementById("importCsv");
       els.resetData = document.getElementById("resetData");
+      els.syncTokenInput = document.getElementById("syncTokenInput");
+      els.saveSyncToken = document.getElementById("saveSyncToken");
+      els.loadCloudData = document.getElementById("loadCloudData");
+      els.saveCloudData = document.getElementById("saveCloudData");
+      els.syncStatus = document.getElementById("syncStatus");
+      els.lastCloudSync = document.getElementById("lastCloudSync");
       els.workerUrlInput = document.getElementById("workerUrlInput");
       els.autoRefreshToggle = document.getElementById("autoRefreshToggle");
       els.refreshNow = document.getElementById("refreshNow");
@@ -757,6 +779,9 @@
       els.importCsvButton.addEventListener("click", () => els.importCsv.click());
       els.importCsv.addEventListener("change", importStocksCsv);
       els.resetData.addEventListener("click", resetLocalData);
+      els.saveSyncToken.addEventListener("click", saveSyncToken);
+      els.loadCloudData.addEventListener("click", loadCloudUserData);
+      els.saveCloudData.addEventListener("click", saveCloudUserData);
       els.saveWorkerUrl.addEventListener("click", saveWorkerUrl);
       els.refreshNow.addEventListener("click", () => refreshLiveData(false));
       if (els.forcePriceRefresh) els.forcePriceRefresh.addEventListener("click", forcePriceRefresh);
@@ -976,6 +1001,77 @@
       renderAll();
     }
 
+    function saveSyncToken() {
+      syncSettings.token = (els.syncTokenInput.value || "").trim();
+      saveJson(STORAGE.syncSettings, syncSettings);
+      updateSyncStatus(syncSettings.token ? "Sync token saved" : "Not configured");
+    }
+
+    async function loadCloudUserData() {
+      if (!syncSettings.token && els.syncTokenInput.value) saveSyncToken();
+      if (!syncSettings.token) { updateSyncStatus("Enter sync token first"); return; }
+      if (!confirm("Load cloud watchlists and notes onto this device? This will replace local manual edits and watchlists.")) return;
+      setSyncBusy(true, "Loading cloud data...");
+      try {
+        const payload = await fetchUserData("GET");
+        const data = payload.data || {};
+        manualEdits = data.edits && typeof data.edits === "object" ? data.edits : {};
+        watchlists = Array.isArray(data.watchlists) ? data.watchlists : JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS));
+        syncSettings.lastSyncAt = payload.savedAt || data.savedAt || new Date().toISOString();
+        saveJson(STORAGE.edits, manualEdits);
+        saveJson(STORAGE.watchlists, watchlists);
+        saveJson(STORAGE.syncSettings, syncSettings);
+        renderAll();
+        updateSyncStatus("Cloud data loaded");
+      } catch (error) {
+        updateSyncStatus("Sync error: " + (error.message || "Load failed"));
+      } finally {
+        setSyncBusy(false);
+      }
+    }
+
+    async function saveCloudUserData() {
+      if (!syncSettings.token && els.syncTokenInput.value) saveSyncToken();
+      if (!syncSettings.token) { updateSyncStatus("Enter sync token first"); return; }
+      if (!confirm("Save this device's watchlists and notes to cloud sync? Other devices can load this version.")) return;
+      setSyncBusy(true, "Saving cloud data...");
+      try {
+        const payload = await fetchUserData("POST", { edits: manualEdits, watchlists });
+        syncSettings.lastSyncAt = payload.savedAt || (payload.data && payload.data.savedAt) || new Date().toISOString();
+        saveJson(STORAGE.syncSettings, syncSettings);
+        updateSyncStatus("Cloud data saved");
+      } catch (error) {
+        updateSyncStatus("Sync error: " + (error.message || "Save failed"));
+      } finally {
+        setSyncBusy(false);
+      }
+    }
+
+    async function fetchUserData(method, data) {
+      const workerUrl = sanitizeWorkerUrl(liveSettings.workerUrl || DEFAULT_WORKER_URL);
+      if (!workerUrl) throw new Error("Missing Worker URL");
+      const options = {
+        method,
+        headers: { "X-QSD-SYNC-TOKEN": syncSettings.token }
+      };
+      if (method === "POST") {
+        options.headers["Content-Type"] = "application/json";
+        options.body = JSON.stringify({ data });
+      }
+      return fetchJsonFromUrl(`${workerUrl}/api/user-data`, options);
+    }
+
+    function setSyncBusy(isBusy, message) {
+      if (els.loadCloudData) els.loadCloudData.disabled = isBusy;
+      if (els.saveCloudData) els.saveCloudData.disabled = isBusy;
+      if (message) updateSyncStatus(message);
+    }
+
+    function updateSyncStatus(message) {
+      if (els.syncStatus) els.syncStatus.textContent = message || (syncSettings.token ? "Ready" : "Not configured");
+      if (els.lastCloudSync) els.lastCloudSync.textContent = formatDateTime(syncSettings.lastSyncAt);
+    }
+
     function applyPrefs() {
       document.body.classList.toggle("light", !prefs.darkMode);
       document.body.classList.toggle("compact", Boolean(prefs.compactCards));
@@ -983,6 +1079,8 @@
       els.compactToggle.checked = Boolean(prefs.compactCards);
       els.workerUrlInput.value = liveSettings.workerUrl || DEFAULT_WORKER_URL;
       els.autoRefreshToggle.checked = Boolean(liveSettings.autoRefresh);
+      if (els.syncTokenInput) els.syncTokenInput.value = syncSettings.token || "";
+      updateSyncStatus();
     }
     function savePrefs() { saveJson(STORAGE.prefs, prefs); }
 
@@ -1344,7 +1442,7 @@
     function yahooUrl(ticker) { return `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}`; }
     function tradingViewUrl(ticker) { return `https://www.tradingview.com/search/?query=${encodeURIComponent(ticker)}`; }
     function sanitizeWorkerUrl(value) { return String(value || "").trim().replace(/\/+$/, ""); }
-    async function fetchJsonFromUrl(url) { const response = await fetch(url); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`); return payload; }
+    async function fetchJsonFromUrl(url, options = {}) { const response = await fetch(url, options); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`); return payload; }
     function formatDateTime(value) { if (!value) return "Never"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Never"; return date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
     function getQuoteUpdatedAt(ticker) { return liveData && liveData.quotes && liveData.quotes[ticker] ? liveData.quotes[ticker].updatedAt : null; }
     function quoteCacheAgeText() { const time = latestQuoteTime(); if (!time) return "—"; const minutes = Math.max(0, Math.floor((Date.now() - new Date(time).getTime()) / 60000)); return minutes < 1 ? "Just now" : `${minutes} min old`; }
