@@ -10,6 +10,7 @@ This repository is designed so a coding agent such as **Codex**, **Claude Code**
 - **Frontend repo:** `benhayek12-design/Investing-dashboard`
 - **Live site:** `https://benhayek12-design.github.io/Investing-dashboard/`
 - **Frontend entry file:** `index.html`
+- **Frontend assets:** `assets/css/styles.css`, `assets/js/data/stocks.js`, `assets/js/app.js`
 - **Backend proxy:** Cloudflare Worker
 - **Worker URL:** `https://quantum-dashboard-api.benhayek12.workers.dev`
 - **Worker file in this folder:** `worker/quantum-dashboard-api-worker.js`
@@ -137,7 +138,7 @@ Cron: every 5 minutes
 
 ### Frontend
 
-Upload/commit root `index.html` to GitHub Pages repo.
+Upload/commit root `index.html` and the `assets/` folder to the GitHub Pages repo.
 
 Then open with a fresh cache-busting URL:
 
