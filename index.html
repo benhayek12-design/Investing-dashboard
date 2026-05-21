@@ -259,6 +259,8 @@
     .status-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; border-radius: 14px; background: rgba(170,184,216,0.055); border: 1px solid rgba(170,184,216,0.13); }
     .status-line span:first-child { color: var(--muted); font-size: 0.82rem; font-weight: 850; }
     .status-line span:last-child { color: var(--text); font-weight: 850; text-align: right; }
+    .status-line.status-line-wide { align-items: flex-start; }
+    .status-line.status-line-wide span:last-child { max-width: 70%; line-height: 1.35; overflow-wrap: anywhere; }
     .file-input { display: none; }
 
 
@@ -356,6 +358,8 @@
       .actions { grid-template-columns: 1fr; }
       .stock-header { display: grid; }
       .tags { justify-content: flex-start; }
+      .status-line.status-line-wide { display: grid; gap: 6px; }
+      .status-line.status-line-wide span:last-child { max-width: none; text-align: left; }
     }
   </style>
 </head>
@@ -542,8 +546,11 @@
               <div class="status-line"><span>Last performance refresh</span><span id="lastPerformanceRefresh">Never</span></div>
               <div class="status-line"><span>Last fundamentals refresh</span><span id="lastFundamentalsRefresh">Never</span></div>
               <div class="status-line"><span>Quotes coverage</span><span id="quotesCoverage">Not loaded</span></div>
+              <div class="status-line status-line-wide"><span>Missing quotes</span><span id="quotesMissing">Not loaded</span></div>
               <div class="status-line"><span>Performance coverage</span><span id="performanceCoverage">Not loaded</span></div>
+              <div class="status-line status-line-wide"><span>Missing performance</span><span id="performanceMissing">Not loaded</span></div>
               <div class="status-line"><span>Fundamentals coverage</span><span id="fundamentalsCoverage">Not loaded</span></div>
+              <div class="status-line status-line-wide"><span>Missing fundamentals</span><span id="fundamentalsMissing">Not loaded</span></div>
               <div class="status-line"><span>Cache used</span><span id="cacheStatus">—</span></div>
               <div class="status-line"><span>Saved snapshot</span><span id="snapshotStatus">—</span></div>
             </div>
@@ -727,8 +734,11 @@
       els.lastPerformanceRefresh = document.getElementById("lastPerformanceRefresh");
       els.lastFundamentalsRefresh = document.getElementById("lastFundamentalsRefresh");
       els.quotesCoverage = document.getElementById("quotesCoverage");
+      els.quotesMissing = document.getElementById("quotesMissing");
       els.performanceCoverage = document.getElementById("performanceCoverage");
+      els.performanceMissing = document.getElementById("performanceMissing");
       els.fundamentalsCoverage = document.getElementById("fundamentalsCoverage");
+      els.fundamentalsMissing = document.getElementById("fundamentalsMissing");
       els.cacheStatus = document.getElementById("cacheStatus");
       els.snapshotStatus = document.getElementById("snapshotStatus");
       els.loadHistory = document.getElementById("loadHistory");
@@ -1179,8 +1189,11 @@
       els.lastPerformanceRefresh.textContent = formatDateTime(liveData.lastPerformanceRefresh);
       if (els.lastFundamentalsRefresh) els.lastFundamentalsRefresh.textContent = formatDateTime(liveData.lastFundamentalsRefresh);
       if (els.quotesCoverage) els.quotesCoverage.textContent = coverageText(liveData.cache && liveData.cache.quotes);
+      if (els.quotesMissing) els.quotesMissing.textContent = coverageMissingText(liveData.cache && liveData.cache.quotes);
       if (els.performanceCoverage) els.performanceCoverage.textContent = coverageText(liveData.cache && liveData.cache.performance);
+      if (els.performanceMissing) els.performanceMissing.textContent = coverageMissingText(liveData.cache && liveData.cache.performance);
       if (els.fundamentalsCoverage) els.fundamentalsCoverage.textContent = coverageText(liveData.cache && liveData.cache.fundamentals);
+      if (els.fundamentalsMissing) els.fundamentalsMissing.textContent = coverageMissingText(liveData.cache && liveData.cache.fundamentals);
       if (els.cacheStatus) els.cacheStatus.textContent = cacheStatusText(liveData.cache);
       if (els.snapshotStatus) els.snapshotStatus.textContent = liveData.snapshotSaved ? "Saved to KV" : "—";
       if (!els.liveStatus.textContent || els.liveStatus.textContent === "Not connected") els.liveStatus.textContent = liveData.lastQuoteRefresh ? "Connected" : "Not connected";
@@ -1376,6 +1389,16 @@
       const total = Number(item.total);
       const missing = Array.isArray(item.missing) ? item.missing.length : Math.max(0, total - filled);
       return missing ? `${filled}/${total} (${missing} missing)` : `${filled}/${total}`;
+    }
+
+    function coverageMissingText(item) {
+      if (!item || !Number.isFinite(Number(item.total))) return "Not loaded";
+      const missing = Array.isArray(item.missing) ? item.missing.filter(Boolean) : [];
+      if (missing.length) return missing.join(", ");
+      const filled = Number.isFinite(Number(item.filled)) ? Number(item.filled) : 0;
+      const total = Number(item.total);
+      const missingCount = Math.max(0, total - filled);
+      return missingCount ? `${missingCount} missing, tickers not reported` : "None";
     }
 
 
