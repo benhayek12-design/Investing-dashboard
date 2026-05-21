@@ -72,6 +72,11 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
      - fundamentals filled / total
    - Make clear when data is missing because of API limits/provider gaps.
 
+7a. [x] **Add Home daily snapshot**
+   - Show top movers from cached/live data.
+   - Show watchlist focus and data freshness.
+   - Keep the view useful when APIs are unavailable.
+
 8. [x] **Improve History with KV snapshots**
    - Keep History readable on iPhone.
    - Default History view should show:

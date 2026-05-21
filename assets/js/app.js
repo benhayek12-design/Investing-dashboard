@@ -64,6 +64,7 @@ function cacheElements() {
   els.tabButtons = document.querySelectorAll(".tab-button");
   els.panels = document.querySelectorAll(".tab-panel");
   els.startupError = document.getElementById("startupError");
+  els.homeSnapshot = document.getElementById("homeSnapshot");
   els.summaryCards = document.getElementById("summaryCards");
   els.categoryCards = document.getElementById("categoryCards");
   els.searchInput = document.getElementById("searchInput");
@@ -195,10 +196,56 @@ function renderHome() {
   const totalCategories = unique(stocks.map(stock => stock.category)).length;
   const highRiskStocks = stocks.filter(stock => ["High", "Very High"].includes(stock.risk)).length;
   const infrastructureStocks = stocks.filter(stock => stock.category === "Semiconductor infrastructure" || stock.category === "Power/cooling/infrastructure").length;
+  renderHomeSnapshot({ totalStocks, highRiskStocks, infrastructureStocks });
   const summary = [["Total stocks", totalStocks], ["Categories", totalCategories], ["High-risk stocks", highRiskStocks], ["Infrastructure", infrastructureStocks]];
   els.summaryCards.innerHTML = summary.map(([label, value]) => `<article class="card metric-card"><span class="label">${escapeHtml(label)}</span><span class="number">${escapeHtml(value)}</span></article>`).join("");
   const categories = unique(stocks.map(stock => stock.category)).map(category => ({ category, count: stocks.filter(stock => stock.category === category).length }));
   els.categoryCards.innerHTML = categories.map(item => `<article class="card category-card"><div class="category-row"><span class="category-name">${escapeHtml(item.category)}</span><span class="category-count">${item.count}</span></div></article>`).join("");
+}
+
+function renderHomeSnapshot({ totalStocks, highRiskStocks, infrastructureStocks }) {
+  if (!els.homeSnapshot) return;
+  const mergedStocks = stocks.map(stock => getMergedStock(stock.ticker));
+  const dayMovers = mergedStocks.filter(stock => Number.isFinite(parsePercentValue(stock.dayChange)));
+  const sixMonthMovers = mergedStocks.filter(stock => Number.isFinite(parsePercentValue(stock.sixMonthReturn)));
+  const watchedTickers = unique(watchlists.flatMap(list => parseTickerList((list.tickers || []).join(","))));
+  const watchedStocks = mergedStocks.filter(stock => watchedTickers.includes(stock.ticker) && Number.isFinite(parsePercentValue(stock.dayChange)));
+  const bestDay = bestBy(dayMovers, stock => parsePercentValue(stock.dayChange));
+  const worstDay = worstBy(dayMovers, stock => parsePercentValue(stock.dayChange));
+  const bestSixMonth = bestBy(sixMonthMovers, stock => parsePercentValue(stock.sixMonthReturn));
+  const topWatchlistMover = bestBy(watchedStocks, stock => parsePercentValue(stock.dayChange));
+  const coverage = liveData.cache || {};
+
+  els.homeSnapshot.innerHTML = [
+    snapshotCardHtml("Market Pulse", [
+      ["Top mover", stockMoveText(bestDay, "dayChange")],
+      ["Weakest", stockMoveText(worstDay, "dayChange")],
+      ["Best 6M", stockMoveText(bestSixMonth, "sixMonthReturn")]
+    ]),
+    snapshotCardHtml("Watchlist Focus", [
+      ["Top watched", stockMoveText(topWatchlistMover, "dayChange")],
+      ["Lists", String(watchlists.length)],
+      ["Tickers watched", String(watchedTickers.length)]
+    ]),
+    snapshotCardHtml("Data Status", [
+      ["Quotes", quoteCacheAgeText()],
+      ["Coverage", coverageText(coverage.quotes)],
+      ["History", liveData.snapshotSaved ? "Snapshot saved" : "No snapshot yet"]
+    ]),
+    snapshotCardHtml("Risk Mix", [
+      ["High risk", `${highRiskStocks}/${totalStocks}`],
+      ["Infrastructure", String(infrastructureStocks)],
+      ["Fundamentals", coverageText(coverage.fundamentals)]
+    ])
+  ].join("");
+}
+
+function snapshotCardHtml(title, rows) {
+  return `<article class="card snapshot-card"><h3>${escapeHtml(title)}</h3>${rows.map(([label, value]) => `<div class="snapshot-row"><span>${escapeHtml(label)}</span><span>${escapeHtml(value || "—")}</span></div>`).join("")}</article>`;
+}
+
+function stockMoveText(stock, field) {
+  return stock ? `${stock.ticker} ${stock[field] || "—"}` : "Refresh data";
 }
 
 function renderStocks() {
@@ -354,7 +401,7 @@ function saveWatchlistEditor(event) {
   const next = { title, tickers, note };
   if (activeWatchlistIndex === null) watchlists.push(next); else watchlists[activeWatchlistIndex] = next;
   saveJson(STORAGE.watchlists, watchlists);
-  closeWatchlistEditor(); renderWatchlists();
+  closeWatchlistEditor(); renderHome(); renderWatchlists();
 }
 
 function deleteWatchlist() {
@@ -362,14 +409,14 @@ function deleteWatchlist() {
   if (!confirm("Delete this watchlist?")) return;
   watchlists.splice(activeWatchlistIndex, 1);
   saveJson(STORAGE.watchlists, watchlists);
-  closeWatchlistEditor(); renderWatchlists();
+  closeWatchlistEditor(); renderHome(); renderWatchlists();
 }
 
 function resetWatchlists() {
   if (!confirm("Reset watchlists to defaults?")) return;
   watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS));
   saveJson(STORAGE.watchlists, watchlists);
-  renderWatchlists();
+  renderHome(); renderWatchlists();
 }
 
 function resetLocalData() {
@@ -488,6 +535,7 @@ async function refreshLiveData(force = false) {
 
     saveJson(STORAGE.live, liveData);
     setLiveStatus("Connected");
+    renderHome();
     renderStocks();
     updateLiveStatus();
     if (document.querySelector('[data-panel="history"]').classList.contains("active")) {
@@ -517,6 +565,7 @@ async function forcePriceRefresh() {
     liveData.cache.quotes = payload.coverage || { filled: Object.keys(liveData.quotes).length, total: stocks.length };
     saveJson(STORAGE.live, liveData);
     setLiveStatus("Prices refreshed");
+    renderHome();
     renderStocks();
     updateLiveStatus();
   } catch (error) {
@@ -535,7 +584,7 @@ function saveWorkerUrl() {
 function clearLiveCache() {
   liveData = { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false };
   saveJson(STORAGE.live, liveData);
-  renderStocks(); updateLiveStatus(); setLiveStatus("Live cache cleared");
+  renderHome(); renderStocks(); updateLiveStatus(); setLiveStatus("Live cache cleared");
 }
 
 function configureAutoRefresh() {
