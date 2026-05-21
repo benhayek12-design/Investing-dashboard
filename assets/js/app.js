@@ -38,7 +38,7 @@ const STORAGE = {
 let manualEdits = loadJson(STORAGE.edits, {});
 let prefs = loadJson(STORAGE.prefs, { darkMode: true, compactCards: false });
 let watchlists = loadJson(STORAGE.watchlists, DEFAULT_WATCHLISTS);
-let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null });
+let liveData = loadJson(STORAGE.live, { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastMarketRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false });
 let liveSettings = loadJson(STORAGE.liveSettings, { workerUrl: DEFAULT_WORKER_URL, autoRefresh: false });
 let syncSettings = loadJson(STORAGE.syncSettings, { token: "", lastSyncAt: null });
 let historyState = { snapshots: [], refreshLog: [], selectedTicker: "IONQ" };
@@ -110,6 +110,7 @@ function cacheElements() {
   els.lastQuoteRefresh = document.getElementById("lastQuoteRefresh");
   els.quoteCacheAge = document.getElementById("quoteCacheAge");
   els.nextQuoteRefresh = document.getElementById("nextQuoteRefresh");
+  els.lastMarketRefresh = document.getElementById("lastMarketRefresh");
   els.marketCoverage = document.getElementById("marketCoverage");
   els.lastPerformanceRefresh = document.getElementById("lastPerformanceRefresh");
   els.lastFundamentalsRefresh = document.getElementById("lastFundamentalsRefresh");
@@ -230,19 +231,19 @@ function renderHomeSnapshot({ totalStocks, highRiskStocks, infrastructureStocks 
   const coverage = liveData.cache || {};
 
   els.homeSnapshot.innerHTML = [
-    snapshotCardHtml("Market Pulse", [
-      ["Top mover", stockMoveText(bestDay, "dayChange")],
-      ["Weakest", stockMoveText(worstDay, "dayChange")],
-      ["Best 6M", stockMoveText(bestSixMonth, "sixMonthReturn")]
+    snapshotCardHtml("Stock Pulse", [
+      ["Top mover", stockMoveText(bestDay, "dayChange", "Refresh Now")],
+      ["Weakest", stockMoveText(worstDay, "dayChange", "Refresh Now")],
+      ["Best 6M", stockMoveText(bestSixMonth, "sixMonthReturn", "Refresh Now")]
     ]),
     snapshotCardHtml("Watchlist Focus", [
-      ["Top watched", stockMoveText(topWatchlistMover, "dayChange")],
+      ["Top watched", stockMoveText(topWatchlistMover, "dayChange", "Refresh Now")],
       ["Lists", String(watchlists.length)],
       ["Tickers watched", String(watchedTickers.length)]
     ]),
     snapshotCardHtml("Data Status", [
-      ["Quotes", quoteCacheAgeText()],
-      ["Coverage", coverageText(coverage.quotes)],
+      ["Stock quotes", quoteCacheAgeText()],
+      ["Stock coverage", coverageText(coverage.quotes)],
       ["Markets", marketCoverageText()],
       ["History", liveData.snapshotSaved ? "Snapshot saved" : "No snapshot yet"]
     ]),
@@ -268,9 +269,9 @@ function broadMarketCards() {
     const laggard = worstBy(movers, asset => parsePercentValue(asset.dayChange));
     return snapshotCardHtml(group, [
       ["Avg day", averagePercentText(movers.map(asset => parsePercentValue(asset.dayChange)))],
-      ["Leader", stockMoveText(leader, "dayChange")],
-      ["Weakest", stockMoveText(laggard, "dayChange")],
-      ["Quotes", `${quotedMarketAssets(groupAssets).length}/${groupAssets.length}`]
+      ["Breadth", marketBreadthText(movers)],
+      ["Leader", marketMoveText(leader)],
+      ["Weakest", marketMoveText(laggard)]
     ]);
   });
 }
@@ -293,8 +294,8 @@ function snapshotCardHtml(title, rows) {
   return `<article class="card snapshot-card"><h3>${escapeHtml(title)}</h3>${rows.map(([label, value]) => `<div class="snapshot-row"><span>${escapeHtml(label)}</span><span>${escapeHtml(value || "—")}</span></div>`).join("")}</article>`;
 }
 
-function stockMoveText(stock, field) {
-  return stock ? `${stock.ticker} ${stock[field] || "—"}` : "Refresh data";
+function stockMoveText(stock, field, emptyText = "Refresh data") {
+  return stock ? `${stock.ticker} ${stock[field] || "—"}` : emptyText;
 }
 
 function marketAssetGroups() {
@@ -307,6 +308,17 @@ function currentMarketQuotes() {
 
 function quotedMarketAssets(assets = marketAssets) {
   return assets.filter(asset => hasQuoteData(liveData.quotes && liveData.quotes[asset.ticker]));
+}
+
+function marketMoveText(asset) {
+  return asset ? `${asset.ticker} ${percentMoveText(asset.dayChange)}` : "Refresh Markets";
+}
+
+function marketBreadthText(assets) {
+  if (!assets.length) return "Refresh Markets";
+  const up = assets.filter(asset => parsePercentValue(asset.dayChange) > 0).length;
+  const down = assets.filter(asset => parsePercentValue(asset.dayChange) < 0).length;
+  return `${up} up / ${down} down`;
 }
 
 function renderStocks() {
@@ -482,7 +494,7 @@ function resetWatchlists() {
 
 function resetLocalData() {
   if (!confirm("Clear saved manual stock fields, watchlists, and live cache from this device?")) return;
-  manualEdits = {}; watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS)); liveData = { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false };
+  manualEdits = {}; watchlists = JSON.parse(JSON.stringify(DEFAULT_WATCHLISTS)); liveData = { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastMarketRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false };
   saveJson(STORAGE.edits, manualEdits); saveJson(STORAGE.watchlists, watchlists); saveJson(STORAGE.live, liveData);
   renderAll();
 }
@@ -648,7 +660,7 @@ async function refreshMarketData() {
     const payload = await fetchJsonFromUrl(url);
     if (!payload.ok) throw new Error(payload.error || "Market refresh failed.");
     liveData.quotes = { ...(liveData.quotes || {}), ...((payload.data && typeof payload.data === "object") ? payload.data : {}) };
-    liveData.lastQuoteRefresh = payload.generatedAt || new Date().toISOString();
+    liveData.lastMarketRefresh = payload.generatedAt || new Date().toISOString();
     if (!liveData.cache || typeof liveData.cache !== "object") liveData.cache = {};
     liveData.cache.marketQuotes = marketQuoteCoverage(liveData.quotes);
     liveData.cache.marketQuotes.workerLimited = Array.isArray(payload.symbols) && payload.symbols.length < marketAssets.length;
@@ -671,7 +683,7 @@ function saveWorkerUrl() {
 }
 
 function clearLiveCache() {
-  liveData = { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false };
+  liveData = { quotes: {}, performance: {}, fundamentals: {}, cache: {}, lastDashboardRefresh: null, lastQuoteRefresh: null, lastMarketRefresh: null, lastPerformanceRefresh: null, lastFundamentalsRefresh: null, snapshotSaved: false };
   saveJson(STORAGE.live, liveData);
   renderHome(); renderStocks(); updateLiveStatus(); setLiveStatus("Live cache cleared");
 }
@@ -692,6 +704,7 @@ function updateLiveStatus() {
   els.lastQuoteRefresh.textContent = formatDateTime(liveData.lastQuoteRefresh);
   if (els.quoteCacheAge) els.quoteCacheAge.textContent = quoteCacheAgeText();
   if (els.nextQuoteRefresh) els.nextQuoteRefresh.textContent = nextQuoteRefreshText();
+  if (els.lastMarketRefresh) els.lastMarketRefresh.textContent = formatDateTime(liveData.lastMarketRefresh);
   if (els.marketCoverage) els.marketCoverage.textContent = marketCoverageText();
   els.lastPerformanceRefresh.textContent = formatDateTime(liveData.lastPerformanceRefresh);
   if (els.lastFundamentalsRefresh) els.lastFundamentalsRefresh.textContent = formatDateTime(liveData.lastFundamentalsRefresh);
@@ -703,7 +716,7 @@ function updateLiveStatus() {
   if (els.fundamentalsMissing) els.fundamentalsMissing.textContent = coverageMissingText(liveData.cache && liveData.cache.fundamentals);
   if (els.cacheStatus) els.cacheStatus.textContent = cacheStatusText(liveData.cache);
   if (els.snapshotStatus) els.snapshotStatus.textContent = liveData.snapshotSaved ? "Saved to KV" : "—";
-  if (!els.liveStatus.textContent || els.liveStatus.textContent === "Not connected") els.liveStatus.textContent = liveData.lastQuoteRefresh ? "Connected" : "Not connected";
+  if (!els.liveStatus.textContent || els.liveStatus.textContent === "Not connected") els.liveStatus.textContent = (liveData.lastQuoteRefresh || liveData.lastMarketRefresh) ? "Connected" : "Not connected";
 }
 
 async function loadHistoryData(showStatus = true) {
@@ -983,10 +996,11 @@ function sanitizeWorkerUrl(value) { return String(value || "").trim().replace(/\
 async function fetchJsonFromUrl(url, options = {}) { const response = await fetch(url, options); const payload = await response.json(); if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`); return payload; }
 function formatDateTime(value) { if (!value) return "Never"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Never"; return date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
 function getQuoteUpdatedAt(ticker) { return liveData && liveData.quotes && liveData.quotes[ticker] ? liveData.quotes[ticker].updatedAt : null; }
-function quoteCacheAgeText() { const time = latestQuoteTime(); if (!time) return "—"; const minutes = Math.max(0, Math.floor((Date.now() - new Date(time).getTime()) / 60000)); return minutes < 1 ? "Just now" : `${minutes} min old`; }
-function nextQuoteRefreshText() { const time = latestQuoteTime(); if (!time) return "Now"; const next = new Date(new Date(time).getTime() + 15 * 60 * 1000); const remaining = Math.ceil((next.getTime() - Date.now()) / 60000); return remaining <= 0 ? "Now" : `${formatDateTime(next.toISOString())} (${remaining} min)`; }
-function latestQuoteTime() {
-  const times = Object.values((liveData && liveData.quotes) || {}).map(row => row && row.updatedAt).filter(Boolean);
+function quoteCacheAgeText() { const time = latestStockQuoteTime(); if (!time) return "Refresh Now"; const minutes = Math.max(0, Math.floor((Date.now() - new Date(time).getTime()) / 60000)); return minutes < 1 ? "Just now" : `${minutes} min old`; }
+function nextQuoteRefreshText() { const time = latestStockQuoteTime(); if (!time) return "Refresh Now"; const next = new Date(new Date(time).getTime() + 15 * 60 * 1000); const remaining = Math.ceil((next.getTime() - Date.now()) / 60000); return remaining <= 0 ? "Now" : `${formatDateTime(next.toISOString())} (${remaining} min)`; }
+function latestStockQuoteTime() {
+  const stockTickers = new Set(stocks.map(stock => stock.ticker));
+  const times = Object.entries((liveData && liveData.quotes) || {}).filter(([ticker]) => stockTickers.has(ticker)).map(([, row]) => row && row.updatedAt).filter(Boolean);
   if (times.length) return times.sort((a, b) => new Date(b) - new Date(a))[0];
   return liveData.lastQuoteRefresh;
 }
@@ -996,7 +1010,7 @@ function hasQuoteData(row) {
 }
 function hasDisplayValue(value) {
   const text = String(value ?? "").trim().toLowerCase();
-  return Boolean(text) && !["—", "-", "n/a", "na", "not loaded", "refresh data", "never"].includes(text);
+  return Boolean(text) && !["—", "â€”", "-", "n/a", "na", "not loaded", "refresh data", "never"].includes(text);
 }
 function marketQuoteCoverage(quotes = liveData.quotes) {
   const missing = marketAssets.filter(asset => !hasQuoteData(quotes && quotes[asset.ticker])).map(asset => asset.ticker);
@@ -1009,6 +1023,7 @@ function parsePercentValue(value) {
   const n = percentMatch ? Number(percentMatch[1]) : Number(text.replace(/[%+,]/g, ""));
   return Number.isFinite(n) ? n : NaN;
 }
+function percentMoveText(value) { const parsed = parsePercentValue(value); return Number.isFinite(parsed) ? `${parsed >= 0 ? "+" : ""}${parsed.toFixed(2)}%` : "Refresh Markets"; }
 function averagePercentText(values) { const valid = values.filter(Number.isFinite); if (!valid.length) return "Refresh data"; const average = valid.reduce((sum, value) => sum + value, 0) / valid.length; return `${average >= 0 ? "+" : ""}${average.toFixed(1)}%`; }
 function bestBy(items, getter) { return items.filter(item => Number.isFinite(getter(item))).sort((a,b) => getter(b) - getter(a))[0] || null; }
 function worstBy(items, getter) { return items.filter(item => Number.isFinite(getter(item))).sort((a,b) => getter(a) - getter(b))[0] || null; }

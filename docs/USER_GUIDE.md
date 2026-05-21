@@ -28,9 +28,9 @@ If Settings says `Deploy Worker for markets` or `Market coverage 1/21 - deploy W
 
 Use Home for the daily overview.
 
-- Market Pulse shows the strongest and weakest daily movers from cached quote data.
+- Stock Pulse shows the strongest and weakest daily stock movers from cached stock quote data.
 - Watchlist Focus shows watched ticker coverage and the strongest watched mover when quote data exists.
-- Data Status shows quote freshness, stock quote coverage, market quote coverage, and whether a snapshot has been saved.
+- Data Status separates stock quote freshness from market quote coverage, so refreshing markets does not make stock data look loaded.
 - Risk Mix summarizes high-risk exposure, infrastructure exposure, and fundamentals coverage.
 - Market context compares broad market groups such as indexes, sectors, and macro ETFs when market quotes are loaded.
 
@@ -43,9 +43,9 @@ Markets are shown inside Home so the iPhone tab bar stays compact.
 - Indexes include SPY, QQQ, DIA, IWM, and VTI.
 - Sectors include XLK, XLF, XLV, XLE, XLI, XLU, XLY, XLP, XLC, XLB, and XLRE.
 - Macro assets include GLD, SLV, USO, TLT, and SHY.
-- Each market group shows average day move, the strongest asset, the weakest asset, and quote coverage for that group.
+- Each market group shows average day move, breadth, the strongest asset, and the weakest asset.
 - Market assets are quote-only. They are not part of the stock research card universe.
-- If market groups show `Refresh data` or `0/5`, `0/11`, or `0/5` quote coverage, go to Settings and tap Refresh Markets.
+- If market groups show `Refresh Markets`, go to Settings and tap Refresh Markets.
 
 ### Stocks
 
