@@ -44,6 +44,7 @@ Markets are shown inside Home so the iPhone tab bar stays compact.
 - Sectors include XLK, XLF, XLV, XLE, XLI, XLU, XLY, XLP, XLC, XLB, and XLRE.
 - Macro assets include GLD, SLV, USO, TLT, and SHY.
 - Each market group shows average day move, breadth, the strongest asset, and the weakest asset.
+- Open the Assets row inside a market group to see each ETF's latest price, daily percent move, and role.
 - Market assets are quote-only. They are not part of the stock research card universe.
 - If market groups show `Refresh Markets`, go to Settings and tap Refresh Markets.
 

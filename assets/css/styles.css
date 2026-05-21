@@ -137,6 +137,15 @@ h1 {
 .snapshot-row:first-of-type { border-top: 0; padding-top: 0; }
 .snapshot-row span:first-child { color: var(--muted); font-size: 0.82rem; font-weight: 850; }
 .snapshot-row span:last-child { color: var(--text); font-weight: 900; text-align: right; overflow-wrap: anywhere; }
+.market-details { margin-top: 8px; border-top: 1px solid rgba(170,184,216,0.12); }
+.market-details summary { min-height: 42px; display: flex; align-items: center; color: var(--accent); font-weight: 900; cursor: pointer; }
+.market-asset-list { display: grid; gap: 8px; padding-bottom: 2px; }
+.market-asset-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(170,184,216,0.08); }
+.market-asset-row:first-child { border-top: 0; }
+.market-asset-main, .market-asset-price { display: grid; gap: 2px; min-width: 0; }
+.market-asset-main span, .market-asset-price span { color: var(--muted); font-size: 0.78rem; font-weight: 800; }
+.market-asset-main strong, .market-asset-price strong { color: var(--text); font-size: 0.92rem; overflow-wrap: anywhere; }
+.market-asset-price { text-align: right; flex: 0 0 96px; }
 .category-grid { grid-template-columns: 1fr; }
 .stock-list, .watchlist-grid, .settings-grid { display: grid; gap: 14px; }
 

@@ -267,12 +267,12 @@ function broadMarketCards() {
     const movers = groupAssets.map(asset => ({ ...asset, ...(liveData.quotes[asset.ticker] || {}) })).filter(asset => Number.isFinite(parsePercentValue(asset.dayChange)));
     const leader = bestBy(movers, asset => parsePercentValue(asset.dayChange));
     const laggard = worstBy(movers, asset => parsePercentValue(asset.dayChange));
-    return snapshotCardHtml(group, [
+    return marketGroupCardHtml(group, [
       ["Avg day", averagePercentText(movers.map(asset => parsePercentValue(asset.dayChange)))],
       ["Breadth", marketBreadthText(movers)],
       ["Leader", marketMoveText(leader)],
       ["Weakest", marketMoveText(laggard)]
-    ]);
+    ], groupAssets);
   });
 }
 
@@ -292,6 +292,16 @@ function thematicMarketCards() {
 
 function snapshotCardHtml(title, rows) {
   return `<article class="card snapshot-card"><h3>${escapeHtml(title)}</h3>${rows.map(([label, value]) => `<div class="snapshot-row"><span>${escapeHtml(label)}</span><span>${escapeHtml(value || "—")}</span></div>`).join("")}</article>`;
+}
+
+function marketGroupCardHtml(title, rows, assets) {
+  const assetRows = assets.map(asset => marketAssetRowHtml({ ...asset, ...(liveData.quotes[asset.ticker] || {}) })).join("");
+  const quoted = quotedMarketAssets(assets).length;
+  return `<article class="card snapshot-card market-card"><h3>${escapeHtml(title)}</h3>${rows.map(([label, value]) => `<div class="snapshot-row"><span>${escapeHtml(label)}</span><span>${escapeHtml(value || "—")}</span></div>`).join("")}<details class="market-details"><summary>Assets ${quoted}/${assets.length}</summary><div class="market-asset-list">${assetRows}</div></details></article>`;
+}
+
+function marketAssetRowHtml(asset) {
+  return `<div class="market-asset-row"><div class="market-asset-main"><strong>${escapeHtml(asset.ticker)}</strong><span>${escapeHtml(asset.name || asset.role || "")}</span></div><div class="market-asset-price"><strong>${escapeHtml(asset.livePrice || "Refresh")}</strong><span>${escapeHtml(percentMoveText(asset.dayChange))}</span></div></div>`;
 }
 
 function stockMoveText(stock, field, emptyText = "Refresh data") {

@@ -85,6 +85,11 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
    - Keep broad markets quote-only to protect performance/fundamental API usage.
    - Show broad markets inside Home instead of adding another iPhone tab.
 
+7d. [x] **Add market asset drilldowns**
+   - Show individual index, sector, and macro ETF rows inside the Home market cards.
+   - Keep the drilldown inside existing Home cards so the iPhone tab bar stays compact.
+   - Include price, daily percent move, and market role for each asset.
+
 8. [x] **Improve History with KV snapshots**
    - Keep History readable on iPhone.
    - Default History view should show:
