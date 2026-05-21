@@ -103,13 +103,13 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
     - Do not remove localStorage until KV sync is implemented and tested.
     - localStorage remains the on-device cache.
 
-11. **KV-backed user data endpoint design**
-    - Proposed future endpoints:
+11. [x] **KV-backed user data endpoint design**
+    - Implemented endpoint:
       - `GET /api/user-data`
       - `POST /api/user-data`
-      - `GET /api/watchlists`
-      - `POST /api/watchlists`
-    - Add authentication/private mode before storing sensitive personal notes.
+    - Current design stores edits and watchlists together as one versioned KV blob.
+    - Protected by `USER_SYNC_TOKEN` / `X-QSD-SYNC-TOKEN`.
+    - Separate watchlist endpoints are deferred until there is a need for finer-grained sync.
 
 ## Medium tasks
 
