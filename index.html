@@ -521,14 +521,19 @@
             </div>
             <div class="status-grid">
               <div class="status-line"><span>Status</span><span id="liveStatus">Not connected</span></div>
+              <div class="status-line"><span>Last dashboard refresh</span><span id="lastDashboardRefresh">Never</span></div>
               <div class="status-line"><span>Last quote refresh</span><span id="lastQuoteRefresh">Never</span></div>
               <div class="status-line"><span>Quote cache age</span><span id="quoteCacheAge">—</span></div>
               <div class="status-line"><span>Next quote refresh</span><span id="nextQuoteRefresh">—</span></div>
               <div class="status-line"><span>Last performance refresh</span><span id="lastPerformanceRefresh">Never</span></div>
               <div class="status-line"><span>Last fundamentals refresh</span><span id="lastFundamentalsRefresh">Never</span></div>
+              <div class="status-line"><span>Quotes coverage</span><span id="quotesCoverage">Not loaded</span></div>
+              <div class="status-line"><span>Performance coverage</span><span id="performanceCoverage">Not loaded</span></div>
+              <div class="status-line"><span>Fundamentals coverage</span><span id="fundamentalsCoverage">Not loaded</span></div>
               <div class="status-line"><span>Cache used</span><span id="cacheStatus">—</span></div>
               <div class="status-line"><span>Saved snapshot</span><span id="snapshotStatus">—</span></div>
             </div>
+            <p class="meta">Missing coverage can come from API limits, provider gaps, or symbols that have not been cached yet.</p>
           </div>
         </div>
       </section>
@@ -693,11 +698,15 @@
       els.saveWorkerUrl = document.getElementById("saveWorkerUrl");
       els.clearLiveCache = document.getElementById("clearLiveCache");
       els.liveStatus = document.getElementById("liveStatus");
+      els.lastDashboardRefresh = document.getElementById("lastDashboardRefresh");
       els.lastQuoteRefresh = document.getElementById("lastQuoteRefresh");
       els.quoteCacheAge = document.getElementById("quoteCacheAge");
       els.nextQuoteRefresh = document.getElementById("nextQuoteRefresh");
       els.lastPerformanceRefresh = document.getElementById("lastPerformanceRefresh");
       els.lastFundamentalsRefresh = document.getElementById("lastFundamentalsRefresh");
+      els.quotesCoverage = document.getElementById("quotesCoverage");
+      els.performanceCoverage = document.getElementById("performanceCoverage");
+      els.fundamentalsCoverage = document.getElementById("fundamentalsCoverage");
       els.cacheStatus = document.getElementById("cacheStatus");
       els.snapshotStatus = document.getElementById("snapshotStatus");
       els.loadHistory = document.getElementById("loadHistory");
@@ -1065,11 +1074,15 @@
     function updateLiveStatus() {
       els.workerUrlInput.value = liveSettings.workerUrl || DEFAULT_WORKER_URL;
       els.autoRefreshToggle.checked = Boolean(liveSettings.autoRefresh);
+      if (els.lastDashboardRefresh) els.lastDashboardRefresh.textContent = formatDateTime(liveData.lastDashboardRefresh);
       els.lastQuoteRefresh.textContent = formatDateTime(liveData.lastQuoteRefresh);
       if (els.quoteCacheAge) els.quoteCacheAge.textContent = quoteCacheAgeText();
       if (els.nextQuoteRefresh) els.nextQuoteRefresh.textContent = nextQuoteRefreshText();
       els.lastPerformanceRefresh.textContent = formatDateTime(liveData.lastPerformanceRefresh);
       if (els.lastFundamentalsRefresh) els.lastFundamentalsRefresh.textContent = formatDateTime(liveData.lastFundamentalsRefresh);
+      if (els.quotesCoverage) els.quotesCoverage.textContent = coverageText(liveData.cache && liveData.cache.quotes);
+      if (els.performanceCoverage) els.performanceCoverage.textContent = coverageText(liveData.cache && liveData.cache.performance);
+      if (els.fundamentalsCoverage) els.fundamentalsCoverage.textContent = coverageText(liveData.cache && liveData.cache.fundamentals);
       if (els.cacheStatus) els.cacheStatus.textContent = cacheStatusText(liveData.cache);
       if (els.snapshotStatus) els.snapshotStatus.textContent = liveData.snapshotSaved ? "Saved to KV" : "—";
       if (!els.liveStatus.textContent || els.liveStatus.textContent === "Not connected") els.liveStatus.textContent = liveData.lastQuoteRefresh ? "Connected" : "Not connected";
@@ -1211,6 +1224,14 @@
         return `${key}: —`;
       });
       return parts.join(" · ");
+    }
+
+    function coverageText(item) {
+      if (!item || !Number.isFinite(Number(item.total))) return "Not loaded";
+      const filled = Number.isFinite(Number(item.filled)) ? Number(item.filled) : 0;
+      const total = Number(item.total);
+      const missing = Array.isArray(item.missing) ? item.missing.length : Math.max(0, total - filled);
+      return missing ? `${filled}/${total} (${missing} missing)` : `${filled}/${total}`;
     }
 
 
