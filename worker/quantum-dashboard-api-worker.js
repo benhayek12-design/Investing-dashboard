@@ -5,12 +5,13 @@ const QUOTE_CACHE_SECONDS = 15 * 60;
 const PERFORMANCE_CACHE_SECONDS = 24 * 60 * 60;
 const FUNDAMENTALS_CACHE_SECONDS = 12 * 60 * 60;
 
-// These budgets protect free API limits. Repeated Refresh Now calls backfill missing data.
+// These budgets protect free API limits. Repeated refreshes backfill missing data.
 const QUOTE_REFRESH_BUDGET = 38;
 const PERFORMANCE_REFRESH_BUDGET = 38;
 const FUNDAMENTALS_REFRESH_BUDGET = 12;
 const MAX_SYMBOLS = 50;
 const HISTORY_LOG_LIMIT = 100;
+const ERROR_RETRY_SECONDS = 30 * 60; // retry failed provider data every 30 minutes
 const USER_DATA_KEY = "user-data:v1";
 const USER_DATA_MAX_BYTES = 200000;
 
@@ -44,7 +45,7 @@ export default {
         return jsonResponse({
           ok: true,
           service: "Quantum Stock Dashboard API",
-          version: "smart-cache-v1",
+          version: "smart-cache-v2-auto-backfill",
           quoteProvider: "Finnhub",
           performanceProvider: "Tiingo",
           fundamentalsProvider: "Finnhub",
@@ -140,6 +141,12 @@ export default {
         return jsonResponse({ ok: true, type: "history", days, count: snapshots.length, data: snapshots });
       }
 
+      if (url.pathname === "/api/backfill-status") {
+        const symbols = getSymbols(url, DASHBOARD_SYMBOLS);
+        const status = await getBackfillStatus(env, symbols);
+        return jsonResponse(status);
+      }
+
       return jsonResponse({ ok: false, error: "Unknown endpoint." }, 404);
     } catch (error) {
       return jsonResponse({ ok: false, error: error.message || "Worker error." }, 500);
@@ -212,6 +219,11 @@ async function getDatasetSmart({ env, ctx, type, symbols, force, ttlSeconds, bud
   const staleOrMissing = symbols.filter(symbol => {
     const record = existing[symbol];
     if (!record || !record.savedAt || !record.data) return true;
+
+    if (record.data && record.data.error && !force && !isStale(record.savedAt, ERROR_RETRY_SECONDS)) {
+      return false;
+    }
+
     if (hasUsefulData(record.data) && !force && !isStale(record.savedAt, ttlSeconds)) return false;
     if (hasUsefulData(record.data) && type !== "quotes" && force) return false; // avoid burning daily APIs unnecessarily
     return true;
@@ -270,6 +282,25 @@ function datasetPayload(type, symbols, data) {
   const providers = { quotes: "Finnhub", performance: "Tiingo", fundamentals: "Finnhub" };
   const providerKey = type === "quotes" ? "quoteProvider" : type === "performance" ? "performanceProvider" : "fundamentalsProvider";
   return { ok: true, type, [providerKey]: providers[type], generatedAt: new Date().toISOString(), symbols, coverage: coverageFor(symbols, data), data };
+}
+
+async function getBackfillStatus(env, symbols) {
+  const [quotes, performance, fundamentals] = await Promise.all([
+    readSymbolRecords(env, "quotes", symbols),
+    readSymbolRecords(env, "performance", symbols),
+    readSymbolRecords(env, "fundamentals", symbols)
+  ]);
+
+  return {
+    ok: true,
+    type: "backfill-status",
+    generatedAt: new Date().toISOString(),
+    coverage: {
+      quotes: coverageFor(symbols, Object.fromEntries(Object.entries(quotes).map(([key, value]) => [key, value.data]))),
+      performance: coverageFor(symbols, Object.fromEntries(Object.entries(performance).map(([key, value]) => [key, value.data]))),
+      fundamentals: coverageFor(symbols, Object.fromEntries(Object.entries(fundamentals).map(([key, value]) => [key, value.data])))
+    }
+  };
 }
 
 async function readSymbolRecords(env, type, symbols) {
