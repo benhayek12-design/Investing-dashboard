@@ -130,7 +130,7 @@ h1 {
 
 .grid { display: grid; gap: 14px; }
 .summary-grid { grid-template-columns: repeat(2, 1fr); }
-.home-snapshot { display: grid; gap: 12px; margin-bottom: 14px; }
+.home-snapshot, .market-snapshot { display: grid; gap: 12px; margin-bottom: 14px; }
 .snapshot-card { display: grid; gap: 10px; }
 .snapshot-card h3 { margin: 0; color: var(--text); font-size: 1rem; letter-spacing: -0.02em; }
 .snapshot-row { display: flex; justify-content: space-between; gap: 12px; padding-top: 8px; border-top: 1px solid rgba(170,184,216,0.12); }
@@ -341,6 +341,7 @@ body.compact .manual-item { min-height: 54px; padding: 8px; }
   .app { padding-inline: 26px; }
   .summary-grid { grid-template-columns: repeat(4, 1fr); }
   .home-snapshot { grid-template-columns: repeat(4, 1fr); }
+  .market-snapshot { grid-template-columns: repeat(3, 1fr); }
   .category-grid, .stock-list, .watchlist-grid { grid-template-columns: repeat(2, 1fr); }
   .controls { grid-template-columns: 1.3fr 1fr 1fr auto; align-items: end; }
   .settings-grid { grid-template-columns: repeat(3, 1fr); }

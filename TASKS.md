@@ -72,10 +72,18 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
      - fundamentals filled / total
    - Make clear when data is missing because of API limits/provider gaps.
 
-7a. [x] **Add Home daily snapshot**
-   - Show top movers from cached/live data.
-   - Show watchlist focus and data freshness.
-   - Keep the view useful when APIs are unavailable.
+7a. [x] **Add Home daily snapshot and market context**
+   - Show top movers, watchlist focus, data freshness, and risk mix.
+   - Compare existing themes without adding another mobile tab.
+   - Use existing cached quote data only.
+
+7b. [x] **Add app user guide**
+   - Explain tabs, refresh behavior, backups, sync, iPhone use, and troubleshooting.
+
+7c. [x] **Add broad market universe**
+   - Add index, sector, and macro ETF groups.
+   - Keep broad markets quote-only to protect performance/fundamental API usage.
+   - Show broad markets inside Home instead of adding another iPhone tab.
 
 8. [x] **Improve History with KV snapshots**
    - Keep History readable on iPhone.

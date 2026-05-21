@@ -1,6 +1,6 @@
-# Quantum Stock Investment Dashboard
+# Personal Investment Terminal
 
-Mobile-first static investment dashboard for quantum-computing-related stocks.
+Mobile-first static investment dashboard for broad market context, watchlists, stock research, quantum/AI infrastructure themes, history, and private notes.
 
 This repository is designed so a coding agent such as **Codex**, **Claude Code**, or another AI model can safely make upgrades without breaking the app.
 
@@ -10,7 +10,7 @@ This repository is designed so a coding agent such as **Codex**, **Claude Code**
 - **Frontend repo:** `benhayek12-design/Investing-dashboard`
 - **Live site:** `https://benhayek12-design.github.io/Investing-dashboard/`
 - **Frontend entry file:** `index.html`
-- **Frontend assets:** `assets/css/styles.css`, `assets/js/data/stocks.js`, `assets/js/app.js`
+- **Frontend assets:** `assets/css/styles.css`, `assets/js/data/stocks.js`, `assets/js/data/markets.js`, `assets/js/app.js`
 - **Backend proxy:** Cloudflare Worker
 - **Worker URL:** `https://quantum-dashboard-api.benhayek12.workers.dev`
 - **Worker file in this folder:** `worker/quantum-dashboard-api-worker.js`
@@ -133,6 +133,10 @@ Cron: every 5 minutes
 `Refresh Now` should use smart cache.
 
 `Force Price Refresh` should only force quotes, not performance or fundamentals.
+
+## User guide
+
+See `docs/USER_GUIDE.md` for day-to-day app instructions, refresh rules, sync guidance, and troubleshooting.
 
 ## Deployment instructions
 

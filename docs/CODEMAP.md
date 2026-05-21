@@ -8,6 +8,7 @@ The frontend is a static GitHub Pages app with no build step.
 index.html                  App shell, tab panels, modals, script/style links
 assets/css/styles.css       Theme, layout, components, responsive rules
 assets/js/data/stocks.js    Static stock universe
+assets/js/data/markets.js   Quote-only broad market universe
 assets/js/app.js            Config, state, rendering, actions, live data, CSV, helpers
 ```
 
@@ -22,6 +23,14 @@ window.DASHBOARD_STOCKS = [ ... ]
 ```
 
 This lives in `assets/js/data/stocks.js`. Current count should be 38.
+
+### Broad market data
+
+```js
+window.DASHBOARD_MARKET_ASSETS = [ ... ]
+```
+
+This lives in `assets/js/data/markets.js`. Market assets are quote-only and power the Home market context.
 
 ### Config
 
@@ -126,6 +135,7 @@ parseCsv()
 ## Critical warnings
 
 - Keep `assets/js/data/stocks.js` loaded before `assets/js/app.js`.
+- Keep `assets/js/data/markets.js` loaded before `assets/js/app.js`.
 - Do not remove `data-tab` or `data-panel` attributes.
 - Do not remove `startupError`; it helps debug failures.
 - Do not rename localStorage keys without migration.
