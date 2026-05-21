@@ -134,6 +134,10 @@ Cron: every 5 minutes
 
 `Force Price Refresh` should only force quotes, not performance or fundamentals.
 
+## User guide
+
+See `docs/USER_GUIDE.md` for day-to-day app instructions, refresh rules, sync guidance, and troubleshooting.
+
 ## Deployment instructions
 
 ### Frontend
