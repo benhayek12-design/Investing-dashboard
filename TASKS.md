@@ -28,7 +28,7 @@ Use this file as Codex / Claude Code's task queue. The safest workflow is: choos
    - Verify no startup JavaScript errors.
    - Do not add new features until this passes.
 
-2. **Refactor only: split the app without changing behavior**
+2. [x] **Refactor only: split the app without changing behavior**
    - Split the single-file app into:
      - `index.html`
      - `assets/styles.css`

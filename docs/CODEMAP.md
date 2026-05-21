@@ -1,28 +1,32 @@
 # Code Map
 
-## Frontend: index.html
+## Frontend Files
 
-Main sections:
+The frontend is a static GitHub Pages app with no build step.
 
 ```text
-<style>      CSS/theme/layout/components
-<body>       app shell, tabs, modals
-<script>     static data, render logic, actions, live data, CSV, helpers
+index.html                  App shell, tab panels, modals, script/style links
+assets/css/styles.css       Theme, layout, components, responsive rules
+assets/js/data/stocks.js    Static stock universe
+assets/js/app.js            Config, state, rendering, actions, live data, CSV, helpers
 ```
+
+Keep paths relative so GitHub Pages can serve the app from `/Investing-dashboard/`.
 
 ## Major JavaScript sections
 
 ### Static stock data
 
 ```js
-const stocks = [ ... ]
+window.DASHBOARD_STOCKS = [ ... ]
 ```
 
-This is the main static stock universe. Current count should be 38.
+This lives in `assets/js/data/stocks.js`. Current count should be 38.
 
 ### Config
 
 ```js
+const stocks = window.DASHBOARD_STOCKS || []
 const DEFAULT_WORKER_URL
 const CORE_FIELDS
 const PRO_FIELDS
@@ -121,6 +125,7 @@ parseCsv()
 
 ## Critical warnings
 
+- Keep `assets/js/data/stocks.js` loaded before `assets/js/app.js`.
 - Do not remove `data-tab` or `data-panel` attributes.
 - Do not remove `startupError`; it helps debug failures.
 - Do not rename localStorage keys without migration.

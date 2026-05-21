@@ -97,19 +97,22 @@ The synced blob currently contains manual stock edits and watchlists. Browser `l
 
 ```text
 index.html
+assets/css/styles.css
+assets/js/data/stocks.js
+assets/js/app.js
 ```
 
-The app is currently single-file because the user edits on phone and GitHub Pages is simple.
+The app remains static and GitHub Pages-compatible. `index.html` is the shell, CSS is in `assets/css/styles.css`, the stock universe is in `assets/js/data/stocks.js`, and behavior is in `assets/js/app.js`.
 
 ## Future code splitting plan
 
-Only split after the current app is stable:
+Only split further after the current multi-file app is stable:
 
 ```text
 index.html
-assets/styles.css
-assets/app.js
-assets/stocks.js
+assets/css/styles.css
+assets/js/app.js
+assets/js/data/stocks.js
 worker/quantum-dashboard-api-worker.js
 docs/
 ```
