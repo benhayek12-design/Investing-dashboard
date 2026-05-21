@@ -10,13 +10,23 @@ It is not a brokerage account and does not place trades. It is a research and mo
 
 ## 2. Main Screens
 
+### Quick Start
+
+1. Open Settings.
+2. Tap Refresh Now to load the main stock dashboard.
+3. Tap Refresh Markets to load indexes, sectors, and macro ETFs.
+4. Return to Home for the daily overview.
+5. Use Stocks for individual research cards and Watchlists for saved groups.
+
+If a card says `Refresh data`, the app is not broken. It means that field has not been loaded yet or the provider did not return that specific value.
+
 ### Home
 
 Use Home for the daily overview.
 
 - Market Pulse shows the strongest and weakest daily movers from cached quote data.
 - Watchlist Focus shows watched ticker coverage and the strongest watched mover when quote data exists.
-- Data Status shows quote freshness, quote coverage, and whether a snapshot has been saved.
+- Data Status shows quote freshness, stock quote coverage, market quote coverage, and whether a snapshot has been saved.
 - Risk Mix summarizes high-risk exposure, infrastructure exposure, and fundamentals coverage.
 - Market context compares broad market groups such as indexes, sectors, and macro ETFs when market quotes are loaded.
 
@@ -29,8 +39,9 @@ Markets are shown inside Home so the iPhone tab bar stays compact.
 - Indexes include SPY, QQQ, DIA, IWM, and VTI.
 - Sectors include XLK, XLF, XLV, XLE, XLI, XLU, XLY, XLP, XLC, XLB, and XLRE.
 - Macro assets include GLD, SLV, USO, TLT, and SHY.
-- Each market group shows average day move, the strongest asset, the weakest asset, and the number of assets in that group.
+- Each market group shows average day move, the strongest asset, the weakest asset, and quote coverage for that group.
 - Market assets are quote-only. They are not part of the stock research card universe.
+- If market groups show `Refresh data` or `0/5`, `0/11`, or `0/5` quote coverage, go to Settings and tap Refresh Markets.
 
 ### Stocks
 
@@ -72,6 +83,7 @@ Use Settings for preferences, data refresh, backup, and sync.
 - Refresh Now calls the smart `/api/dashboard` endpoint.
 - Force Price Refresh calls `/api/quotes?force=1` and should be used sparingly.
 - Refresh Markets calls `/api/quotes` for broad market assets only.
+- User Guide opens this guide from inside the app.
 - Coverage diagnostics show what data is missing.
 - Cloud Sync uses a private token and stores manual edits/watchlists through the Worker.
 

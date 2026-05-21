@@ -110,6 +110,7 @@ function cacheElements() {
   els.lastQuoteRefresh = document.getElementById("lastQuoteRefresh");
   els.quoteCacheAge = document.getElementById("quoteCacheAge");
   els.nextQuoteRefresh = document.getElementById("nextQuoteRefresh");
+  els.marketCoverage = document.getElementById("marketCoverage");
   els.lastPerformanceRefresh = document.getElementById("lastPerformanceRefresh");
   els.lastFundamentalsRefresh = document.getElementById("lastFundamentalsRefresh");
   els.quotesCoverage = document.getElementById("quotesCoverage");
@@ -242,6 +243,7 @@ function renderHomeSnapshot({ totalStocks, highRiskStocks, infrastructureStocks 
     snapshotCardHtml("Data Status", [
       ["Quotes", quoteCacheAgeText()],
       ["Coverage", coverageText(coverage.quotes)],
+      ["Markets", marketCoverageText()],
       ["History", liveData.snapshotSaved ? "Snapshot saved" : "No snapshot yet"]
     ]),
     snapshotCardHtml("Risk Mix", [
@@ -268,7 +270,7 @@ function broadMarketCards() {
       ["Avg day", averagePercentText(movers.map(asset => parsePercentValue(asset.dayChange)))],
       ["Leader", stockMoveText(leader, "dayChange")],
       ["Weakest", stockMoveText(laggard, "dayChange")],
-      ["Assets", String(groupAssets.length)]
+      ["Quotes", `${quotedMarketAssets(groupAssets).length}/${groupAssets.length}`]
     ]);
   });
 }
@@ -301,6 +303,10 @@ function marketAssetGroups() {
 
 function currentMarketQuotes() {
   return Object.fromEntries(marketAssets.filter(asset => liveData.quotes && liveData.quotes[asset.ticker]).map(asset => [asset.ticker, liveData.quotes[asset.ticker]]));
+}
+
+function quotedMarketAssets(assets = marketAssets) {
+  return assets.filter(asset => hasQuoteData(liveData.quotes && liveData.quotes[asset.ticker]));
 }
 
 function renderStocks() {
@@ -684,6 +690,7 @@ function updateLiveStatus() {
   els.lastQuoteRefresh.textContent = formatDateTime(liveData.lastQuoteRefresh);
   if (els.quoteCacheAge) els.quoteCacheAge.textContent = quoteCacheAgeText();
   if (els.nextQuoteRefresh) els.nextQuoteRefresh.textContent = nextQuoteRefreshText();
+  if (els.marketCoverage) els.marketCoverage.textContent = marketCoverageText();
   els.lastPerformanceRefresh.textContent = formatDateTime(liveData.lastPerformanceRefresh);
   if (els.lastFundamentalsRefresh) els.lastFundamentalsRefresh.textContent = formatDateTime(liveData.lastFundamentalsRefresh);
   if (els.quotesCoverage) els.quotesCoverage.textContent = coverageText(liveData.cache && liveData.cache.quotes);
@@ -899,6 +906,14 @@ function coverageMissingText(item) {
   return missingCount ? `${missingCount} missing, tickers not reported` : "None";
 }
 
+function marketCoverageText() {
+  if (!marketAssets.length) return "Not configured";
+  const cached = liveData.cache && liveData.cache.marketQuotes;
+  if (cached && Number.isFinite(Number(cached.total))) return coverageText(cached);
+  const derived = { filled: quotedMarketAssets().length, total: marketAssets.length };
+  return derived.filled ? coverageText(derived) : "Refresh markets";
+}
+
 
 /* =========================================================
    7. CSV
@@ -973,7 +988,20 @@ function latestQuoteTime() {
   if (times.length) return times.sort((a, b) => new Date(b) - new Date(a))[0];
   return liveData.lastQuoteRefresh;
 }
-function parsePercentValue(value) { const n = Number(String(value || "").replace(/[%+,]/g, "")); return Number.isFinite(n) ? n : NaN; }
+function hasQuoteData(row) {
+  if (!row || typeof row !== "object") return false;
+  return ["livePrice", "dayChange", "updatedAt"].some(key => hasDisplayValue(row[key]));
+}
+function hasDisplayValue(value) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return Boolean(text) && !["—", "-", "n/a", "na", "not loaded", "refresh data", "never"].includes(text);
+}
+function parsePercentValue(value) {
+  if (!hasDisplayValue(value)) return NaN;
+  const text = String(value).trim();
+  const n = Number(text.replace(/[%+,]/g, ""));
+  return Number.isFinite(n) ? n : NaN;
+}
 function averagePercentText(values) { const valid = values.filter(Number.isFinite); if (!valid.length) return "Refresh data"; const average = valid.reduce((sum, value) => sum + value, 0) / valid.length; return `${average >= 0 ? "+" : ""}${average.toFixed(1)}%`; }
 function bestBy(items, getter) { return items.filter(item => Number.isFinite(getter(item))).sort((a,b) => getter(b) - getter(a))[0] || null; }
 function worstBy(items, getter) { return items.filter(item => Number.isFinite(getter(item))).sort((a,b) => getter(a) - getter(b))[0] || null; }
