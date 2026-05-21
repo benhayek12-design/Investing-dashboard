@@ -1204,11 +1204,57 @@
     }
 
     function renderRefreshLog() {
+      if (historyState.refreshLog.length) {
+        els.refreshLogList.innerHTML = historyState.refreshLog.map(refreshLogItemHtml).join("");
+        return;
+      }
       if (!historyState.refreshLog.length) {
         els.refreshLogList.innerHTML = `<div class="meta">No refresh activity loaded yet.</div>`;
         return;
       }
       els.refreshLogList.innerHTML = historyState.refreshLog.map(item => `<div class="refresh-log-item"><strong>${escapeHtml(item.type || "refresh")} · ${escapeHtml(item.provider || "provider")}</strong><span>${escapeHtml(formatDateTime(item.refreshedAt))} · ${escapeHtml(String(item.symbolCount || 0))} symbols · ${item.force ? "forced refresh" : "scheduled/cache refresh"}</span><span>${escapeHtml((item.symbols || []).slice(0, 12).join(", "))}${(item.symbols || []).length > 12 ? "…" : ""}</span></div>`).join("");
+    }
+
+    function refreshLogItemHtml(item) {
+      const time = item.at || item.refreshedAt || item.generatedAt;
+      const symbolText = refreshSymbolsText(item);
+      const rows = ["quotes", "performance", "fundamentals"].map(type => {
+        const refresh = item.refresh && item.refresh[type] ? item.refresh[type] : null;
+        const coverage = item.coverage && item.coverage[type] ? item.coverage[type] : null;
+        if (!refresh && !coverage && item.type && item.type !== type) return "";
+        return `<span>${escapeHtml(refreshProviderLabel(type))}: ${escapeHtml(refreshTypeSummary(refresh, item))} - ${escapeHtml(coverageSummary(coverage))}</span>`;
+      }).filter(Boolean).join("");
+      const fallbackRows = rows || `<span>${escapeHtml(item.type || "refresh")}: ${escapeHtml(item.provider || "provider")} - ${escapeHtml(item.force ? "forced refresh" : "scheduled/cache refresh")}</span>`;
+      return `<div class="refresh-log-item"><strong>${escapeHtml(formatDateTime(time))} - ${escapeHtml(symbolText)}</strong>${fallbackRows}</div>`;
+    }
+
+    function refreshProviderLabel(type) {
+      const labels = { quotes: "Quotes / Finnhub", performance: "Performance / Tiingo", fundamentals: "Fundamentals / Finnhub" };
+      return labels[type] || type;
+    }
+
+    function refreshTypeSummary(refresh, item) {
+      if (refresh && Number.isFinite(Number(refresh.refreshed))) return `${refresh.refreshed} refreshed`;
+      if (refresh && Number.isFinite(Number(refresh.fromKv))) return `${refresh.fromKv} from cache`;
+      if (item.force) return "forced refresh";
+      return "smart cache";
+    }
+
+    function coverageSummary(coverage) {
+      if (!coverage || !Number.isFinite(Number(coverage.total))) return "coverage not reported";
+      const filled = Number.isFinite(Number(coverage.filled)) ? Number(coverage.filled) : 0;
+      const total = Number(coverage.total);
+      const missing = Array.isArray(coverage.missing) ? coverage.missing.length : Math.max(0, total - filled);
+      return missing ? `${filled}/${total} filled, ${missing} missing` : `${filled}/${total} filled`;
+    }
+
+    function refreshSymbolsText(item) {
+      if (Array.isArray(item.symbols) && item.symbols.length) {
+        const preview = item.symbols.slice(0, 12).join(", ");
+        return item.symbols.length > 12 ? `${preview} +${item.symbols.length - 12} more` : preview;
+      }
+      const count = Number(item.symbolCount);
+      return Number.isFinite(count) && count > 0 ? `${count} symbols attempted` : "symbols not reported";
     }
 
     function insightCardHtml(label, value, sub) {
